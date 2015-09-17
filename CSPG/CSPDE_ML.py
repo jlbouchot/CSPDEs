@@ -1,0 +1,138 @@
+import numpy as np
+import itertools
+from collections import namedtuple
+
+
+CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result'])
+
+def CSPDE_ML(spde_model, wr_model, epsilon, L=1, cspde_result = None):
+	lvl_by_lvl_result = []
+	for oneLvl in xrange(0,L):
+		dat_constant = 5
+		# sl = 10+np.max([2**(L-oneLvl),1])
+		sl = dat_constant*2**(L-oneLvl)
+		print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl+1,L,sl))
+		## 1. Create index set and draw random samples
+		print("Generating J_s ...")
+	
+		# Compute "active index set" J_s
+		J_s = J(sl, wr_model.operator.theta, wr_model.weights)
+
+		# Get total number of coefficients in tensorized chebyshev polynomial base
+		N = len(J_s)
+	
+		# Calculate number of samples
+		m = wr_model.get_m_from_s_N(sl, N)
+	
+		# Get sample dimension
+		d = len(J_s[0])
+	
+		# if not cspde_result is None:
+		#     assert d == cspde_result.d, "New sample space dimension is different from old sample space dimension."
+	
+		# Check whether this even an interesting case
+		print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
+		wr_model.check(N, m)
+	
+		Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+		print("\nComputing {0} SPDE sample approximations ...".format(m))
+		# Get samples
+		if oneLvl != 0:
+			y_old = spde_model.samples(Z)
+			spde_model.refine_mesh()
+		else:
+			y_old = np.zeros(m)
+		y_new = spde_model.samples(Z)
+
+
+		## 3. Solve compressed sensing problem
+		print("\nSolving compressed sensing problem ...")
+	
+		# Create sampling matrix and weights
+		print("   Creating sample operator ...")
+		A = wr_model.operator.create(J_s, Z)
+	
+		print("   Computing weights ...")
+		w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
+	
+		print("   Weighted minimization ...")
+		result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) * epsilon)
+		lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result))
+	
+	
+	return lvl_by_lvl_result
+
+
+def J(s, theta, v):
+    print("s = {0}, theta = {1}, v = {2}".format(s,theta,v))
+    # Function for generating all admissible indices over given index set S
+    def iterate(M, a, B, S):
+        def iterate_(B, S, p):
+            L = []
+
+            if len(S):
+                while True:
+                    # Take the highest index in S
+                    r     = S[-1]
+
+                    # Substract weight from B
+                    B    -= a[r]
+
+                    # Increase nu_r by one
+                    p[r] += 1
+
+                    
+                    if len(S) > 1:
+                        # If there is more than one index left, recurse with remaining indices and 'remaining weight' B
+                        e = iterate_(B, S[0:-1], p.copy())
+                    else:
+                        # If B - sum over a_j is larger than 0, add this multiindex
+                        if B >= 0:
+                            e = [p.copy()]
+                        else:
+                            e = []
+
+                    # If the list of new multiindices is empty, there is nothing left to be done
+                    # thanks to the monotonicity of a
+                    if not e:
+                        break
+
+                    # Add found multiindices
+                    L += e
+
+            return L
+
+        return iterate_(B, S, np.zeros(M, dtype='int'))
+
+
+    # Set A and a as in Theorem 5.2
+    A = np.log2(s/2.)
+    a = 2 * np.log2(v)
+    T = 2 * np.log2(theta)
+
+    # Determine maximal M s.t. for j = 0 ... M-1 is a_j <= A - T
+    # M is also the maximal support size
+    M = np.argmin(a <= A - T)
+    assert 0 != M, "Weight array too short. (Last element: {0}. Threshold: {1})".format(a[-1], A-T)
+
+    # If A is non-negative the zero vector is always admissible
+    assert A >= 0, "Negative A, i.e. sparsity less than 2."
+    L = [np.zeros(M, dtype='int')]
+
+    # Iterate through support sets of cardinality k = 1 ... M
+    for k in range(1, M + 1):
+        new_indices = []
+
+        for S in itertools.combinations(range(M), k):
+            new_indices += iterate(M, a, A - k*T, list(S))
+
+        if [] == new_indices:
+            break
+
+        L += new_indices
+
+    return L
+
+
+def calculate_weights(theta, v, J_s):
+    return np.array([theta**np.count_nonzero(nu) * np.product(v[nu > 0]**nu[nu > 0]) for nu in J_s])
