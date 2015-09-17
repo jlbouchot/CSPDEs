@@ -38,7 +38,7 @@ The details of these methods can be found in the following publications (pdf wil
 in revision
 
 * J.-L. Bouchot, B. Bykowski, H. Rauhut and C. Schwab
-""
+"Compressed sensing Petrov-Galerkin approximations for parametric PDEs"
 Sampling Theory and Applications 2015 (SampTA 15)
 
 * B. Bykowski
