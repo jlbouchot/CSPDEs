@@ -33,6 +33,7 @@ def Main():
     parser.add_argument("-o", "--output-file", help="File to write the results", default="outputDiffusionML", required=False)
     parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
     parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
+    parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=500, required=False)
 
     args = parser.parse_args()
 	
@@ -41,8 +42,6 @@ def Main():
     grid_points = int(args.mesh_size)
     d = int(args.nb_cosines)
     L_max = int(args.nb_level)
-	
-    epsilon = 1e-4
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(TrigCoefficient(d, 1.0, 4.3), ConstantCoefficient(10.0),
@@ -58,8 +57,9 @@ def Main():
             wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
 
-            ## Number of tests
-            num_tests = 2500 # change from 10 for Quinoa tests
+            epsilon = 10 # Since we're working with wHTP here, the epsilon can be seen as the nbIter. It will be multiplied by sqrt(m)
+			## Number of tests
+            num_tests = 250 # change from 10 for Quinoa tests
 
 			## Don't forget to reset the original mesh
             spde_model.refine_mesh(2**(-s))

@@ -13,9 +13,6 @@ class WRModel:
         y_recon = np.zeros(len(Z_cross))
 
         for oneLevel in xrange(0,nbLevel):
-            # print cspde_result[oneLevel].result.x.shape
-            # print cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0]
-            # print cspde_result[oneLevel].J_s.shape
             F_recon = self.operator.create(np.array(cspde_result[oneLevel].J_s)[cspde_result[oneLevel].result.x != 0], Z_cross, normalization=np.sqrt(cspde_result[oneLevel].m))
             y_recon = y_recon+F_recon.apply(cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0])
 
@@ -26,7 +23,7 @@ def check_cs(N, m):
     assert N >= m, "It is N < m ({0} < {1}). Aborting ...".format(N, m)
 
 def cs_theoretic_m(s, N):
-    # TODO: Consant factor is known to be 2?
+    # TODO: Constant factor is known to be 2?
     return int(np.ceil(2 * np.log(s)**3 * s * np.log(N)))
 
 def cs_pragmatic_m(s, N):
@@ -36,5 +33,5 @@ def cs_pragmatic_m(s, N):
     return int(np.ceil(2 * s * np.log(N)))
 	
 def cs_theoretic_m_new(s, N):
-    # TODO: Consant factor is known to be 2?
+    # TODO: Constant factor is known to be 2?
     return int(np.ceil(2 * np.log(s)**2 * s * np.log(N)))

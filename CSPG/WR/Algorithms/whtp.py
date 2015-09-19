@@ -11,7 +11,7 @@ def whtp(Operator, y, w, s, eta):
     k     = 0
 
     while True:
-        if k > 200:
+        if k > eta:
             print('WHTP did not converge after {0} iterations.'.format(k))
             break
 
