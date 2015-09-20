@@ -1,8 +1,9 @@
 import numpy as np
+import Algorithms
 
 class WRModel:
     def __init__(self, method, operator, weights, m_from_s_N, check):
-        self.method         = method
+        self.method         = get_recovery_algo_from_string(method)
         self.operator       = operator
         self.weights        = weights
         self.get_m_from_s_N = m_from_s_N
@@ -32,6 +33,16 @@ def cs_pragmatic_m(s, N):
     #  Constant factor "C" is about 2
     return int(np.ceil(2 * s * np.log(N)))
 	
+
 def cs_theoretic_m_new(s, N):
     # TODO: Constant factor is known to be 2?
     return int(np.ceil(2 * np.log(s)**2 * s * np.log(N)))
+	
+	
+def get_recovery_algo_from_string(algo_name):
+    switcher = {
+        "whtp": Algorithms.whtp,
+        "wiht": Algorithms.wiht,
+        "womp": Algorithms.womp,
+    }
+    return switcher.get(algo_name, Algorithms.whtp)

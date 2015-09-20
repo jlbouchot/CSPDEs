@@ -34,6 +34,7 @@ def Main():
     parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
     parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=500, required=False)
+    parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
 
     args = parser.parse_args()
 	
@@ -42,7 +43,16 @@ def Main():
     grid_points = int(args.mesh_size)
     d = int(args.nb_cosines)
     L_max = int(args.nb_level)
-
+    algo_name = args.recovery_algo.lower()
+    if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
+        epsilon = 10 # This will be rescaled later
+    elif algo_name == 'wiht':
+	    epsilon = 1e-4 
+    elif algo_name == 'womp':
+	    epsilon = 1e-4 
+    else: 
+        epsilon = 10 # This will be rescaled later
+		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(TrigCoefficient(d, 1.0, 4.3), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
@@ -54,10 +64,11 @@ def Main():
             ### Reconstruction Model
             v = np.hstack((np.repeat(gamma, 2*d), [np.inf]))
 
-            wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
+            wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
+            #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
+            #                        WR.cs_pragmatic_m, WR.check_cs)
 
-            epsilon = 10 # Since we're working with wHTP here, the epsilon can be seen as the nbIter. It will be multiplied by sqrt(m)
 			## Number of tests
             num_tests = 250 # change from 10 for Quinoa tests
 

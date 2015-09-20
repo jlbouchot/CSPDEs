@@ -8,6 +8,7 @@ def womp(Operator, y, w, s, eta):
     x = np.zeros(Operator.n)
     S = []
     k = 0
+    s = 3*s # This should allow for ample error (13s being the lowest upper bound)
 
     while s > 0 and np.linalg.norm(Operator.apply(x) - y) > eta:
         j    = np.argmax(np.abs(Operator.apply_adj(y - Operator.apply(x))) * 1./w)
