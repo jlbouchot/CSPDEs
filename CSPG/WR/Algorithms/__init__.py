@@ -1,6 +1,6 @@
 __all__ = [
-#    'exact_wbp_cvx',
-#    'qc_wbp_cvx',
+    # 'exact_wbp_cvx',
+    # 'qc_wbp_cvx',
     'Qc_wbp_precond_primaldual',
     'wiht',
     'whtp',

@@ -21,7 +21,9 @@ class WRModel:
 
 
 def check_cs(N, m):
-    assert N >= m, "It is N < m ({0} < {1}). Aborting ...".format(N, m)
+    if N < m: 
+        print("!!! WARNING !!! It holds N < m ({0} < {1}). You might want to use other L2 minimization procedures instead of weighted l1".format(N, m))
+    # assert N >= m, "It is N < m ({0} < {1}). Aborting ...".format(N, m)
 
 def cs_theoretic_m(s, N):
     # TODO: Constant factor is known to be 2?
@@ -44,5 +46,7 @@ def get_recovery_algo_from_string(algo_name):
         "whtp": Algorithms.whtp,
         "wiht": Algorithms.wiht,
         "womp": Algorithms.womp,
+        # "bp": Algorithms.exact_wbp_cvx,
+        # "bpdn": Algorithms.qc_wbp_cvx,
     }
     return switcher.get(algo_name, Algorithms.whtp)

@@ -45,32 +45,34 @@ def Main():
     L_max = int(args.nb_level)
     algo_name = args.recovery_algo.lower()
     if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
-        epsilon = 10 # This will be rescaled later
+        epsilon = 50 # This will be rescaled later
     elif algo_name == 'wiht':
 	    epsilon = 1e-4 
     elif algo_name == 'womp':
 	    epsilon = 1e-4 
+    elif algo_name == 'bpdn':
+	    epsilon = 1e-4 
     else: 
-        epsilon = 10 # This will be rescaled later
+        epsilon = 50 # This will be rescaled later
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(TrigCoefficient(d, 1.0, 4.3), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
-    test_result = '_'.join([str(d), str(grid_points),outfile]), None
+    test_result = '_'.join([algo_name, str(d), str(grid_points),outfile]), None
     for s in range(1,L_max+1,1): # s corresponds to the number of levels here
-        for gamma in np.arange(1.025, 1.03, 0.01)[::-1]:
+        for gamma in np.arange(1.055, 1.06, 0.01)[::-1]:
             ### Reconstruction Model
             v = np.hstack((np.repeat(gamma, 2*d), [np.inf]))
 
             wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
             #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
-            #                        WR.cs_pragmatic_m, WR.check_cs)
+            #                        WR.cs_pragmatic_m, WR.check_cs) # or cs_theoretic_m
 
 			## Number of tests
-            num_tests = 250 # change from 10 for Quinoa tests
+            num_tests = 1000 # change from 10 for Quinoa tests
 
 			## Don't forget to reset the original mesh
             spde_model.refine_mesh(2**(-s))
