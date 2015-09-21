@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2015/09/19"
+__lastmodified__ = "2015/09/21"
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
@@ -67,7 +67,7 @@ def Main():
             v = np.hstack((np.repeat(gamma, 2*d), [np.inf]))
 
             wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
-                                    WR.cs_pragmatic_m, WR.check_cs)
+                                    WR.cs_theoretic_m_new, WR.check_cs)
             #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
             #                        WR.cs_pragmatic_m, WR.check_cs) # or cs_theoretic_m
 
