@@ -6,7 +6,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2015/09/22"
 
 __all__ = [
     # 'exact_wbp_cvx',
