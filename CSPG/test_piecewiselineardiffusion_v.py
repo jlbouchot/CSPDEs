@@ -1,9 +1,9 @@
 import WR
 
 from SPDE              import FEniCSModels
-from SPDE.FEniCSModels import PiecewiseConstantDiffusionFEMModelML, LinearCoefficient, ConstantCoefficient, Integration
+from SPDE.FEniCSModels import PiecewiseConstantDiffusionFEMModelML, LinearCoefficient, ConstantCoefficient, Integration, Average
 
-from Check import test, CrossCheck
+from Check_ML import test, CrossCheck
 
 import sys
 import numpy as np
@@ -13,6 +13,7 @@ def Main(outfile):
 
     ## SPDEModel
     d  = 9
+    epsilon = 50 # Is used for the number of iterations in whtp
 
     mesh_size = d*200 # corresponds to 1800 grid points for our example
 
@@ -23,20 +24,27 @@ def Main(outfile):
     a  = [LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound),
           LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound),
           LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound)] # Make sure you have d of those
-    spde_model = PiecewiseConstantDiffusionFEMModelML(a, ConstantCoefficient(1.0), mesh_size)
+    spde_model = PiecewiseConstantDiffusionFEMModelML(a, ConstantCoefficient(1.0), mesh_size, Average())
 
     test_result = outfile, None
 
-    for s in range(35,156,15):
-        for gamma in np.arange(1.03, 1.08, 0.01)[::-1]:
+    for s in range(1,3,1):
+        for gamma in np.arange(1.035, 1.05, 0.01)[::-1]:
             ## Reconstruction Model
-            v = [gamma, gamma, gamma, gamma, gamma, np.inf]
+            v = [gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, np.inf] # This has to be done better too
 
             wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                                   WR.cs_pragmatic_m, WR.check_cs)
 
+								  
+								  
+            num_tests = 1000 # change from 10 for Quinoa tests
+
+			## Don't forget to reset the original mesh
+            spde_model.refine_mesh(2**(-s))
+            
             ### Execute test
-            test_result = test(spde_model, wr_model, epsilon, s, [], *test_result)
+            test_result = test(spde_model, wr_model, epsilon, s, [CrossCheck(num_tests)], *test_result)
 
 
 ### Main

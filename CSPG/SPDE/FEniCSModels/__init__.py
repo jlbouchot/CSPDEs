@@ -19,6 +19,7 @@ __all__ = [
     'ConvectionDiffusionFEMModel',
     'DiffusionFEMModel',
     'DiffusionFEMModelML',
+    'PiecewiseConstantDiffusionFEMModelML'
     'FinFEMModel',
     'HelmholtzFEMModel',
 
@@ -47,6 +48,7 @@ from HelmholtzFEMModel import *
 
 # ML Models
 from DiffusionFEMModelML import *
+from PiecewiseConstantDiffusionFEMModelML import *
 
 # Coefficients
 from ConstantCoefficient import *

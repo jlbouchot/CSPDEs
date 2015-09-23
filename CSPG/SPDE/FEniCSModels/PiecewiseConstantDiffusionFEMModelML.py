@@ -1,12 +1,65 @@
 from dolfin import *
+from FEMModel import *
+import numpy as np
+
+# Still have to find the way to 
+# 1) Automize the process to an unknown d number of sub domains and 
+# 2) uncertain splitting points
+class Omega0(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 0 and x <= 1.0/9.0 else False
+
+class Omega1(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 1.0/9.0 and x <= 2.0/9.0 else False
+
+class Omega2(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 2.0/9.0 and x <= 3.0/9.0 else False
+
+class Omega3(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 3.0/9.0 and x <= 4.0/9.0 else False
+
+class Omega4(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 4.0/9.0 and x <= 5.0/9.0 else False
+
+class Omega5(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 5.0/9.0 and x <= 6.0/9.0 else False
+
+class Omega6(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 6.0/9.0 and x <= 7.0/9.0 else False
+
+class Omega7(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 7.0/9.0 and x <= 8.0/9.0 else False
+
+class Omega8(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 8.0/9.0 and x <= 1.0 else False
+
+tol = 1E-14   # tolerance for coordinate comparisons
+class BottomBoundary(SubDomain):
+    def inside(self, x, on_boundary):
+        return on_boundary and abs(x) < tol
+
+
+class TopBoundary(SubDomain):
+    def inside(self, x, on_boundary):
+        return on_boundary and abs(x - 1) < tol
+
 
 class PiecewiseConstantDiffusionFEMModelML(FEMModel):
     
-    def __init__(self, a, f, mesh_size):
+    def __init__(self, a, f, mesh_size, M_gen):
         
         self.a         = a
         self.f         = f
         self.M_gen     = M_gen
+        self.num_subd  = len(self.a)
 
         self.mesh_size = mesh_size
         self.init_simple_mesh()
@@ -20,21 +73,59 @@ class PiecewiseConstantDiffusionFEMModelML(FEMModel):
         if not hasattr(self, 'mesh'):
             self.init_simple_mesh()
 
+        # Create the d subdomains
+        subdomains = MeshFunction('int', self.mesh, 1) # The last argument corresponds to the dimension of the cells: here, intervals, dim 1. 
+        subdomain0 = Omega0()
+        subdomain0.mark(subdomains, 0)
+        subdomain1 = Omega1()
+        subdomain1.mark(subdomains, 1)
+        subdomain2 = Omega2()
+        subdomain2.mark(subdomains, 2)
+        subdomain3 = Omega3()
+        subdomain3.mark(subdomains, 3)
+        subdomain4 = Omega4()
+        subdomain4.mark(subdomains, 4)
+        subdomain5 = Omega5()
+        subdomain5.mark(subdomains, 5)
+        subdomain6 = Omega6()
+        subdomain6.mark(subdomains, 6)
+        subdomain7 = Omega7()
+        subdomain7.mark(subdomains, 7)
+        subdomain8 = Omega8()
+        subdomain8.mark(subdomains, 8)
+
+
+        V0 = FunctionSpace(self.mesh, 'DG', 0) # Function space of constant functions
+        # This has to be used for the uncertain diffusion coefficients
+        k  = Function(V0) # That particular -- parametric -- diffusion coefficient
+        ### Have to improve in the following part for the case of "more" uncertainty
+        # # Recover the diffusion values from the parameter vector z passed as an argument:
+        # params = self.split_params(self.a + [self.f], z)
+        # # Hopefully params[0:8] should contain the coefs we are looking for 
+        # k_values = params[0:8]/2+5 # The 5 should be changed to the abar given as a parameter
+        k_values = z/2+5
+        # Affect the appropriate local diffusion value:
+        help = np.asarray(subdomains.array(), dtype=np.int32)
+        k.vector()[:] = np.choose(help, k_values)		
+
+        # Now we can keep going with the usual FEniCS process.
+
         # Create approximation space
         V = FunctionSpace(self.mesh, 'Lagrange', degree=2)
+        Gamma_0 = DirichletBC(V, Constant(0), BottomBoundary())
+        Gamma_1 = DirichletBC(V, Constant(1), TopBoundary())
 
         # Define boundary conditions
-        bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
+        bc = [Gamma_0, Gamma_1] # DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
 
         # Define variational problem
         w = TrialFunction(V)
         v = TestFunction(V)
 
-        params = self.split_params([self.a, self.f], z)
 
         x = SpatialCoordinate(self.mesh)
-        A = self.a(x, Constant(params[0])) * inner(nabla_grad(w), nabla_grad(v)) * dx
-        L = self.f(x, Constant(params[1])) * v * dx
+        A = k * inner(nabla_grad(w), nabla_grad(v)) * dx
+        L = self.f(x, Constant(1)) * v * dx
 
         # Create goal-functional for error estimation
         u      = Function(V)
