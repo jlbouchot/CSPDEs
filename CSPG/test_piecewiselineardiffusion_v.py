@@ -25,7 +25,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max =
         epsilon = 50 # This will be rescaled later
 		
     ## SPDEModel
-    d  = 12
+    d  = 13
     epsilon = 50 # Is used for the number of iterations in whtp
 
     mesh_size = int(d*math.floor(float(grid_points)/float(d)))
@@ -43,7 +43,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max =
 
     for s in range(1,L_max+1,1):
         ## Reconstruction Model
-        v = [gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, np.inf] # This has to be done better too
+        v = [gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, np.inf] # This has to be done better too
 
         wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                               WR.cs_pragmatic_m, WR.check_cs)

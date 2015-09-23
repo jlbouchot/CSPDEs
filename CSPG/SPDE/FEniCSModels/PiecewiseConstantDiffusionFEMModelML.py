@@ -7,51 +7,55 @@ import numpy as np
 # 2) uncertain splitting points
 class Omega0(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 0 and x <= 1.0/12.0 else False
+        return True if x >= 0 and x <= 1.0/13.0 else False
 
 class Omega1(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 1.0/12.0 and x <= 2.0/12.0 else False
+        return True if x >= 1.0/13.0 and x <= 2.0/13.0 else False
 
 class Omega2(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 2.0/12.0 and x <= 3.0/12.0 else False
+        return True if x >= 2.0/13.0 and x <= 3.0/13.0 else False
 
 class Omega3(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 3.0/12.0 and x <= 4.0/12.0 else False
+        return True if x >= 3.0/13.0 and x <= 4.0/13.0 else False
 
 class Omega4(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 4.0/12.0 and x <= 5.0/12.0 else False
+        return True if x >= 4.0/13.0 and x <= 5.0/13.0 else False
 
 class Omega5(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 5.0/12.0 and x <= 6.0/12.0 else False
+        return True if x >= 5.0/13.0 and x <= 6.0/13.0 else False
 
 class Omega6(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 6.0/12.0 and x <= 7.0/12.0 else False
+        return True if x >= 6.0/13.0 and x <= 7.0/13.0 else False
 
 class Omega7(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 7.0/12.0 and x <= 8.0/12.0 else False
+        return True if x >= 7.0/13.0 and x <= 8.0/13.0 else False
 
 class Omega8(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 8.0/12.0 and x <= 9.0/12.0 else False
+        return True if x >= 8.0/13.0 and x <= 9.0/13.0 else False
 
 class Omega9(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 9.0/12.0 and x <= 10.0/12.0 else False
+        return True if x >= 9.0/13.0 and x <= 10.0/13.0 else False
 
 class Omega10(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 10.0/12.0 and x <= 11.0/12.0 else False
+        return True if x >= 10.0/13.0 and x <= 11.0/13.0 else False
 
 class Omega11(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 11.0/12.0 and x <= 1.0 else False
+        return True if x >= 11.0/13.0 and x <= 12.0/13.0 else False
+
+class Omega12(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 12.0/13.0 and x <= 1.0 else False
 
 tol = 1E-14   # tolerance for coordinate comparisons
 class BottomBoundary(SubDomain):
@@ -87,7 +91,8 @@ class PiecewiseConstantDiffusionFEMModelML(FEMModel):
             self.init_simple_mesh()
 
         # Create the d subdomains
-        subdomains = MeshFunction('int', self.mesh, 1) # The last argument corresponds to the dimension of the cells: here, intervals, dim 1. 
+        subdomains = MeshFunction('size_t', self.mesh, 1) # The last argument corresponds to the dimension of the cells: here, intervals, dim 1. 
+        subdomains.set_all(0) ### IMPORTANT! This is not a GOOD way to deal with it. But I have no clue how to solve the problem. It appears that the 'meshes' at the boundaries between two partitions are marked with random numbers
         subdomain0 = Omega0()
         subdomain0.mark(subdomains, 0)
         subdomain1 = Omega1()
@@ -112,6 +117,8 @@ class PiecewiseConstantDiffusionFEMModelML(FEMModel):
         subdomain10.mark(subdomains, 10)
         subdomain11 = Omega11()
         subdomain11.mark(subdomains, 11)
+        subdomain12 = Omega12()
+        subdomain12.mark(subdomains, 12)
 
         V0 = FunctionSpace(self.mesh, 'DG', 0) # Function space of constant functions
         # This has to be used for the uncertain diffusion coefficients
