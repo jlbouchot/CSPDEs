@@ -3,43 +3,55 @@ from FEMModel import *
 import numpy as np
 
 # Still have to find the way to 
-# 1) Automize the process to an unknown d number of sub domains and 
+# 1) Automatize the process to an unknown d number of sub domains and 
 # 2) uncertain splitting points
 class Omega0(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 0 and x <= 1.0/9.0 else False
+        return True if x >= 0 and x <= 1.0/12.0 else False
 
 class Omega1(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 1.0/9.0 and x <= 2.0/9.0 else False
+        return True if x >= 1.0/12.0 and x <= 2.0/12.0 else False
 
 class Omega2(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 2.0/9.0 and x <= 3.0/9.0 else False
+        return True if x >= 2.0/12.0 and x <= 3.0/12.0 else False
 
 class Omega3(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 3.0/9.0 and x <= 4.0/9.0 else False
+        return True if x >= 3.0/12.0 and x <= 4.0/12.0 else False
 
 class Omega4(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 4.0/9.0 and x <= 5.0/9.0 else False
+        return True if x >= 4.0/12.0 and x <= 5.0/12.0 else False
 
 class Omega5(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 5.0/9.0 and x <= 6.0/9.0 else False
+        return True if x >= 5.0/12.0 and x <= 6.0/12.0 else False
 
 class Omega6(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 6.0/9.0 and x <= 7.0/9.0 else False
+        return True if x >= 6.0/12.0 and x <= 7.0/12.0 else False
 
 class Omega7(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 7.0/9.0 and x <= 8.0/9.0 else False
+        return True if x >= 7.0/12.0 and x <= 8.0/12.0 else False
 
 class Omega8(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 8.0/9.0 and x <= 1.0 else False
+        return True if x >= 8.0/12.0 and x <= 9.0/12.0 else False
+
+class Omega9(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 9.0/12.0 and x <= 10.0/12.0 else False
+
+class Omega10(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 10.0/12.0 and x <= 11.0/12.0 else False
+
+class Omega11(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x >= 11.0/12.0 and x <= 1.0 else False
 
 tol = 1E-14   # tolerance for coordinate comparisons
 class BottomBoundary(SubDomain):
@@ -54,10 +66,11 @@ class TopBoundary(SubDomain):
 
 class PiecewiseConstantDiffusionFEMModelML(FEMModel):
     
-    def __init__(self, a, f, mesh_size, M_gen):
+    def __init__(self, abar, f, var, mesh_size, M_gen):
         
-        self.a         = a
+        self.abar      = abar
         self.f         = f
+        self.var       = var
         self.M_gen     = M_gen
         self.num_subd  = len(self.a)
 
@@ -93,7 +106,12 @@ class PiecewiseConstantDiffusionFEMModelML(FEMModel):
         subdomain7.mark(subdomains, 7)
         subdomain8 = Omega8()
         subdomain8.mark(subdomains, 8)
-
+        subdomain9 = Omega9()
+        subdomain9.mark(subdomains, 9)
+        subdomain10 = Omega10()
+        subdomain10.mark(subdomains, 10)
+        subdomain11 = Omega11()
+        subdomain11.mark(subdomains, 11)
 
         V0 = FunctionSpace(self.mesh, 'DG', 0) # Function space of constant functions
         # This has to be used for the uncertain diffusion coefficients
@@ -103,7 +121,7 @@ class PiecewiseConstantDiffusionFEMModelML(FEMModel):
         # params = self.split_params(self.a + [self.f], z)
         # # Hopefully params[0:8] should contain the coefs we are looking for 
         # k_values = params[0:8]/2+5 # The 5 should be changed to the abar given as a parameter
-        k_values = z/2+5
+        k_values = z*self.var+self.abar
         # Affect the appropriate local diffusion value:
         help = np.asarray(subdomains.array(), dtype=np.int32)
         k.vector()[:] = np.choose(help, k_values)		

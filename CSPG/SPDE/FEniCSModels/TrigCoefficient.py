@@ -26,7 +26,6 @@ class TrigCoefficient:
 
     def __call__(self, x, z):
         r = 0
-        print type(x)
         for k in range(int(len(z)/2)):
             r +=     z[2*k]   * cos(np.pi * (k+1) * x[0]) / (k+1)**self.alpha
 
