@@ -28,7 +28,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max =
     d  = 12
     epsilon = 50 # Is used for the number of iterations in whtp
 
-    mesh_size = d*math.floor(float(grid_points)/float(d))
+    mesh_size = int(d*math.floor(float(grid_points)/float(d)))
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     if variability is None:
