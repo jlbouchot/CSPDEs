@@ -1,4 +1,4 @@
-from test_diff_avg_v import Main as DIFF_V
+from test_diff_avg_v_ML import Main as DIFF_V
 from test_piecewiselineardiffusion_v import Main as PWLD_V # As in PieceWiseLinearDiffusion
 
 ## Still have to deal with the plot scripts
@@ -11,7 +11,7 @@ from multiprocessing import Pool
 
 
 # Compute solutions
-p = Pool(6)
+p = Pool(4)
 # p.apply_async(DIFF_V, (outfile = "diffML_whtp_d20_g105", d = 20, grid_points = 2000, L_max = 5, algo_name = "whtp", gamma = 1.05))
 # p.apply_async(DIFF_V, (outfile = "diffML_whtp_d10_g105", d = 10, grid_points = 2000, L_max = 5, algo_name = "whtp", gamma = 1.05))
 # p.apply_async(DIFF_V, (outfile = "diffML_whtp_d10_g104", d = 10, grid_points = 2000, L_max = 5, algo_name = "whtp", gamma = 1.04))
@@ -22,8 +22,8 @@ p.apply_async(DIFF_V, ("diffML_whtp_d20_g105", 20, 2000, 5, "whtp", 1.05))
 p.apply_async(DIFF_V, ("diffML_whtp_d10_g105", 10, 2000, 5, "whtp", 1.05))
 p.apply_async(DIFF_V, ("diffML_whtp_d10_g104", 10, 2000, 5, "whtp", 1.04))
 p.apply_async(DIFF_V, ("diffML_whtp_d10_g103", 10, 2000, 5, "whtp", 1.03))
-p.apply_async(PWLD_V, ("pwldML_whtp_var_1", 2000, 5, "whtp", 1.05, 5, 1.0/13.0))
-p.apply_async(PWLD_V, ("pwldML_whtp_var_5", 2000, 5, "whtp", 1.05, 5, 5.0/13.0))
+# p.apply_async(PWLD_V, ("pwldML_whtp_var_1", 2000, 5, "whtp", 1.05, 5, 1.0/13.0))
+# p.apply_async(PWLD_V, ("pwldML_whtp_var_5", 2000, 5, "whtp", 1.05, 5, 5.0/13.0))
 
 p.close()
 p.join()
