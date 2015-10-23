@@ -18,12 +18,33 @@ p = Pool(4)
 # p.apply_async(DIFF_V, (outfile = "diffML_whtp_d10_g103", d = 10, grid_points = 2000, L_max = 5, algo_name = "whtp", gamma = 1.03))
 # p.apply_async(PWLD_V, (outfile = "pwldML_whtp_var_1", grid_points = 2000, L_max = 5, algo_name = "whtp", gamma = 1.05, abar = 5, variability = 1.0/13.0))
 # p.apply_async(PWLD_V, (outfile = "pwldML_whtp_var_5", grid_points = 2000, L_max = 5, algo_name = "whtp", gamma = 1.05, abar = 5, variability = 5.0/13.0))
-p.apply_async(DIFF_V, ("diffML_whtp_d20_g105", 20, 2000, 5, "whtp", 1.05))
-p.apply_async(DIFF_V, ("diffML_whtp_d10_g105", 10, 2000, 5, "whtp", 1.05))
-p.apply_async(DIFF_V, ("diffML_whtp_d10_g104", 10, 2000, 5, "whtp", 1.04))
-p.apply_async(DIFF_V, ("diffML_whtp_d10_g103", 10, 2000, 5, "whtp", 1.03))
+
+# # p.apply_async(DIFF_V, ("diffML_whtp_d20_g105", 20, 2000, 5, "whtp", 1.05))
+# # p.apply_async(DIFF_V, ("diffML_whtp_d10_g105", 10, 2000, 5, "whtp", 1.05))
+# # p.apply_async(DIFF_V, ("diffML_whtp_d10_g104", 10, 2000, 5, "whtp", 1.04))
+# # p.apply_async(DIFF_V, ("diffML_whtp_d10_g103", 10, 2000, 5, "whtp", 1.03))
+
 # p.apply_async(PWLD_V, ("pwldML_whtp_var_1", 2000, 5, "whtp", 1.05, 5, 1.0/13.0))
 # p.apply_async(PWLD_V, ("pwldML_whtp_var_5", 2000, 5, "whtp", 1.05, 5, 5.0/13.0))
+
+##p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055p_5000", 5, 5000, 4, "whtp", 1.055, 1, "p", []))
+### (outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_tests = 0)
+##p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055p_10000", 5, 10000, 3, "whtp", 1.055, 1, "p", []))
+##p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055t_2000", 5, 2000, 4, "whtp", 1.055, 1, "t", []))
+##p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055p_2000", 5, 2000, 4, "whtp", 1.055, 1, "p", []))
+
+# # # p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055p_5000_goal4L", 5, 5000, 4, "whtp", 1.055, 4, "p", []))
+# # # # (outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_tests = 0)
+# # # p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055p_10000_goal4L", 5, 10000, 3, "whtp", 1.055, 3, "p", []))
+# # # p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055t_20000_goal4L", 5, 20000, 2, "whtp", 1.055, 2, "p", []))
+# # # p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055p_2000_goal4L", 5, 40000, 1, "whtp", 1.055, 1, "p", []))
+
+p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055t_40000_goal4L", 5, 5000, 4, "whtp", 1.055, 4, "t", []))
+# (outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_tests = 0)
+p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055t_40000_goal3L", 5, 10000, 3, "whtp", 1.055, 3, "t", []))
+p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055t_40000_goal2L", 5, 20000, 2, "whtp", 1.055, 2, "t", []))
+p.apply_async(DIFF_V, ("diffML_whtp_d5_g1055t_40000_goal1L", 5, 40000, 1, "whtp", 1.055, 1, "t", []))
+
 
 p.close()
 p.join()

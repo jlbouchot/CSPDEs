@@ -50,17 +50,20 @@ class CrossCheck:
 
     def __call__(self, spde_model, wr_model, epsilon, cspde_result, y_truth=None):
         # Compute truth values
-        Z_cross = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (self.num_tests, cspde_result[0].d)))
+        if self.num_tests == [] or self.num_tests is None: 
+            return None
+        else: 
+            Z_cross = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (self.num_tests, cspde_result[0].d)))
 
-        if y_truth is None:
-            # Compute truth values of functional at new samples
-            y_truth = spde_model.samples(Z_cross, 3) # consider a three times finer grid 
+            if y_truth is None:
+                # Compute truth values of functional at new samples
+                y_truth = spde_model.samples(Z_cross, 3) # consider a three times finer grid 
 
-        # Compute reconstructed values
-        y_recon = wr_model.estimate_ML_samples(cspde_result, Z_cross)
+            # Compute reconstructed values
+            y_recon = wr_model.estimate_ML_samples(cspde_result, Z_cross)
 
-        # Compare
-        difference = np.abs(y_truth - y_recon)
-        print("Maximum error: {0}; Average error: {1}".format(difference.max(), difference.sum()/self.num_tests))
+            # Compare
+            difference = np.abs(y_truth - y_recon)
+            print("Maximum error: {0}; Average error: {1}".format(difference.max(), difference.sum()/self.num_tests))
 
-        return y_truth
+            return y_truth

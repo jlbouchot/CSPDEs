@@ -10,7 +10,7 @@ import numpy as np
 
 import math
 
-def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max = 3, algo_name = "whtp", gamma = 1.035, abar = 5, variability = None):
+def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max = 3, algo_name = "whtp", gamma = 1.035, abar = 5, variability = None, L_min = 1):
     
 	
     if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
@@ -41,7 +41,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max =
 
     test_result = outfile, None
 
-    for s in range(1,L_max+1,1):
+    for s in range(L_min,L_max+1,1):
         ## Reconstruction Model
         v = [gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, np.inf] # This has to be done better too
 
@@ -69,7 +69,8 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--gamma", help="Value of the constant weights", default=1.035, required=False)
     parser.add_argument("-a", "--abar", help="Mean (constant) diffusion field", default=5, required=False)
     parser.add_argument("-v", "--variability", help="Variations (uncertainty) in the mean field per section - None is equivalent to abar/(nb sections + 1)", default=None, required=False)
+    parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
 
     args = parser.parse_args()
     
-    Main(args.output_file, int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), float(args.abar), None if args.variability is None else float(args.variability))
+    Main(args.output_file, int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), float(args.abar), None if args.variability is None else float(args.variability), int(args.l_start))

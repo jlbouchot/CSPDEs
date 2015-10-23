@@ -39,9 +39,10 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_tests = None):
-
+def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", c = 1, alpha = 1/2, L_min = 1, sampling_name = "p", nb_tests = None):
+# we deal here with polynomial weights v_j = c . j^alpha
     
+    print algo_name
     if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
         epsilon = 50 # This will be rescaled later
     elif algo_name == 'wiht':
@@ -63,8 +64,8 @@ def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name =
     for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         # for gamma in np.arange(1.055, 1.06, 0.01)[::-1]:
         ### Reconstruction Model
-        v = np.hstack((np.repeat(gamma, 2*d), [np.inf]))
-
+        # v = np.hstack((np.repeat(c, 2*d), [np.inf]))
+        v = np.hstack((c*np.power([val+1 for val in range(d) for dummy_variable in (0,1)], alpha), [np.inf]))
         wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                                 get_sampling_type(sampling_name), WR.check_cs)
         #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
@@ -89,7 +90,8 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=500, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
-    parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
+    parser.add_argument("-c", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1, required=False)
+    parser.add_argument("-a", "--alpha", help="Value of the exponent for the polynomial weights", default=1, required=False)
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
@@ -97,5 +99,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))
     # Main(sys.argv[1])

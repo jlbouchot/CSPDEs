@@ -15,7 +15,7 @@ class SPDEModel:
     def samples(self, Z, ratio=None):
 
         if ratio is not None:
-            self.refine_mesh()
+            self.refine_mesh(ratio)
 
         m, _ = Z.shape
 
