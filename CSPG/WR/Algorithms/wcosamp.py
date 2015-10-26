@@ -14,7 +14,7 @@ __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
 __lastmodified__ = "2015/09/21"
 
-def wcosamp(Operator, y, w, s, eta):
+def wcosamp(Operator, y, w, s, eta, maxiter):
     x = np.zeros(Operator.n)
     u = np.zeros(Operator.n)
     U_old = []
@@ -23,7 +23,7 @@ def wcosamp(Operator, y, w, s, eta):
     k         = 0
 
     while k < s:
-        if k > 100:
+        if k > maxiter:
             print('WCoSaMP did not converge after {0} iterations.'.format(k))
             break
 

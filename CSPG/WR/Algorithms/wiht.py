@@ -14,7 +14,7 @@ __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
 __lastmodified__ = "2015/09/21"
 
-def wiht(Operator, y, w, s, eta):
+def wiht(Operator, y, w, s, eta, maxiter):
     x         = np.zeros(Operator.n)
     last_norm = 0
     k         = 0
@@ -27,7 +27,7 @@ def wiht(Operator, y, w, s, eta):
         last_norm = cur_norm
         k         = k + 1
 
-        if k > 1000:
+        if k > maxiter:
             print('WIHT did not converge after {0} iterations.'.format(k))
             break
 

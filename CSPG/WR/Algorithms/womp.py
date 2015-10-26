@@ -13,11 +13,11 @@ __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
 __lastmodified__ = "2015/09/21"
 
-def womp(Operator, y, w, s, eta):
+def womp(Operator, y, w, s, eta, maxiter):
     x = np.zeros(Operator.n)
     S = []
     k = 0
-    s = 3*s # This should allow for ample error (13s being the lowest upper bound)
+    s = maxiter 
 
     while s > 0 and np.linalg.norm(Operator.apply(x) - y) > eta:
         j    = np.argmax(np.abs(Operator.apply_adj(y - Operator.apply(x))) * 1./w)

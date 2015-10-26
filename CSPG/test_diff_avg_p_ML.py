@@ -43,16 +43,13 @@ def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name =
 # we deal here with polynomial weights v_j = c . j^alpha
     
     print algo_name
+    epsilon = 1e-4
     if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
-        epsilon = 50 # This will be rescaled later
+        epsilon = 1e-6 # We can go a little further than with usual optimization
     elif algo_name == 'wiht':
-	    epsilon = 1e-4 
+	    epsilon = 1e-6 
     elif algo_name == 'womp':
-	    epsilon = 1e-4 
-    elif algo_name == 'bpdn':
-	    epsilon = 1e-4 
-    else: 
-        epsilon = 50 # This will be rescaled later
+	    epsilon = 1e-6 
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(TrigCoefficient(d, 1.0, 4.3), ConstantCoefficient(10.0),

@@ -15,7 +15,7 @@ __lastmodified__ = "2015/09/21"
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result'])
 
-def CSPDE_ML(spde_model, wr_model, epsilon, L=1, cspde_result = None):
+def CSPDE_ML(spde_model, wr_model, epsilon, L=1, cspde_result = None, unscaledNbIter = 100):
 	lvl_by_lvl_result = []
 	for oneLvl in xrange(0,L):
 		dat_constant = 10
@@ -66,7 +66,7 @@ def CSPDE_ML(spde_model, wr_model, epsilon, L=1, cspde_result = None):
 		w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
 	
 		print("   Weighted minimization ...")
-		result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) * epsilon)
+		result = wr_model.method(A, y_new-y_old, w, sl, epsilon, np.sqrt(m) * unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
 		lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result))
 	
 	

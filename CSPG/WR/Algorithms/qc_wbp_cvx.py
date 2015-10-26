@@ -18,7 +18,7 @@ import cvxpy as cvx
 from Result import *
 
 
-def qc_wbp_cvx(Operator, y, w, s, eta):
+def qc_wbp_cvx(Operator, y, w, s, eta, maxiter):
     x = cvx.Variable(Operator.n)
 
     cvx.Problem(cvx.Minimize(cvx.norm(np.diag(w) * x, 1)),

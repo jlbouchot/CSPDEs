@@ -14,19 +14,20 @@ __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
 __lastmodified__ = "2015/09/21"
 
-def whtp(Operator, y, w, s, eta):
+def whtp(Operator, y, w, s, eta, maxiter):
     x     = np.zeros(Operator.n)
     S_old = np.array([])
     k     = 0
 
     while True:
-        if k > eta:
+        if k > maxiter:
             print('WHTP did not converge after {0} iterations.'.format(k))
             break
 
         dummy, S = weighted_quasi_abslargest(x + Operator.apply_adj(y - Operator.apply(x)), 3 * s, w)
 
-        if set(S) == set(S_old):
+        if set(S) == set(S_old) or np.linalg.norm(Operator.apply(x) - y)/np.linalg.norm(y) <= eta:
+            print('WHTP Converged after {0} iterations. Norm of residual {1}'.format(k,np.linalg.norm(Operator.apply(x) - y)))
             break
 
         SubMatrix = Operator.genSubMatrix(S)

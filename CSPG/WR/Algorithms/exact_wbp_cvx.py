@@ -20,7 +20,7 @@ from WR import eps
 from Result import *
 
 
-def exact_wbp_cvx(Operator, y, w, s, eta):
+def exact_wbp_cvx(Operator, y, w, s, eta, maxiter):
     x = cvx.Variable(Operator.n)
 
     cvx.Problem(cvx.Minimize(cvx.norm(np.diag(w) * x, 1)),
