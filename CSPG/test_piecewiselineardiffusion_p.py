@@ -22,7 +22,7 @@ def get_sampling_type(sampling_name):
     }
     return switcher.get(sampling_name, WR.cs_pragmatic_m)
 
-def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max = 3, algo_name = "whtp", gamma = 1.035, abar = 5, variability = None, L_min = 1, sampling_name = "p", nb_tests = None):
+def Main(outfile = "testPiecewiseConstantDiffusionPoly", grid_points = 2000, L_max = 3, algo_name = "whtp", c = 1, alpha = 1/2, abar = 5, variability = None, L_min = 1, sampling_name = "p", nb_tests = None):
     
 	
     if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
@@ -55,7 +55,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion", grid_points = 2000, L_max =
 
     for s in range(L_min,L_max+1,1):
         ## Reconstruction Model
-        v = [gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, gamma, np.inf] # This has to be done better too
+        v = np.hstack((c*np.power([val+1 for val in range(d)], alpha), [np.inf]))
 
         wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                               get_sampling_type(sampling_name), WR.check_cs)
@@ -78,7 +78,8 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=500, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
-    parser.add_argument("-g", "--gamma", help="Value of the constant weights", default=1.035, required=False)
+    parser.add_argument("-c", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1, required=False)
+    parser.add_argument("-a", "--alpha", help="Value of the exponent for the polynomial weights", default=1, required=False)
     parser.add_argument("-b", "--abar", help="Mean (constant) diffusion field", default=5, required=False)
     parser.add_argument("-v", "--variability", help="Variations (uncertainty) in the mean field per section - None is equivalent to abar/(nb sections + 1)", default=None, required=False)
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
@@ -87,4 +88,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    Main(args.output_file, int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), float(args.abar), None if args.variability is None else float(args.variability), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), float(args.abar), None if args.variability is None else float(args.variability), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))

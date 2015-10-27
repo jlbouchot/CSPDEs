@@ -18,7 +18,7 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 def CSPDE_ML(spde_model, wr_model, epsilon, L=1, cspde_result = None, unscaledNbIter = 100):
 	lvl_by_lvl_result = []
 	for oneLvl in xrange(0,L):
-		dat_constant = 10
+		dat_constant = 10 # (2+oneLevel)*5
 		# sl = 10+np.max([2**(L-oneLvl),1])
 		sl = dat_constant*2**(L-oneLvl)
 		print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl+1,L,sl))
@@ -122,8 +122,8 @@ def J(s, theta, v):
 
     # Determine maximal M s.t. for j = 0 ... M-1 is a_j <= A - T
     # M is also the maximal support size
-    M = np.argmin(a <= A - T)
-    # M = np.argmin(a <= A )
+    # M = np.argmin(a <= A - T)
+    M = np.argmin(a <= A )
     assert 0 != M, "Weight array too short. (Last element: {0}. Threshold: {1})".format(a[-1], A-T)
 
     # If A is non-negative the zero vector is always admissible

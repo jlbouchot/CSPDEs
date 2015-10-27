@@ -17,9 +17,10 @@ def womp(Operator, y, w, s, eta, maxiter):
     x = np.zeros(Operator.n)
     S = []
     k = 0
-    s = maxiter 
+    s = 13*s # This is the result that ensure the best 's' sparse recovery according to T. Zhang
 
     while s > 0 and np.linalg.norm(Operator.apply(x) - y) > eta:
+        print('Norm of the error {0}, while the objective norm is {1} and the ratio is {2}'.format(np.linalg.norm(Operator.apply(x) - y),np.linalg.norm(y),np.linalg.norm(Operator.apply(x) - y)/np.linalg.norm(y)))
         j    = np.argmax(np.abs(Operator.apply_adj(y - Operator.apply(x))) * 1./w)
 
         if j in S:

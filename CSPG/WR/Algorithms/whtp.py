@@ -25,7 +25,7 @@ def whtp(Operator, y, w, s, eta, maxiter):
             break
 
         dummy, S = weighted_quasi_abslargest(x + Operator.apply_adj(y - Operator.apply(x)), 3 * s, w)
-
+        print('Norm of the error {0}, while the objective norm is {1} and the ratio is {2}'.format(np.linalg.norm(Operator.apply(x) - y),np.linalg.norm(y),np.linalg.norm(Operator.apply(x) - y)/np.linalg.norm(y)))
         if set(S) == set(S_old) or np.linalg.norm(Operator.apply(x) - y)/np.linalg.norm(y) <= eta:
             print('WHTP Converged after {0} iterations. Norm of residual {1}'.format(k,np.linalg.norm(Operator.apply(x) - y)))
             break
