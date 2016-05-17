@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2016/05/17"
 
 
 def get_sampling_type(sampling_name):
@@ -86,7 +86,8 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--nb-cosines", help="Number of random cosine and sine parameters", default=5, required=False)
     parser.add_argument("-o", "--output-file", help="File to write the results", default="outputDiffusionML", required=False)
     parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
-    parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
+    parser.add_argument("-mx", "--mesh-size-x", help="Size of the coarsest level (number of grid points) in the x direction", default=2000, required=False)
+	parser.add_argument("-my", "--mesh-size-y", help="Size of the coarsest level (number of grid points) in the y direction", default=2000, required=False)
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=500, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
     parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
@@ -97,5 +98,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.nb_cosines), [int(args.mesh_size_x),int(args.mesh_size_x)], int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))
     # Main(sys.argv[1])
