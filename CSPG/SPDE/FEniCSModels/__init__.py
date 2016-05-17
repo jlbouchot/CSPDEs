@@ -20,6 +20,7 @@ __all__ = [
     'DiffusionFEMModel',
     'DiffusionFEMModelML',
     'PiecewiseConstantDiffusionFEMModelML'
+	'PiecewiseConstantDiffusionFEMModelML2'
     'FinFEMModel',
     'HelmholtzFEMModel',
 
@@ -30,6 +31,7 @@ __all__ = [
     'PartitionUnityConstantCoefficient',
     'LinearCoefficient',
     'TrigCoefficient'
+	'CosineCoef2D'
 ]
 
 # Functionals
@@ -49,6 +51,7 @@ from HelmholtzFEMModel import *
 # ML Models
 from DiffusionFEMModelML import *
 from PiecewiseConstantDiffusionFEMModelML import *
+from PiecewiseConstantDiffusionFEMModelML2D import *
 
 # Coefficients
 from ConstantCoefficient import *
@@ -57,4 +60,5 @@ from LinearCoefficient import *
 from PiecewiseConstantCoefficient import *
 from Exponential2DCoefficient import *
 from TrigCoefficient import *
+from CosineCoef2D import *
 from PartitionUnityConstantCoefficient import *
