@@ -146,4 +146,5 @@ def J(s, theta, v):
 
 
 def calculate_weights(theta, v, J_s):
-    return np.array([theta**np.count_nonzero(nu) * np.product(v[nu > 0]**nu[nu > 0]) for nu in J_s])
+    return np.array([theta**np.count_nonzero(nu) * np.product(v[np.where(nu > 0)]**nu[np.where(nu > 0)]) for nu in J_s])
+    # return np.array([theta**np.count_nonzero(nu) * np.product(v[nu > 0]**nu[nu > 0]) for nu in J_s]) old version for earlier python distributions
