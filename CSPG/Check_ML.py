@@ -18,9 +18,9 @@ from collections import namedtuple
 from CSPDE_ML import CSPDE_ML
 
 TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'epsilon', 'L', 'cspde_result'])
-def test(spde_model, wr_model, epsilon, L, checks = None, filename = None, cspde_result = None):
+def test(spde_model, wr_model, nb_iter, epsilon, L, checks = None, filename = None, cspde_result = None):
     ### Execute CSPDE algorithm
-    cspde_result = CSPDE_ML(spde_model, wr_model, epsilon, L, cspde_result)
+    cspde_result = CSPDE_ML(spde_model, wr_model, nb_iter, epsilon, L, cspde_result)
 
     ### Output results and check
     print("\nPostprocessing and outputting solution ...")
@@ -38,7 +38,7 @@ def test(spde_model, wr_model, epsilon, L, checks = None, filename = None, cspde
     ## Execute checks
     if not checks is None:
         print("   Executing checks ... ")
-        map(lambda C: C(spde_model, wr_model, epsilon, cspde_result), checks)
+        map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)
 
 
     return filename, cspde_result
@@ -48,7 +48,7 @@ class CrossCheck:
     def __init__(self, num_tests):
         self.num_tests = num_tests
 
-    def __call__(self, spde_model, wr_model, epsilon, cspde_result, y_truth=None):
+    def __call__(self, spde_model, wr_model, nb_iter, epsilon, cspde_result, y_truth=None):
         # Compute truth values
         if self.num_tests == [] or self.num_tests is None: 
             return None

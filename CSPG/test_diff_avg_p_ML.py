@@ -39,17 +39,16 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", c = 1, alpha = 1/2, L_min = 1, sampling_name = "p", nb_tests = None):
+def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", c = 1, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter, epsilon, nb_tests = None):
 # we deal here with polynomial weights v_j = c . j^alpha
     
-    print algo_name
-    epsilon = 1e-4
-    if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
-        epsilon = 1e-6 # We can go a little further than with usual optimization
-    elif algo_name == 'wiht':
-	    epsilon = 1e-6 
-    elif algo_name == 'womp':
-	    epsilon = 1e-6 
+    # epsilon = 1e-4
+    # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
+        # epsilon = 1e-6 # We can go a little further than with usual optimization
+    # elif algo_name == 'wiht':
+	    # epsilon = 1e-6 
+    # elif algo_name == 'womp':
+	    # epsilon = 1e-6 
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(TrigCoefficient(d, 1.0, 4.3), ConstantCoefficient(10.0),
@@ -74,7 +73,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name =
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-s))
 		### Execute test
-        test_result = test(spde_model, wr_model, epsilon, s, [CrossCheck(num_tests)], *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], *test_result)
 
 
 ### Main
@@ -85,7 +84,8 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output-file", help="File to write the results", default="outputDiffusionML", required=False)
     parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
     parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
-    parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=500, required=False)
+    parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
+    parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
     parser.add_argument("-c", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1, required=False)
     parser.add_argument("-a", "--alpha", help="Value of the exponent for the polynomial weights", default=1, required=False)
@@ -96,5 +96,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else float(args.nb_tests))
     # Main(sys.argv[1])
