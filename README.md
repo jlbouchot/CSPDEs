@@ -28,6 +28,7 @@ To sum up, here is what you may need:
 * FEniCS: http://fenicsproject.org/ ; used as the black box solver for the PDEs
 * ProgressBar: https://pypi.python.org/pypi/progressbar ; used to keep track of the advancement of the PDE solves
 * Scientific Linux (including in particular scipy, numpy, etc... ) - Ubuntu works just fine too!
+* cvxpy: http://www.cvxpy.org/en/latest/install/index.html ; used for the convex minimizations needed for the compressed sensing part
 
 
 Accompanying papers - Theory
@@ -47,7 +48,7 @@ Master's Thesis, Chair C for Mathematics, RWTH Aachen, July 2015
 
 * J.-L. Bouchot, R. Rauhut and C. Schwab
 "A multi-level compressed sensing Petrov Galerkin method for the approximation of solution to high dimensional parametric operators"
-In preparation (estimated submission September 2015)
+In preparation (estimated submission June 2016)
 
 
 License
@@ -56,4 +57,5 @@ More details very soon.
 
 Test examples
 =============
-Still to come.
+You will find some (dirty) test examples, usually named test_XXX. In the notation, diff stands for a diffusion problem, ML for Multi-level, v for constant coefficients while p is for polynomially growing weights, pwld for PieceWise Linear Diffusion. 
+Better structured tests will be made available soon. 
