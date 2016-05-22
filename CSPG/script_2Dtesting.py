@@ -17,4 +17,4 @@ from test_diff_avg_v_ML_2D import Main as DIFF_V_2D
 # p.apply_async(PWLD_V, (outfile = "pwldML_whtp_var_5", grid_points = 2000, L_max = 5, algo_name = "whtp", gamma = 1.05, abar = 5, variability = 5.0/13.0))
 
 
-DIFF_V_2D(outfile = "first2Dtests", d = 5, L_max = 2, algo_name = "whtp", grid_points = tuple([1000, 1000]), gamma = 1.06, nb_iter = 50, nb_tests = 50)
+DIFF_V_2D(outfile = "first2Dtests", d = 5, L_max = 2, algo_name = "whtp", grid_points = tuple([200, 200]), gamma = 1.06, nb_iter = 50, nb_tests = 50, epsilon = 1e-4)
