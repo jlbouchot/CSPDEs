@@ -7,6 +7,8 @@ Compressed-sensing based approximation of solutions to high-dimensional operator
 This toolbox is provided as is so far. There is absolutely no guarantees that it will work on any of your problems!
 -----------------------------------
 
+-----------------------------------
+
 DISCLAIMER: This is a python package relying on the FEniCS solver. I will *not* provide assistance with installing FEniCS (but will happily help with your particular problem regarding this implementation, ellipticity conditions, or any compressed sensing remarks)
 
 
@@ -59,3 +61,7 @@ Test examples
 =============
 You will find some (dirty) test examples, usually named test_XXX. In the notation, diff stands for a diffusion problem, ML for Multi-level, v for constant coefficients while p is for polynomially growing weights, pwld for PieceWise Linear Diffusion. 
 Better structured tests will be made available soon. 
+
+Acknowledgments
+===============
+This work was partly supported by the European Research Council through the grant StG 258926. Part of this work was developed as J.-L. B. and H. R. were visiting the Hausdorff Research Center for Mathematics as part of the Hausdorff Trimester Program on Mathematics of Signal Processing. 
