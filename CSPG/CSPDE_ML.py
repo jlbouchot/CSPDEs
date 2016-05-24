@@ -66,7 +66,8 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, cspde_result = 
 		w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
 	
 		print("   Weighted minimization ...")
-		result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+		result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+		# result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
 		lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result))
 	
 	
