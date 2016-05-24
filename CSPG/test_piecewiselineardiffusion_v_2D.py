@@ -55,10 +55,9 @@ def Main(outfile = "testPiecewiseConstantDiffusion2D", grid_points = tuple([200,
 
     for s in range(L_min,L_max+1,1):
         ## Reconstruction Model
-		v = np.hstack((np.repeat(gamma, 25), [np.inf])) # The 2D PW constant has been implemented as a 5 times 5 grid
+        v = np.hstack((np.repeat(gamma, 25), [np.inf])) # The 2D PW constant has been implemented as a 5 times 5 grid
 
-        wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
-                              get_sampling_type(sampling_name), WR.check_cs)
+        wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v, get_sampling_type(sampling_name), WR.check_cs)
 
         num_tests = nb_tests # change from 10 for Quinoa tests
 
@@ -66,7 +65,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion2D", grid_points = tuple([200,
         spde_model.refine_mesh(2**(-s))
 
         ### Execute test
-        test_result = test(spde_model, wr_model, epsilon, s, [CrossCheck(num_tests)], *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], *test_result)
 
 
 ### Main
