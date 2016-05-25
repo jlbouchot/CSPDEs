@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2016/05/20"
+__lastmodified__ = "2016/05/24"
 
 
 def get_sampling_type(sampling_name):
@@ -39,7 +39,7 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None):
 
     
     # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
@@ -98,5 +98,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else float(args.nb_tests))
     # Main(sys.argv[1])
