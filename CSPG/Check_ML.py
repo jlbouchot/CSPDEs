@@ -40,9 +40,9 @@ def test(spde_model, wr_model, nb_iter, epsilon, L, checks = None, filename = No
         print("   Executing checks ... ")
         map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)
 
+    ## Compute (L_2 estimation of) true Cheb coefs. 
 
     return filename, cspde_result
-
 
 class CrossCheck:
     def __init__(self, num_tests):

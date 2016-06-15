@@ -61,7 +61,6 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
     test_result = outfile, None
     # test_result = '_'.join([algo_name, str(d), str(grid_points),outfile]), None
     for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
-        # for gamma in np.arange(1.055, 1.06, 0.01)[::-1]:
         ### Reconstruction Model
         v = np.hstack((np.repeat(gamma, 2*d), [np.inf]))
 
@@ -69,6 +68,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
                                 get_sampling_type(sampling_name), WR.check_cs)
         #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
         #                        WR.cs_pragmatic_m, WR.check_cs) # or cs_theoretic_m
+        print 'wr_model created'
 
 		## Number of tests
         num_tests = nb_tests # change from 10 for Quinoa tests

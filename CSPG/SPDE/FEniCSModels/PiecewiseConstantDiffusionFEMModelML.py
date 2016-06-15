@@ -76,7 +76,7 @@ class PiecewiseConstantDiffusionFEMModelML(FEMModel):
         self.f         = f
         self.var       = var
         self.M_gen     = M_gen
-        self.num_subd  = 12
+        self.num_subd  = 13
 
         self.mesh_size = mesh_size
         self.init_simple_mesh()
