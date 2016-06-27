@@ -33,16 +33,31 @@ def get_true_coefs(infile, outfile, J = None):
 
     # Now that we have the full 'interesting set' we can oversample it and use an L2 minimization
     N = len(J)
-    m = 1*N # Why 10? Well... why not?
+    m = int(1.1*N) # Why 10? Well... why not?
     # Compute the right hand side: 
     print("Computing {0} samples to estimate {1} coefficients".format(m,N))
     Z = finest_result.wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+    y_recon = finest_result.wr_model.estimate_ML_samples(finest_result.cspde_result, Z)
+    print("WHAT?")
     y_new = finest_result.spde_model.samples(Z)
+    # Compare
+    difference = np.abs(y_new - y_recon)
+    print("Maximum error: {0}; Average error: {1} taken from {2} sample points".format(difference.max(), difference.sum()/m, m))
     # Compute the 'sensing matrix' to be pseudo inverted
     print("Creating matrix before inversion -- this *will* take some time!")
-    A = finest_result.wr_model.operator.create(J, Z).A
+    # A = finest_result.wr_model.operator.create(J, Z, normalization=1).A
+    A = finest_result.wr_model.operator.create(J, Z, normalization=np.sqrt(m)).A
     print("Solving linear system -- this may take some time")
+    recon_coefs = np.linalg.lstsq(A,y_recon)
     true_coefs = np.linalg.lstsq(A,y_new)
+    # print("Solving linear system with pinv -- this may take some time")
+    # pinv_coefs = np.linalg.lstsq(A,y_new, rcond=1e-10)
+    print("Norm of the error between true values and l2 optimized:{0}".format(np.linalg.norm(y_new-np.dot(A,true_coefs[0]))))
+    print("Norm of the error between true values and l2 optimized (with reconstructed y's):{0}".format(np.linalg.norm(y_recon-np.dot(A,true_coefs[0]))))
+    # print("Norm of the error between true values and pinv results:{0}".format(np.linalg.norm(y_new-np.dot(A,pinv_coefs[0]))))
+
+
+
 
     # Still have to write our findings into an output file
 
@@ -83,6 +98,9 @@ def get_computed_coefs(infile,outfile, J = None):
             find_idx = np.array(np.sum(finest_result.cspde_result[one_lvl].J_s == a_nu, axis = 1))
             if np.any(find_idx == d):
                 cur_idx = find_idx.tolist().index(d)
+                # print type(estimated_coefs[idx_nu])
+                # print type(finest_result.cspde_result[one_lvl].result.x[cur_idx])
+                # print("Index for the coefficients {0} : {1}. It has magnitude {2} at level {3}".format(a_nu, cur_idx, finest_result.cspde_result[one_lvl].result.x[cur_idx], one_lvl))
                 estimated_coefs[idx_nu] = estimated_coefs[idx_nu] + finest_result.cspde_result[one_lvl].result.x[cur_idx] # NO! idx of a_nu!
 
     return estimated_coefs, J
