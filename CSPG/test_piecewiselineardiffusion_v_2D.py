@@ -80,7 +80,7 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
     parser.add_argument("-g", "--gamma", help="Value of the constant weights", default=1.035, required=False)
-    parser.add_argument("-b", "--abar", help="Mean (constant) diffusion field", default=5, required=False)
+    parser.add_argument("-a", "--abar", help="Mean (constant) diffusion field", default=5, required=False)
     parser.add_argument("-v", "--variability", help="Variations (uncertainty) in the mean field per section - None is equivalent to abar/(nb sections + 1)", default=None, required=False)
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
