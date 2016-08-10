@@ -9,16 +9,16 @@ from multiprocessing import Pool
 # Compute solutions
 p = Pool(4)
 
-p.apply_async(DIFF_V, (outfile = "diffML_trig_whtp_d20_g1055_grid2000", alpha = 2, d = 10, grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.055, nb_iter = 50, epsilon = 1e-4))
-p.apply_async(DIFF_V, (outfile = "diffML_trig_whtp_d30_g1055_grid2000", alpha = 2, d = 15, grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.055, nb_iter = 50, epsilon = 1e-4))
-p.apply_async(DIFF_V, (outfile = "diffML_trig_whtp_d30_g1055_fixedhL40000_L1", alpha = 2, d = 15, grid_points = 40000, L_min = 1, L_max = 1, algo_name = "whtp", gamma = 1.055, nb_iter = 50, epsilon = 1e-4))
-p.apply_async(DIFF_V, (outfile = "diffML_trig_whtp_d30_g1055_fixedhL40000_L2", alpha = 2, d = 15, grid_points = 20000, L_min = 2, L_max = 2, algo_name = "whtp", gamma = 1.055, nb_iter = 50, epsilon = 1e-4))
-p.apply_async(DIFF_V, (outfile = "diffML_trig_whtp_d30_g1055_fixedhL40000_L3", alpha = 2, d = 15, grid_points = 10000, L_min = 3, L_max = 3, algo_name = "whtp", gamma = 1.055, nb_iter = 50, epsilon = 1e-4))
-p.apply_async(DIFF_V, (outfile = "diffML_trig_whtp_d30_g1055_fixedhL40000_L4", alpha = 2, d = 15, grid_points = 5000, L_min = 4, L_max = 4, algo_name = "whtp", gamma = 1.055, nb_iter = 50, epsilon = 1e-4))
-p.apply_async(PWLD_V, (outfile = "pwldML_whtp_var_big_L4", grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.05, abar = 5, variability = 2.0, nb_iter = 50, epsilon = 1e-4)
-p.apply_async(PWLD_V, (outfile = "pwldML_whtp_var_small_L4", grid_points = 2000, L_max = 4, algo_name = "whtp", gamma = 1.05, abar = 5, variability = 1.0/13.0, nb_iter = 50, epsilon = 1e-4)
-p.apply_async(PWLD_2D, (outfile = "pwld2D_grid2000_var_small_L4", L_max = 4, algo_name = "whtp", grid_points = tuple([2000, 2000]), gamma = 1.06, abar = 5, variability = 1.0/25.0, nb_iter = 50, epsilon = 1e-3))
-p.apply_async(PWLD_2D, (outfile = "pwld2D_grid2000_var_big_L4", L_max = 4, algo_name = "whtp", grid_points = tuple([2000, 2000]), gamma = 1.06, abar = 5, variability = 2.0, nb_iter = 50, epsilon = 1e-3))
+p.apply_async(DIFF_V, ("diffML_trig_whtp_d20_g1055_grid2000", 10, tuple([2000]), 4, "whtp", 1.055, 1, "p", 50, 1e-4, None, 2, 4.3))
+p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_grid2000", 15, tuple([2000]), 4, "whtp", 1.055, 1, "p", 50, 1e-4, None, 2, 4.3))
+p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_fixedhL40000_L1", 15, tuple([40000]), 1, "whtp", 1.055, 1, "p", 50, 1e-4, None, 2, 4.3))
+p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_fixedhL40000_L2", 15, tuple([20000]), 2, "whtp", 1.055, 2, "p", 50, 1e-4, None, 2, 4.3))
+p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_fixedhL40000_L3", 15, tuple([10000]), 3, "whtp", 1.055, 3, "p", 50, 1e-4, None, 2, 4.3))
+p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_fixedhL40000_L4", 15, tuple([5000]), 4, "whtp", 1.055, 4, "p", 50, 1e-4, None, 2, 4.3))
+p.apply_async(PWLD_V, ("pwldML_whtp_var_big_L4", tuple([2000]), 4, "whtp", 1.05, 5, 2.0, 1, "p", 50, epsilon = 1e-4, None)
+p.apply_async(PWLD_V, (outfile = "pwldML_whtp_var_small_L4", tuple([2000]), 4, "whtp", 1.05, 5, 1.0/13.0, 1, "p", 50, 1e-4, None)
+p.apply_async(PWLD_2D, ("pwld2D_grid2000_var_small_L4", tuple([2000, 2000]), 4, "whtp", 1.06, 5, 1.0/25.0, 1, "p", 50, 1e-3, None))
+p.apply_async(PWLD_2D, ("pwld2D_grid2000_var_big_L4", tuple([2000, 2000]), 4, "whtp", 1.06, 5, 2.0, 1, "p", 50, 1e-3, None))
 
 
 
