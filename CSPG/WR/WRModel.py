@@ -58,7 +58,7 @@ def get_recovery_algo_from_string(algo_name):
         "whtp": Algorithms.whtp,
         "wiht": Algorithms.wiht,
         "womp": Algorithms.womp,
-        "bp": Algorithms.exact_wbp_cvx,
-        "bpdn": Algorithms.qc_wbp_cvx,
+        #"bp": Algorithms.exact_wbp_cvx,
+        #"bpdn": Algorithms.qc_wbp_cvx,
     }
     return switcher.get(algo_name, Algorithms.whtp)
