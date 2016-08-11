@@ -9,7 +9,7 @@ from multiprocessing import Pool
 # Compute solutions
 p = Pool(4)
 
-p.apply_async(DIFF_V, ("diffML_trig_whtp_d20_g1055_grid2000", 10, tuple([2000]), 4, "whtp", 1.055, 1, "p", 50, 1e-4, None, 2, 4.3))
+# p.apply_async(DIFF_V, ("diffML_trig_whtp_d20_g1055_grid2000", 10, tuple([2000]), 4, "whtp", 1.055, 1, "p", 50, 1e-4, None, 2, 4.3))
 p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_grid2000", 15, tuple([2000]), 4, "whtp", 1.055, 1, "p", 50, 1e-4, None, 2, 4.3))
 p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_fixedhL40000_L1", 15, tuple([40000]), 1, "whtp", 1.055, 1, "p", 50, 1e-4, None, 2, 4.3))
 p.apply_async(DIFF_V, ("diffML_trig_whtp_d30_g1055_fixedhL40000_L2", 15, tuple([20000]), 2, "whtp", 1.055, 2, "p", 50, 1e-4, None, 2, 4.3))
