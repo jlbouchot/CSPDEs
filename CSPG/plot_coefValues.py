@@ -11,21 +11,23 @@ from compare_true_coefs import get_computed_coefs as gcc
 import sys
 import shelve
 
-from math import log10 as log10
+import math
 
 
-def plot_coef_values(infile, outfile, L_to_plot, v_to_plot, k_to_plot, which_to_plot = None):
+def plot_coef_values(infile, outfile): #, L_to_plot, v_to_plot, k_to_plot, which_to_plot = None):
     ### Load
     true_coefs, J = gtc(infile, None, None)
-	computed_coefs, other_J = gcc(infile, None, J) # other_J should be the same as J.
+    computed_coefs, other_J = gcc(infile, None, J) # other_J should be the same as J.
     
     J = np.asarray(J)
     other_J = np.asarray(other_J)
     d = len(J[0,:]) # number of parameters -- make sure that's the way to go!
 
     eps_not_zero = 1e-16 # make sure we can take a log!
-    true_coefs = log10(true_coefs + eps_not_zero)
-    computed_coefs = log10(computed_coefs + eps_not_zero)
+    # true_coefs = log10(true_coefs + eps_not_zero)
+    true_coefs = [math.log10(np.abs(a_coefs) + eps_not_zero) for a_coefs in true_coefs]
+#    computed_coefs = log10(computed_coefs + eps_not_zero)
+    computed_coefs = [math.log10(np.abs(a_coef) + eps_not_zero) for a_coef in computed_coefs]
 
     nb_coefs = len(true_coefs)
     
@@ -52,6 +54,6 @@ def plot_coef_values(infile, outfile, L_to_plot, v_to_plot, k_to_plot, which_to_
     plt.plot(np.range(0,nb_coefs), sorted_computed_coefs[sorting_idx], color='b', marker='s', label='Multi-level estimations')
     plt.show()
     plt.xlabel('Coefficient index')
-    plt.ylabel('Labelof log-magnitudes')
+    plt.ylabel('Coefficients log-magnitudes')
     
     plt.savefig(outfile, bbox_inches="tight")
