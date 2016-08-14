@@ -43,15 +43,15 @@ def plot_coef_values(infile, outfile): #, L_to_plot, v_to_plot, k_to_plot, which
         sorted_true_coefs[cur_idx_true] = true_coefs[cur_idx_true]
     
     # # Now sort and keep the permutation somewhere
-    # sorting_idx = np.argsort(np.abs(sorted_true_coefs))
+    sorting_idx = np.argsort(np.abs(sorted_true_coefs))
     # plt.plot([1,2,3,4], [1,4,9,16], 'ro')
     # plt.axis([0, 6, 0, 20])
     # plt.show()
 
     # or
     # red dashes, blue squares and green triangles
-    plt.plot(np.range(0,nb_coefs), sorted_true_coefs[sorting_idx], color='r', marker='^', label='True coefficients')
-    plt.plot(np.range(0,nb_coefs), sorted_computed_coefs[sorting_idx], color='b', marker='s', label='Multi-level estimations')
+    plt.plot(range(0,nb_coefs), sorted_true_coefs[sorting_idx], color='r', marker='^', label='True coefficients')
+    plt.plot(range(0,nb_coefs), sorted_computed_coefs[sorting_idx], color='b', marker='s', label='Multi-level estimations')
     plt.show()
     plt.xlabel('Coefficient index')
     plt.ylabel('Coefficients log-magnitudes')
