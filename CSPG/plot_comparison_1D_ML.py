@@ -106,3 +106,4 @@ def plot_1D(infile, outfile, L_to_plot, v_to_plot, k_to_plot, which_to_plot = No
 
     # plt.tight_layout()
     plt.savefig(outfile, bbox_inches="tight")
+

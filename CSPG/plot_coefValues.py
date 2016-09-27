@@ -14,7 +14,7 @@ import shelve
 import math
 
 
-def plot_coef_values(infile, outfile): #, L_to_plot, v_to_plot, k_to_plot, which_to_plot = None):
+def plot_coef_values(infile, outfile, ratio = 1): #, L_to_plot, v_to_plot, k_to_plot, which_to_plot = None):
     ### Load
     true_coefs, J = gtc(infile, None, None)
     computed_coefs, other_J = gcc(infile, None, J) # other_J should be the same as J.
@@ -23,7 +23,7 @@ def plot_coef_values(infile, outfile): #, L_to_plot, v_to_plot, k_to_plot, which
     other_J = np.asarray(other_J)
     d = len(J[0,:]) # number of parameters -- make sure that's the way to go!
 
-    eps_not_zero = 1e-16 # make sure we can take a log!
+    eps_not_zero = 1e-22 # make sure we can take a log!
     # true_coefs = log10(true_coefs + eps_not_zero)
     true_coefs = [math.log10(np.abs(a_coefs) + eps_not_zero) for a_coefs in true_coefs]
 #    computed_coefs = log10(computed_coefs + eps_not_zero)
@@ -49,11 +49,16 @@ def plot_coef_values(infile, outfile): #, L_to_plot, v_to_plot, k_to_plot, which
     # plt.show()
 
     # or
+    nb_to_display = int(np.floor(ratio*nb_coefs))
     # red dashes, blue squares and green triangles
-    plt.plot(range(0,nb_coefs), sorted_true_coefs[sorting_idx], color='r', marker='^', label='True coefficients')
-    plt.plot(range(0,nb_coefs), sorted_computed_coefs[sorting_idx], color='b', marker='s', label='Multi-level estimations')
-    plt.show()
+    plt.plot(range(0,nb_to_display), sorted_true_coefs[sorting_idx[0:nb_to_display]], color='r', marker='^', label='True coefficients')
+    plt.plot(range(0,nb_to_display), sorted_computed_coefs[sorting_idx[0:nb_to_display]], color='b', marker='s', label='Multi-level estimations')
+    # handler_true_coefs = plt.plot(range(0,nb_to_display), sorted_true_coefs[sorting_idx[0:nb_to_display]], color='r', marker='^', label='True coefficients')
+    # handler_estim_coefs = plt.plot(range(0,nb_to_display), sorted_computed_coefs[sorting_idx[0:nb_to_display]], color='b', marker='s', label='Multi-level estimations')
     plt.xlabel('Coefficient index')
     plt.ylabel('Coefficients log-magnitudes')
+    # plt.legend(handles = [handler_true_coefs, handler_estim_coefs])
+    plt.legend()
     
     plt.savefig(outfile, bbox_inches="tight")
+    plt.show()

@@ -136,7 +136,8 @@ class PiecewiseConstantDiffusionFEMModelML(FEMModel):
         # Now we can keep going with the usual FEniCS process.
 
         # Create approximation space
-        V = FunctionSpace(self.mesh, 'Lagrange', degree=2)
+        V = FunctionSpace(self.mesh, 'Lagrange', 2)
+        # V = FunctionSpace(self.mesh, 'Lagrange', degree=2)
         Gamma_0 = DirichletBC(V, Constant(0), BottomBoundary())
         Gamma_1 = DirichletBC(V, Constant(1), TopBoundary())
 
