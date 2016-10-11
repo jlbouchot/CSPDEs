@@ -26,10 +26,10 @@ def coefs_mpmath_wrapper(a_nu): # seems like there is no way to use mpmath for m
 def coefs_dbltpl_wrapper(nu0,nu1,nu2,nu3,nu4,nu5): # Will work only for the 6 dimensional case
     return spi.tplquad(secondIntegrals, -1., 1., fun_mone, fun_one, fun_mone, fun_one, args=(nu0,nu1,nu2,nu3,nu4,nu5))
 
-def coefs_MC_wrapper(nb_samples, a_nu): 
+def coefs_MC_wrapper(nb_samples, a_nu, rhs = 1., variability = 1./6., abar = 5.): 
     domainsize = 1. # math.pow(2,6)
     np.random.seed(1)
-    result, error = mcint.integrate(lambda (x0, x1, x2, x3, x4, x5): integrand(x0,x1,x2,x3,x4,x5, a_nu[0],a_nu[1],a_nu[2],a_nu[3],a_nu[4],a_nu[5], False), sampler(), measure=domainsize, n=nb_samples)
+    result, error = mcint.integrate(lambda (x0, x1, x2, x3, x4, x5): integrand(x0,x1,x2,x3,x4,x5, a_nu[0],a_nu[1],a_nu[2],a_nu[3],a_nu[4],a_nu[5], False, 1., 1./6., 5.), sampler(), measure=domainsize, n=nb_samples)
     return result
 
 def coefs_QMCSobol_wrapper(nb_samples, a_nu): # note that a lot of calculations will be repeated by doing this. We need to be smarter!
@@ -69,8 +69,8 @@ def faster_QMC_computations(nb_samples, nus): # note that a lot of calculations 
 def coefs_Smolyak_wrapper():
     return 1
 
-def integrand(x0,x1,x2,x3,x4,x5,nu0,nu1,nu2,nu3,nu4,nu5, with_weights = True):
-    return ctaa([np.array([x0,x1,x2,x3,x4,x5])], 1.0, 1.0/6.0, 5.0 )*mvc([x0,x1,x2,x3,x4,x5],np.array([nu0,nu1,nu2,nu3,nu4,nu5]), with_weights)
+def integrand(x0,x1,x2,x3,x4,x5,nu0,nu1,nu2,nu3,nu4,nu5, with_weights = True, rhs = 1., variability = 1.0/6., abar = 5.):
+    return ctaa([np.array([x0,x1,x2,x3,x4,x5])], rhs, variability, abar )*mvc([x0,x1,x2,x3,x4,x5],np.array([nu0,nu1,nu2,nu3,nu4,nu5]), with_weights)
 # def integrand(x0,x1,x2,x3,x4,x5,a_nu):
     # return ctaa([np.array([x0,x1,x2,x3,x4,x5])], 1.0, 1.0/6.0, 5.0 )*mvc([x0,x1,x2,x3,x4,x5],a_nu)
 
