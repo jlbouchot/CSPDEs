@@ -15,12 +15,13 @@ __lastmodified__ = "2015/09/21"
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result'])
 
-def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, cspde_result = None):
+def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None):
 	lvl_by_lvl_result = []
 	for oneLvl in xrange(0,L):
-		dat_constant = 10 # (2+oneLevel)*5
 		# sl = 10+np.max([2**(L-oneLvl),1])
-		sl = dat_constant*2**(L-oneLvl)
+                print dat_constant
+                print 
+		sl = np.floor(dat_constant*2**(L-oneLvl))
 		print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl+1,L,sl))
 		## 1. Create index set and draw random samples
 		print("Generating J_s ...")
