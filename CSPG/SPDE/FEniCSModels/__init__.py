@@ -21,7 +21,9 @@ __all__ = [
     'DiffusionFEMModelML',
     'PiecewiseConstantDiffusionFEMModelML',
     'SmallPiecewiseConstantDiffusionFEMModelML',
+    'Dim5PiecewiseConstantDiffusionFEMModelML'
     'PiecewiseConstantDiffusionFEMModelML2',
+    'PiecewiseConstantDiffusionFEMModelML2_small',
     'FinFEMModel',
     'HelmholtzFEMModel',
 
@@ -53,7 +55,9 @@ from HelmholtzFEMModel import *
 from DiffusionFEMModelML import *
 from PiecewiseConstantDiffusionFEMModelML import *
 from SmallPiecewiseConstantDiffusionFEMModelML import *
+from Dim5PiecewiseConstantDiffusionFEMModelML import *
 from PiecewiseConstantDiffusionFEMModelML2D import *
+from PiecewiseConstantDiffusionFEMModelML2D_small import *
 
 # Coefficients
 from ConstantCoefficient import *

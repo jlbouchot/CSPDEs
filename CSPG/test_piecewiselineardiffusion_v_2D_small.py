@@ -1,7 +1,7 @@
 import WR
 
 from SPDE              import FEniCSModels
-from SPDE.FEniCSModels import PiecewiseConstantDiffusionFEMModelML2D, LinearCoefficient, ConstantCoefficient, Integration, Average
+from SPDE.FEniCSModels import PiecewiseConstantDiffusionFEMModelML2D_small, LinearCoefficient, ConstantCoefficient, Integration, Average
 
 import argparse
 
@@ -38,7 +38,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion2D", grid_points = tuple([200,
 	
 	
     ## SPDEModel
-    d  = 25
+    d  = 16
 
     # mesh_size = int(d*math.floor(float(grid_points)/float(d)))
 
@@ -49,13 +49,13 @@ def Main(outfile = "testPiecewiseConstantDiffusion2D", grid_points = tuple([200,
     #a  = [LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound),
     #      LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound),
     #      LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound), LinearCoefficient(abar, upper_bound)] # Make sure you have d of those
-    spde_model = PiecewiseConstantDiffusionFEMModelML2D(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
+    spde_model = PiecewiseConstantDiffusionFEMModelML2D_small(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
 
     test_result = outfile, None
 
     for s in range(L_min,L_max+1,1):
         ## Reconstruction Model
-        v = np.hstack((np.repeat(gamma, 25), [np.inf])) # The 2D PW constant has been implemented as a 5 times 5 grid
+        v = np.hstack((np.repeat(gamma, d), [np.inf])) # The 2D PW constant has been implemented as a 5 times 5 grid
 
         wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v, get_sampling_type(sampling_name), WR.check_cs)
 
@@ -85,6 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
+    parser.add_argument("-c", "--dat-constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
 
     args = parser.parse_args()
     
