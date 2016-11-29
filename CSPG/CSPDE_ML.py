@@ -19,8 +19,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 	lvl_by_lvl_result = []
 	for oneLvl in xrange(0,L):
 		# sl = 10+np.max([2**(L-oneLvl),1])
-                print dat_constant
-                print 
+
 		sl = np.floor(dat_constant*2**(L-oneLvl))
 		print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl+1,L,sl))
 		## 1. Create index set and draw random samples

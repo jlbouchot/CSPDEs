@@ -11,23 +11,23 @@ class Omega0(SubDomain):
 
 class Omega1(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 1.0/13.0 and x <= 2.0/6.0 else False
+        return True if x >= 1.0/6.0 and x <= 2.0/6.0 else False
 
 class Omega2(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 2.0/13.0 and x <= 3.0/6.0 else False
+        return True if x >= 2.0/6.0 and x <= 3.0/6.0 else False
 
 class Omega3(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 3.0/13.0 and x <= 4.0/6.0 else False
+        return True if x >= 3.0/6.0 and x <= 4.0/6.0 else False
 
 class Omega4(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 4.0/13.0 and x <= 5.0/6.0 else False
+        return True if x >= 4.0/6.0 and x <= 5.0/6.0 else False
 
 class Omega5(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x >= 5.0/13.0 and x <= 6.0/6.0 else False
+        return True if x >= 5.0/6.0 and x <= 6.0/6.0 else False
 
 tol = 1E-14   # tolerance for coordinate comparisons
 class BottomBoundary(SubDomain):

@@ -43,7 +43,7 @@ def Main(outfile = "testSmallPiecewiseConstantDiffusion", grid_points = tuple([2
         ## Reconstruction Model
         v = np.hstack(([gamma]*d, [np.inf])) # This has to be done better too
 
-        wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
+        wr_model = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                               get_sampling_type(sampling_name), WR.check_cs)
 
         num_tests = nb_tests # change from 10 for Quinoa tests

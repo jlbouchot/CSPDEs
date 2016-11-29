@@ -3,12 +3,16 @@ from compare_true_coefs import get_computed_coefs as gcc
 from iterative_solution import compute_true_avg as cta
 from iterative_solution import compute_true_avg_alternate as ctaa
 from multivariate_chebpoly import multi_var_chebpoly as mvc
+from multivariate_chebpoly import vectorized_mvc as vmvc
 
 from sobol_lib import i4_sobol # for QMC points
 import mcint # for automated MC method
 
 import numpy as np
 import math
+
+import os.path
+
 
 from mpmath import *
 
@@ -26,10 +30,10 @@ def coefs_mpmath_wrapper(a_nu): # seems like there is no way to use mpmath for m
 def coefs_dbltpl_wrapper(nu0,nu1,nu2,nu3,nu4,nu5): # Will work only for the 6 dimensional case
     return spi.tplquad(secondIntegrals, -1., 1., fun_mone, fun_one, fun_mone, fun_one, args=(nu0,nu1,nu2,nu3,nu4,nu5))
 
-def coefs_MC_wrapper(nb_samples, a_nu, rhs = 1., variability = 1./6., abar = 5.): 
+def coefs_MC_wrapper(nb_samples, a_nu, with_cheb_weights = False, rhs = 1., variability = 1./6., abar = 5.): 
     domainsize = 1. # math.pow(2,6)
     np.random.seed(1)
-    result, error = mcint.integrate(lambda (x0, x1, x2, x3, x4, x5): integrand(x0,x1,x2,x3,x4,x5, a_nu[0],a_nu[1],a_nu[2],a_nu[3],a_nu[4],a_nu[5], False, 1., 1./6., 5.), sampler(), measure=domainsize, n=nb_samples)
+    result, error = mcint.integrate(lambda (x0, x1, x2, x3, x4, x5): integrand(x0,x1,x2,x3,x4,x5, a_nu[0],a_nu[1],a_nu[2],a_nu[3],a_nu[4],a_nu[5], with_cheb_weights, rhs, variability, abar), sampler(), measure=domainsize, n=nb_samples)
     return result
 
 def coefs_QMCSobol_wrapper(nb_samples, a_nu): # note that a lot of calculations will be repeated by doing this. We need to be smarter!
@@ -70,6 +74,7 @@ def coefs_Smolyak_wrapper():
     return 1
 
 def integrand(x0,x1,x2,x3,x4,x5,nu0,nu1,nu2,nu3,nu4,nu5, with_weights = True, rhs = 1., variability = 1.0/6., abar = 5.):
+    # print ctaa([np.array([x0,x1,x2,x3,x4,x5])], rhs, variability, abar )
     return ctaa([np.array([x0,x1,x2,x3,x4,x5])], rhs, variability, abar )*mvc([x0,x1,x2,x3,x4,x5],np.array([nu0,nu1,nu2,nu3,nu4,nu5]), with_weights)
 # def integrand(x0,x1,x2,x3,x4,x5,a_nu):
     # return ctaa([np.array([x0,x1,x2,x3,x4,x5])], 1.0, 1.0/6.0, 5.0 )*mvc([x0,x1,x2,x3,x4,x5],a_nu)
@@ -94,10 +99,69 @@ def fun_mone(p1 = 0, p2 = 0): # the boundaries of the tplquad have to be functio
 
 def sampler(): # for the Monte-Carlo approach
     while True: # Generates the chebyshev measures via a uniform measure
-        x0     = math.cos(np.random.uniform(0.,math.pi))
-        x1     = math.cos(np.random.uniform(0.,math.pi))
-        x2     = math.cos(np.random.uniform(0.,math.pi))
-        x3     = math.cos(np.random.uniform(0.,math.pi))
-        x4     = math.cos(np.random.uniform(0.,math.pi))
-        x5     = math.cos(np.random.uniform(0.,math.pi))
+        x0     = math.cos(np.random.uniform(0,math.pi))
+        x1     = math.cos(np.random.uniform(0,math.pi))
+        x2     = math.cos(np.random.uniform(0,math.pi))
+        x3     = math.cos(np.random.uniform(0,math.pi))
+        x4     = math.cos(np.random.uniform(0,math.pi))
+        x5     = math.cos(np.random.uniform(0,math.pi))
         yield (x0, x1, x2, x3, x4, x5)
+
+def vectorized_MC_integration(tot_tests, a_nu, batch_size = 100000, rhs = 1., variability = 1./6., mean_field = 5., regular_saves = True, dump_fname = None): # This can be adapted to make it better for later tests. At the moment, it is implemented fast and dirty for our particular setup
+
+    final_avg = 0
+
+    # Since lists, nd_arrays are not hashable, we need to create a key (unique) for each nu... 
+    hashable_nu = '{}'.format(a_nu)
+
+    ## This definitely needs to be done better! 
+    if dump_fname is None:
+        dump_fname = 'MCEstimations_PWLD_6dim_small_var.npy'
+    if os.path.isfile(dump_fname) is False:
+        dict_results = {hashable_nu: {}} # or load if the file already exists
+        batches = range(batch_size, tot_tests + 1, batch_size)
+    else:
+        dict_results = np.load(dump_fname).item()
+        if hashable_nu not in dict_results:
+            dict_results[hashable_nu] = {}
+            nb_tests = 0
+            batches = range(batch_size, tot_tests + 1, batch_size)
+        else: 
+            computed_tests = sorted(dict_results[hashable_nu].keys())
+            if tot_tests >= computed_tests[-1]:
+                batches = range(computed_tests[-1]+batch_size, tot_tests+1, batch_size)
+                nb_tests = computed_tests[-1]
+                final_avg = dict_results[hashable_nu][computed_tests[-1]]*computed_tests[-1]
+            else:
+                nb_tests = computed_tests[[computed_tests[i]-tot_tests >= 0 for i in xrange(0,len(computed_tests))].index(True)-1]
+                batches = range(nb_tests+batch_size, tot_tests+1, batch_size)
+                final_avg = dict_results[hashable_nu][nb_tests]*nb_tests
+
+
+    for a_batch in batches:
+        print '\tCurrent number of test samples: {}'.format(a_batch) 
+        if a_batch in dict_results[hashable_nu]: 
+            # Don't redo the calculation, and load the one already done:
+            nb_tests = a_batch
+            final_avg = dict_results[hashable_nu][nb_tests]*nb_tests
+        else: 
+            nb_tests = a_batch
+            zs = np.cos(np.random.uniform(0,np.pi,[batch_size, 6]))
+            ys = ctaa(zs, rhs, variability, mean_field)
+            cheb_vals = vmvc(zs,a_nu)
+            final_avg = final_avg + sum(ys*cheb_vals)
+            dict_results[hashable_nu][nb_tests] = final_avg/nb_tests
+            np.save(dump_fname, dict_results) 
+
+    # one last batch of tests to make sure we have the required number
+    remaining_tests = tot_tests - nb_tests
+    if remaining_tests > 0:
+        nb_tests = nb_tests+remaining_tests
+        zs = np.cos(np.random.uniform(0,np.pi,[remaining_tests, 6]))
+        ys = ctaa(zs, rhs, variability, mean_field)
+        cheb_vals = vmvc(zs,a_nu)
+        final_avg = final_avg + sum(ys*cheb_vals)
+        dict_results[hashable_nu][nb_tests] = final_avg/nb_tests
+        np.save(dump_fname, dict_results) 
+
+    return final_avg/nb_tests

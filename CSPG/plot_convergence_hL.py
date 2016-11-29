@@ -9,19 +9,18 @@ import sys
 import shelve
 
 
-def plot_1D_hL(infile, outfile, L_to_plot, v_to_plot, k_to_plot, which_to_plot = None):
+def plot_1D_hL(infile, outfile, L_to_plot, k_to_plot, which_to_plot = None):
     ### Load
     results = []
     for one_L in L_to_plot:
-        cur_infile = infile + '_goal' + str(one_L) + 'L'
+        cur_infile = infile + '_L{}'.format(one_L)
         print("Loading {0} ...".format(cur_infile))
         cur_results = sorted(shelve.open(cur_infile).values(), key=lambda r: r.L)
         results.append(cur_results[0]) # probably need a [0] here. 
 
     ### Plot
-    print len(results)
-    print type(results)
-    first_result = results[0] # At that moment, first_result is a multi-level result
+    sorted_results = sorted(results, key = lambda r: r.L)
+    first_result = sorted_results[-1] # At that moment, first_result is a multi-level result
     #print len(first_result)
     d            = first_result.cspde_result[0].d # number of parameters
     spde_model   = first_result.spde_model
@@ -29,7 +28,7 @@ def plot_1D_hL(infile, outfile, L_to_plot, v_to_plot, k_to_plot, which_to_plot =
 
 
     d_plot       = len(k_to_plot) # k_to_plot corresponds to the number of pointwise convergences that we want to analyze
-    results_plot = [r for r in results if r.wr_model.weights[0] in v_to_plot and r.L in L_to_plot]
+    results_plot = [r for r in results if r.L in L_to_plot]
     # Note: The number of grid points in the original grid can be recovered from spde_model.mesh_size - Obviously, every time we add a level, we multiply (every component) by two
     print len(results_plot)
     fig = plt.figure()
@@ -39,7 +38,7 @@ def plot_1D_hL(infile, outfile, L_to_plot, v_to_plot, k_to_plot, which_to_plot =
 
     l = []
     # First refine the mesh to a (much) finer level 
-    spde_model.refine_mesh(4) # Refine to 2 levels larger than the largest level we consider. !!!!!! To rechange back once the first tests work
+    spde_model.refine_mesh(2**(max(L_to_plot) + 2)) # Refine to 2 levels larger than the largest level we consider. !!!!!! To rechange back once the first tests work
 
     for (index, k) in enumerate(k_to_plot): 
         print("Plotting k={0} ...".format(k+1))
