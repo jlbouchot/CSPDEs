@@ -39,7 +39,7 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name = "whtp", c = 1, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter, epsilon, nb_tests = None):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", c = 1, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10):
 # we deal here with polynomial weights v_j = c . j^alpha
     
     # epsilon = 1e-4
@@ -51,7 +51,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name =
 	    # epsilon = 1e-6 
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    spde_model = DiffusionFEMModelML(TrigCoefficient(d, 1.0, 4.3), ConstantCoefficient(10.0),
+    spde_model = DiffusionFEMModelML(TrigCoefficient(d, alpha_trig, abar), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
@@ -68,12 +68,12 @@ def Main(outfile = "thatTest", d = 5, grid_points = 2000, L_max = 4, algo_name =
         #                        WR.cs_pragmatic_m, WR.check_cs) # or cs_theoretic_m
 
 		## Number of tests
-        num_tests = nb_tests # change from 10 for Quinoa tests
+        num_tests = nb_tests 
 
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-s))
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, *test_result)
 
 
 ### Main
@@ -87,14 +87,17 @@ if __name__ == "__main__":
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
     parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
-    parser.add_argument("-c", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1, required=False)
+    parser.add_argument("-w", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1, required=False)
     parser.add_argument("-a", "--alpha", help="Value of the exponent for the polynomial weights", default=1, required=False)
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
+    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
+    parser.add_argument("-a", "--abar", help="Value of the mean field", default=4.3, required=False)
+    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
 
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.nb_cosines), int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else float(args.nb_tests), float(args.power), float(args.abar), args.dat_constant)
     # Main(sys.argv[1])

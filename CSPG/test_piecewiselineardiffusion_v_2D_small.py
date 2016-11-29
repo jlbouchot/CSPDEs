@@ -57,7 +57,7 @@ def Main(outfile = "testPiecewiseConstantDiffusion2D", grid_points = tuple([200,
         ## Reconstruction Model
         v = np.hstack((np.repeat(gamma, d), [np.inf])) # The 2D PW constant has been implemented as a 5 times 5 grid
 
-        wr_model = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v, get_sampling_type(sampling_name), WR.check_cs)
+        wr_model = WR.WRModel(algo_name, WR.Operators.Chebyshev, v, get_sampling_type(sampling_name), WR.check_cs)
 
         num_tests = nb_tests # change from 10 for Quinoa tests
 

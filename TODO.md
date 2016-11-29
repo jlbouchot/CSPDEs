@@ -5,6 +5,7 @@ Code organization:
 ------------------
 * Separate tests from actual developments (include all the test_XXX files)
 * Have some fairly simple examples
+* Split the bunch of tests into test categories (e.g. test_accuracyhL or h0 or multiplicative constant ... ) 
 
 Code improvements:
 ------------------
@@ -30,3 +31,4 @@ UPDATES from first version of this document:
 --------------------------------------------
 * Added the processing of whether we want the cheb weights in the multivariate chebpoly routines (10/10/2016)
 * Added functions for numerical integration in 6 dimensons and their (Q)-MC comparison (10/10/2016)
+* Added a parameter for varying the proportionality constant of the sparsity per level (Oct/10/2016)
