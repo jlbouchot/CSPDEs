@@ -38,19 +38,20 @@ Accompanying papers - Theory
 The details of these methods can be found in the following publications:
 * H. Rauhut and C. Schwab 
 "Compressive sensing Petrov-Galerkin approximation of high-dimensional parametric operator equations"
-Mathematics of Computation 86(304):661-700, 2017, http://www.mathc.rwth-aachen.de/~rauhut/files/csparampde.pdf
+Mathematics of Computation 86(304):661-700, 2017, 
+([Preprint](http://www.mathc.rwth-aachen.de/~rauhut/files/csparampde.pdf))
 
 * J.-L. Bouchot, B. Bykowski, H. Rauhut and C. Schwab
 "Compressed sensing Petrov-Galerkin approximations for parametric PDEs"
-Sampling Theory and Applications 2015 (SampTA 15), http://www.mathc.rwth-aachen.de/~rauhut/files/SampTA15_BBRS.pdf
+Sampling Theory and Applications 2015 (SampTA 15), ([Preprint](http://www.mathc.rwth-aachen.de/~rauhut/files/SampTA15_BBRS.pdf))
 
 * B. Bykowski
 "Weigthed l1 minimization methods for numerical approximations of parametric PDEs under uncertainty quantification"
-Master's Thesis, Chair C for Mathematics, RWTH Aachen, July 2015
+Master's Thesis, Chair C for Mathematics, RWTH Aachen, July 2015. ([Thesis](./Papers/bykowski_master.pdf))
 
 * J.-L. Bouchot, R. Rauhut and C. Schwab
 "Multi-level Compressed Sensing Petrov-Galerkin discretization of high-dimensional parametric PDEs"
-Submitted Jan. 2017, http://www.mathc.rwth-aachen.de/~rauhut/files/MLCSPG.pdf
+Submitted Jan. 2017, ([Preprint](http://www.mathc.rwth-aachen.de/~rauhut/files/MLCSPG.pdf))
 
 
 License
