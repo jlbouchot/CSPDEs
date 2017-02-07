@@ -9,9 +9,9 @@ __status__ = "Development"
 __lastmodified__ = "2015/09/22"
 
 __all__ = [
-    #'exact_wbp_cvx',
-    #'qc_wbp_cvx',
-    #'Qc_wbp_precond_primaldual',
+    'exact_wbp_cvx',
+    'qc_wbp_cvx',
+    'Qc_wbp_precond_primaldual',
     'wiht',
     'whtp',
     'wcosamp',
