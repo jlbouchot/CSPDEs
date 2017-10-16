@@ -13,7 +13,7 @@ __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
 __lastmodified__ = "2017/10/16"
 
-class CosineCoef2D:
+class CosineCoef3D:
     def __init__(self, d, alpha, c = None):
         self.num_params = d
 
