@@ -51,7 +51,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_
 	    # epsilon = 1e-6 
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    spde_model = DiffusionFEMModelML(CosineCoef3D(d, alpha_trig, abar), ConstantCoefficient(10.0),.
+    spde_model = DiffusionFEMModelML(CosineCoef3D(d, alpha_trig, abar), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
