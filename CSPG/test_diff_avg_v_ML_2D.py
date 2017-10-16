@@ -39,7 +39,7 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "CosineCoefDiff2D", d = 5, grid_points = [2000, 2000], L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 50, epsilon = 1e-3, nb_tests = None):
+def Main(outfile = "CosineCoefDiff2D", d = 5, grid_points = [2000, 2000], L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 50, epsilon = 1e-3, nb_tests = None, dat_constant = 10):
 
     
     # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
@@ -76,7 +76,7 @@ def Main(outfile = "CosineCoefDiff2D", d = 5, grid_points = [2000, 2000], L_max 
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-s))
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, *test_result)
 
 
 ### Main
@@ -95,9 +95,10 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
+    parser.add_argument("-c", "--dat-constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
 
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_x)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_x)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), args.dat_constant)
     # Main(sys.argv[1])

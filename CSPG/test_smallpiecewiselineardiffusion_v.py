@@ -75,4 +75,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    Main(args.output_file, tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), float(args.abar), None if args.variability is None else float(args.variability), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else float(args.nb_tests), args.dat_constant)
+    Main(args.output_file, tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), float(args.abar), None if args.variability is None else float(args.variability), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), args.dat_constant)

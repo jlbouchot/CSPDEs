@@ -22,7 +22,7 @@ def get_sampling_type(sampling_name):
     }
     return switcher.get(sampling_name, WR.cs_pragmatic_m)
 
-def Main(outfile = "testPiecewiseConstantDiffusionPoly", grid_points = 2000, L_max = 3, algo_name = "whtp", c = 1, alpha = 1/2, abar = 5, variability = None, L_min = 1, sampling_name = "p", nb_tests = None):
+def Main(outfile = "testPiecewiseConstantDiffusionPoly", grid_points = 2000, L_max = 3, algo_name = "whtp", c = 1, alpha = 1/2, abar = 5, variability = None, L_min = 1, sampling_name = "p", nb_tests = None, dat_constant = 10.):
     
 	
     if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
@@ -66,7 +66,7 @@ def Main(outfile = "testPiecewiseConstantDiffusionPoly", grid_points = 2000, L_m
         spde_model.refine_mesh(2**(-s))
 
         ### Execute test
-        test_result = test(spde_model, wr_model, epsilon, s, [CrossCheck(num_tests)], *test_result)
+        test_result = test(spde_model, wr_model, epsilon, s, [CrossCheck(num_tests)], dat_constant, *test_result)
 
 
 ### Main
@@ -85,7 +85,8 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
+    parser.add_argument("-c", "--dat-constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
 
     args = parser.parse_args()
     
-    Main(args.output_file, int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), float(args.abar), None if args.variability is None else float(args.variability), int(args.l_start), args.sampling, None if args.nb_tests is None else float(args.nb_tests))
+    Main(args.output_file, int(args.mesh_size), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), float(args.abar), None if args.variability is None else float(args.variability), int(args.l_start), args.sampling, None if args.nb_tests is None else int(args.nb_tests), args.dat_constant)
