@@ -93,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
     parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
-    parser.add_argument("-a", "--abar", help="Value of the mean field", default=4.3, required=False)
+    parser.add_argument("-b", "--abar", help="Value of the mean field", default=4.3, required=False)
     parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
 
     args = parser.parse_args()
