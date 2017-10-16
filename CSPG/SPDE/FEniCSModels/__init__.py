@@ -33,9 +33,9 @@ __all__ = [
     'Exponential2DCoefficient',
     'PartitionUnityConstantCoefficient',
     'LinearCoefficient',
-    'TrigCoefficient'
-	'CosineCoef2D'
-	'CosineCoef3D'
+    'TrigCoefficient', 
+    'CosineCoef2D',
+    'CosineCoef3D'
 ]
 
 # Functionals
@@ -68,4 +68,5 @@ from PiecewiseConstantCoefficient import *
 from Exponential2DCoefficient import *
 from TrigCoefficient import *
 from CosineCoef2D import *
+from CosineCoef3D import *
 from PartitionUnityConstantCoefficient import *
