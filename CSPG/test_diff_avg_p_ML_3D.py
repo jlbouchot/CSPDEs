@@ -39,7 +39,7 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_max = 4, algo_name = "whtp", c = 1, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_max = 4, algo_name = "whtp", c = 1.05, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10):
 # we deal here with polynomial weights v_j = c . j^alpha
     
     # epsilon = 1e-4
@@ -61,7 +61,8 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_
         # for gamma in np.arange(1.055, 1.06, 0.01)[::-1]:
         ### Reconstruction Model
         # v = np.hstack((np.repeat(c, 2*d), [np.inf]))
-        v = np.hstack((c*np.power([val+1 for val in range(d) for dummy_variable in (0,1)], alpha), [np.inf]))
+        print c
+        v = np.hstack((c*np.power([val+1 for val in range(d)], alpha), [np.inf]))
         wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                                 get_sampling_type(sampling_name), WR.check_cs)
         #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
@@ -89,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
     parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
-    parser.add_argument("-w", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1, required=False)
+    parser.add_argument("-w", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1.05, required=False)
     parser.add_argument("-a", "--alpha", help="Value of the exponent for the polynomial weights", default=1, required=False)
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
