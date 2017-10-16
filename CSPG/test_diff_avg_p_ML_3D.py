@@ -1,7 +1,7 @@
 import WR
 
 from SPDE              import FEniCSModels
-from SPDE.FEniCSModels import DiffusionFEMModelML, CosineCoef3D, ConstantCoefficient, Average
+from SPDE.FEniCSModels import DiffusionFEMModelML, TrigCoefficient, ConstantCoefficient, Average
 
 from Check_ML import test, CrossCheck
 
@@ -16,14 +16,14 @@ import argparse
 
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2017, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
+__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2017/10/16"
+__lastmodified__ = "2015/09/21"
 
 
 def get_sampling_type(sampling_name):
@@ -39,22 +39,19 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "CosineCoefDiff2D", d = 5, grid_points = [2000, 2000], L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 50, epsilon = 1e-3, nb_tests = None, dat_constant = 10):
-
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_max = 4, algo_name = "whtp", c = 1, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10):
+# we deal here with polynomial weights v_j = c . j^alpha
     
+    # epsilon = 1e-4
     # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
-        # epsilon = 50 # This will be rescaled later
+        # epsilon = 1e-6 # We can go a little further than with usual optimization
     # elif algo_name == 'wiht':
-	    # epsilon = 1e-4 
+	    # epsilon = 1e-6 
     # elif algo_name == 'womp':
-	    # epsilon = 1e-4 
-    # elif algo_name == 'bpdn':
-	    # epsilon = 1e-4 
-    # else: 
-        # epsilon = 50 # This will be rescaled later
+	    # epsilon = 1e-6 
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    spde_model = DiffusionFEMModelML(CosineCoef3D(d, 1.0, 4.3), ConstantCoefficient(10.0),
+    spde_model = DiffusionFEMModelML(CosineCoef3D(d, alpha_trig, abar), ConstantCoefficient(10.0),.
                                        Average(), grid_points) 
 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
@@ -63,15 +60,15 @@ def Main(outfile = "CosineCoefDiff2D", d = 5, grid_points = [2000, 2000], L_max 
     for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         # for gamma in np.arange(1.055, 1.06, 0.01)[::-1]:
         ### Reconstruction Model
-        v = np.hstack((np.repeat(gamma, d), [np.inf]))
-
+        # v = np.hstack((np.repeat(c, 2*d), [np.inf]))
+        v = np.hstack((c*np.power([val+1 for val in range(d) for dummy_variable in (0,1)], alpha), [np.inf]))
         wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                                 get_sampling_type(sampling_name), WR.check_cs)
         #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
         #                        WR.cs_pragmatic_m, WR.check_cs) # or cs_theoretic_m
 
 		## Number of tests
-        num_tests = nb_tests # change from 10 for Quinoa tests
+        num_tests = nb_tests 
 
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-s))
@@ -92,14 +89,17 @@ if __name__ == "__main__":
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
     parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
-    parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
+    parser.add_argument("-w", "--constant-weights", help="Value of the multiplicative constant in front of the polynomial weights", default=1, required=False)
+    parser.add_argument("-a", "--alpha", help="Value of the exponent for the polynomial weights", default=1, required=False)
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
-    parser.add_argument("-c", "--dat-constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
+    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
+    parser.add_argument("-a", "--abar", help="Value of the mean field", default=4.3, required=False)
+    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
 
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_y), int(args.mesh_z)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), args.dat_constant)
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_y), int(args.mesh_z)]), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), args.dat_constant)
     # Main(sys.argv[1])
