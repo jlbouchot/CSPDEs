@@ -1,7 +1,7 @@
 import WR
 
 from SPDE              import FEniCSModels
-from SPDE.FEniCSModels import DiffusionFEMModelML, TrigCoefficient, ConstantCoefficient, Average
+from SPDE.FEniCSModels import DiffusionFEMModelML, CosineCoef3D, ConstantCoefficient, Average
 
 from Check_ML import test, CrossCheck
 
