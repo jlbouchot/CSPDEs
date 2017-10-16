@@ -35,6 +35,7 @@ __all__ = [
     'LinearCoefficient',
     'TrigCoefficient'
 	'CosineCoef2D'
+	'CosineCoef3D'
 ]
 
 # Functionals
