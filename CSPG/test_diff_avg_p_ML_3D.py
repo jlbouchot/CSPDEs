@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
     parser.add_argument("-x", "--mesh-x", help="Size of the coarsest level (number of grid points) in the x direction", default=2000, required=False)
     parser.add_argument("-y", "--mesh-y", help="Size of the coarsest level (number of grid points) in the y direction", default=2000, required=False)
-	parser.add_argument("-z", "--mesh-z", help="Size of the coarsest level (number of grid points) in the z direction", default=2000, required=False)
+    parser.add_argument("-z", "--mesh-z", help="Size of the coarsest level (number of grid points) in the z direction", default=2000, required=False)
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
     parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
