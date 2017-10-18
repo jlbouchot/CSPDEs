@@ -54,6 +54,6 @@ class DiffusionFEMModel(FEMModel):
 	# y[k] = assemble(myAverage(mesh, u, dx))
 
         # Compute solution
-        self.solver.solve()
+        self.solver.solve(solver_parameter={'linear_solver':'gmres'})
 
         return u
