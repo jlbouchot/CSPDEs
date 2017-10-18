@@ -49,11 +49,11 @@ class DiffusionFEMModel(FEMModel):
         self.M = self.M_gen(self, u, dx)
 
         # Create solver
-        problem     = LinearVariationalProblem(A, L, u, bc)
+        problem     = LinearVariationalProblem(A, L, u, bc, "gmres", "ilu")
 	self.solver = LinearVariationalSolver(problem)
 	# y[k] = assemble(myAverage(mesh, u, dx))
 
         # Compute solution
-        self.solver.solve(solver_parameter={'linear_solver':'gmres'})
+        self.solver.solve()
 
         return u
