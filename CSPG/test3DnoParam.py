@@ -1,4 +1,5 @@
 from fenics import *
+import time
 
 # Create the mesh and the functions spaces on it
 nx = 50
@@ -31,9 +32,31 @@ a = dot(grad(u), grad(v))*dx
 L = f*v*dx
 
 # Et voila! 
+start_mumps = time.process_time()
+u = Function(V)
+solve(a == L, u, bc, solver_parameters={'linear_solver': 'mumps'})
+end_mumps = time.process_time()
+print("\nComputation time for mumps: {0}".format(end_mumps-start_mumps))
+
+start_iterative = time.process_time()
+u = Function(V)
+solve(a == L, u, bc, solver_parameters={'linear_solver': 'iterative'})
+end_iterative = time.process_time()
+print("\nComputation time for iterative: {0}".format(end_iterative-start_iterative))
+
+start_nothing = time.process_time()
 u = Function(V)
 solve(a == L, u, bc)
+end_nothing = time.process_time()
+print("\nComputation time for nothing: {0}".format(end_nothing-start_nothing))
 
+start_lu = time.process_time()
+u = Function(V)
+solve(a == L, u, bc, solver_parameters={'linear_solver': 'lu'})
+end_mumps = time.process_lu()
+print("\nComputation time for lu: {0}".format(end_lu-start_lu))
+
+# direct, lu, cg, iterative, gmres
 
 plot(u)
 plot(myMesh)
