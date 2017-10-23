@@ -2,6 +2,8 @@ import numpy as np
 import itertools
 from collections import namedtuple
 
+import time
+
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
@@ -15,7 +17,7 @@ __lastmodified__ = "2015/09/21"
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result'])
 
-def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None):
+def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None, t_samples = 0, t_matrix = 0, t_recovery = 0):
 	lvl_by_lvl_result = []
 	for oneLvl in xrange(0,L):
 		# sl = 10+np.max([2**(L-oneLvl),1])
@@ -47,28 +49,37 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 		Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
 		print("\nComputing {0} SPDE sample approximations ...".format(m))
 		# Get samples
+		t_start = time.time()
 		if oneLvl != 0:
 			y_old = spde_model.samples(Z)
 			spde_model.refine_mesh()
 		else:
 			y_old = np.zeros(m)
 		y_new = spde_model.samples(Z)
-
+		t_stop = time.time()
+		t_samples = t_stop-s_start
 
 		## 3. Solve compressed sensing problem
 		print("\nSolving compressed sensing problem ...")
 	
 		# Create sampling matrix and weights
 		print("   Creating sample operator ...")
+		t_start = time.time()
 		A = wr_model.operator.create(J_s, Z)
-	
+                t_stop = time.time()
+		t_matrix = t_stop-s_start
+		
 		print("   Computing weights ...")
 		w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
 	
 		print("   Weighted minimization ...")
+		t_start = time.time()
 		result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+		t_stop = time.time()
+		t_recovery = t_stop-t_start
 		# result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-		lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result))
+		lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
+		print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples {2}\n".format(t_recovery, t_matrix, t_samples))
 	
 	
 	return lvl_by_lvl_result
