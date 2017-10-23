@@ -2,7 +2,7 @@ from fenics import *
 import time
 
 # Create the mesh and the functions spaces on it
-nx = 50
+nx = 40
 ny = nx
 nz = nx
 myMesh = UnitCubeMesh(nx, ny, nz) # defined via the number of points in each directions
@@ -32,32 +32,32 @@ a = dot(grad(u), grad(v))*dx
 L = f*v*dx
 
 # Et voila! 
-start_mumps = time.process_time()
+start_mumps = time.time()
 u = Function(V)
 solve(a == L, u, bc, solver_parameters={'linear_solver': 'mumps'})
-end_mumps = time.process_time()
+end_mumps = time.time()
 print("\nComputation time for mumps: {0}".format(end_mumps-start_mumps))
 
-start_iterative = time.process_time()
+start_iterative = time.time()
 u = Function(V)
 solve(a == L, u, bc, solver_parameters={'linear_solver': 'iterative'})
-end_iterative = time.process_time()
+end_iterative = time.time()
 print("\nComputation time for iterative: {0}".format(end_iterative-start_iterative))
 
-start_nothing = time.process_time()
+start_nothing = time.time()
 u = Function(V)
 solve(a == L, u, bc)
-end_nothing = time.process_time()
+end_nothing = time.time()
 print("\nComputation time for nothing: {0}".format(end_nothing-start_nothing))
 
-start_lu = time.process_time()
+start_lu = time.time()
 u = Function(V)
 solve(a == L, u, bc, solver_parameters={'linear_solver': 'lu'})
-end_mumps = time.process_lu()
+end_lu = time.time()
 print("\nComputation time for lu: {0}".format(end_lu-start_lu))
 
 # direct, lu, cg, iterative, gmres
 
-plot(u)
-plot(myMesh)
-interactive()
+# plot(u)
+# plot(myMesh)
+# interactive()
