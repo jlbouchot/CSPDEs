@@ -15,9 +15,9 @@ __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
 __lastmodified__ = "2015/09/21"
 
-CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result'])
+CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
 
-def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None, t_samples = 0, t_matrix = 0, t_recovery = 0):
+def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None):
 	lvl_by_lvl_result = []
 	for oneLvl in xrange(0,L):
 		# sl = 10+np.max([2**(L-oneLvl),1])
