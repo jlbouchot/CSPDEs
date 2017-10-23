@@ -57,7 +57,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 			y_old = np.zeros(m)
 		y_new = spde_model.samples(Z)
 		t_stop = time.time()
-		t_samples = t_stop-s_start
+		t_samples = t_stop-t_start
 
 		## 3. Solve compressed sensing problem
 		print("\nSolving compressed sensing problem ...")
@@ -67,7 +67,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 		t_start = time.time()
 		A = wr_model.operator.create(J_s, Z)
                 t_stop = time.time()
-		t_matrix = t_stop-s_start
+		t_matrix = t_stop-t_start
 		
 		print("   Computing weights ...")
 		w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
