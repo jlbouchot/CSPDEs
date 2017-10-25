@@ -28,6 +28,7 @@ class FEMModel(SPDEModel):
             self.mesh = UnitIntervalMesh(self.mesh_size)
 
     def refine_mesh(self, ratio=2): # Note, this can also be used to coarsen the mesh
+        print self.mesh_size
         self.mesh_size = tuple(int(one_direction*ratio) for one_direction in self.mesh_size)
         self.init_simple_mesh()
 
