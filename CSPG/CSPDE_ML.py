@@ -3,6 +3,7 @@ import itertools
 from collections import namedtuple
 
 import WR.Operators.Chebyshev
+import WR.Operators.operator_from_matrix
 
 import time
 
