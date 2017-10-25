@@ -11,9 +11,9 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2017/10/25"
 
-class CosineCoef2D:
+class CosineCoef1D:
     def __init__(self, d, alpha, c = None):
         self.num_params = d
 
@@ -27,5 +27,5 @@ class CosineCoef2D:
     def __call__(self, x, z):
         r = 0
         for k in range(int(len(z))):
-            r +=     z[k]   * cos(np.pi * (k+1) * (x[0]**2 + x[1]**2 )**(0.5)) / (k+1)**self.alpha
+            r +=     z[k]   * cos(np.pi * (k+1) * (x )) / (k+1)**self.alpha
         return self.c + r

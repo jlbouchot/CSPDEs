@@ -9,7 +9,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2017/10/25"
 
 class DiffusionFEMModelML(FEMModel):
     def __init__(self, a, f, M_gen, mesh_size):
@@ -29,7 +29,7 @@ class DiffusionFEMModelML(FEMModel):
             self.init_simple_mesh()
 
         # Create approximation space
-        V = FunctionSpace(self.mesh, 'Lagrange', 2)
+        V = FunctionSpace(self.mesh, 'Lagrange', 1)
 
         # Define boundary conditions
         bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)

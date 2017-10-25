@@ -27,5 +27,5 @@ class CosineCoef3D:
     def __call__(self, x, z):
         r = 0
         for k in range(int(len(z))):
-            r +=     z[k]   * cos(np.pi * (k+1) * (x[0]**2 + x[1]**2 + x[2]**2)) / (k+1)**self.alpha
+            r +=     z[k]   * cos(np.pi * (k+1) * (x[0]**2 + x[1]**2 + x[2]**2)**0.5) / (k+1)**self.alpha
         return self.c + r
