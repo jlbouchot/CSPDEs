@@ -48,7 +48,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 		print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
 		wr_model.check(N, m)
 
-		if (sampling_fname is None) and (datamtx_fname is None):  
+		if (sampling_fname is None) or (datamtx_fname is None):  
 			Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
 			print("\nComputing {0} SPDE sample approximations ...".format(m))
 			# Get samples
@@ -74,7 +74,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 
 
 		else:
-			sampling_file = sampling_fname + '_l' + str(oneLvl) + '.npy'
+			sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy'
 			if os.path.isfile(sampling_file):
 				Z = np.load(sampling_file)
 			else: 
@@ -98,7 +98,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 			# Create sampling matrix and weights
 			print("   Creating sample operator ...")
 			t_start = time.time()
-			mtx_file = datamtx_fname + '_l' + str(oneLvl) + '.npy'
+			mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy'
 			if os.path.isfile(mtx_file):
 				A = np.load(mtx_file)
 			else: 
