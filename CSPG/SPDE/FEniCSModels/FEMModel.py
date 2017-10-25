@@ -26,7 +26,7 @@ class FEMModel(SPDEModel):
                 assert False, "Only one to three dimensional problems supported"
         else:
             self.mesh = UnitIntervalMesh(self.mesh_size)
-        print self.mesh_size
+
 
     def refine_mesh(self, ratio=2): # Note, this can also be used to coarsen the mesh
         self.mesh_size = tuple(int(one_direction*ratio) for one_direction in self.mesh_size)

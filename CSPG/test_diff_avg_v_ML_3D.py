@@ -73,11 +73,11 @@ def Main(outfile = "testCosine3D", d = 5, grid_points = tuple([20, 20, 20]), L_m
 		## Number of tests
         num_tests = nb_tests # change from 10 for Quinoa tests
 
-		## Don't forget to reset the original mesh
-        spde_model.refine_mesh(2**(-s))
+
 		### Execute test
         test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, *test_result)
-
+		## Don't forget to reset the original mesh
+        spde_model.refine_mesh(2**(-(s-1)))
 
 ### Main
 if __name__ == "__main__":
