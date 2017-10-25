@@ -4,6 +4,8 @@ from collections import namedtuple
 
 import time
 
+import os.path
+
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
@@ -17,7 +19,7 @@ __lastmodified__ = "2017/10/24"
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
 
-def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None):
+def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None, sampling_fname = None, datamtx_fname = None): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
 	lvl_by_lvl_result = []
 	for oneLvl in xrange(0,L):
 		# sl = 10+np.max([2**(L-oneLvl),1])
@@ -45,29 +47,65 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 		# Check whether this even an interesting case
 		print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
 		wr_model.check(N, m)
-	
-		Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
-		print("\nComputing {0} SPDE sample approximations ...".format(m))
-		# Get samples
-		t_start = time.time()
-		if oneLvl != 0:
-			y_old = spde_model.samples(Z)
-			spde_model.refine_mesh()
-		else:
-			y_old = np.zeros(m)
-		y_new = spde_model.samples(Z)
-		t_stop = time.time()
-		t_samples = t_stop-t_start
 
-		## 3. Solve compressed sensing problem
-		print("\nSolving compressed sensing problem ...")
+		if (sampling_fname is None) and (datamtx_fname is None):  
+			Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+			print("\nComputing {0} SPDE sample approximations ...".format(m))
+			# Get samples
+			t_start = time.time()
+			if oneLvl != 0:
+				y_old = spde_model.samples(Z)
+				spde_model.refine_mesh()
+			else:
+				y_old = np.zeros(m)
+			y_new = spde_model.samples(Z)
+			t_stop = time.time()
+			t_samples = t_stop-t_start
 	
-		# Create sampling matrix and weights
-		print("   Creating sample operator ...")
-		t_start = time.time()
-		A = wr_model.operator.create(J_s, Z)
-                t_stop = time.time()
-		t_matrix = t_stop-t_start
+			## 3. Solve compressed sensing problem
+			print("\nSolving compressed sensing problem ...")
+		
+			# Create sampling matrix and weights
+			print("   Creating sample operator ...")
+			t_start = time.time()
+			A = wr_model.operator.create(J_s, Z)
+			t_stop = time.time()
+			t_matrix = t_stop-t_start
+
+
+		else:
+			sampling_file = sampling_fname + '_l' + str(oneLvl) + '.npy'
+			if os.path.isfile(sampling_file):
+				Z = np.load(sampling_file)
+			else: 
+				Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+				np.save(sampling_file, Z)
+			print("\nComputing {0} SPDE sample approximations ...".format(m))
+			# Get samples
+			t_start = time.time()
+			if oneLvl != 0:
+				y_old = spde_model.samples(Z)
+				spde_model.refine_mesh()
+			else:
+				y_old = np.zeros(m)
+			y_new = spde_model.samples(Z)
+			t_stop = time.time()
+			t_samples = t_stop-t_start
+	
+			## 3. Solve compressed sensing problem
+			print("\nSolving compressed sensing problem ...")
+		
+			# Create sampling matrix and weights
+			print("   Creating sample operator ...")
+			t_start = time.time()
+			mtx_file = datamtx_fname + '_l' + str(oneLvl) + '.npy'
+			if os.path.isfile(mtx_file):
+				A = np.load(mtx_file)
+			else: 
+				A = wr_model.operator.create(J_s, Z)
+				np.save(mtx_file)
+	                t_stop = time.time()
+			t_matrix = t_stop-t_start
 		
 		print("   Computing weights ...")
 		w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
