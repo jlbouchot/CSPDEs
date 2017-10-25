@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 from collections import namedtuple
 
-import WR.Operators.Chebyshev
+import WR.Operators.Chebyshev as Chebyshev
 import WR.Operators.operator_from_matrix as ofm
 
 import time
