@@ -61,7 +61,7 @@ class CrossCheck:
 
             # Compute reconstructed values
             y_recon = wr_model.estimate_ML_samples(cspde_result, Z_cross)
-            spde_model.refine_mesh(1/3)
+            spde_model.refine_mesh(0.3334)
 
             # Compare
             difference = np.abs(y_truth - y_recon)
