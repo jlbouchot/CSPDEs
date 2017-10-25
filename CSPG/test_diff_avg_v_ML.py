@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2016/05/24"
+__lastmodified__ = "2017/10/25"
 
 
 def get_sampling_type(sampling_name):
@@ -54,7 +54,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
         # epsilon = 50 # This will be rescaled later
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    spde_model = DiffusionFEMModelML(TrigCoefficient(d, alpha, abar), ConstantCoefficient(10.0),
+    spde_model = DiffusionFEMModelML(CosineCoef1D(d, alpha, abar), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
@@ -62,7 +62,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
     # test_result = '_'.join([algo_name, str(d), str(grid_points),outfile]), None
     for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         ### Reconstruction Model
-        v = np.hstack((np.repeat(gamma, 2*d), [np.inf]))
+        v = np.hstack((np.repeat(gamma, d), [np.inf]))
 
         wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                                 get_sampling_type(sampling_name), WR.check_cs)
@@ -101,5 +101,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), args.dat_constant)
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant))
     # Main(sys.argv[1])

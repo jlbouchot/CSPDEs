@@ -39,7 +39,7 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "CosineCoefDiff2D", d = 5, grid_points = [2000, 2000], L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 50, epsilon = 1e-3, nb_tests = None, dat_constant = 10):
+def Main(outfile = "testCosine3D", d = 5, grid_points = tuple([20, 20, 20]), L_max = 3, algo_name = "whtp", gamma = 1.035, L_min = 3, sampling_name = "p", nb_iter = 50, epsilon = 1e-3, nb_tests = None, dat_constant = 10):
 
     
     # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
