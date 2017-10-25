@@ -3,7 +3,7 @@ import itertools
 from collections import namedtuple
 
 import WR.Operators.Chebyshev
-import WR.Operators.operator_from_matrix
+import WR.Operators.operator_from_matrix as ofm
 
 import time
 
@@ -103,7 +103,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 			t_start = time.time()
 			mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy'
 			if os.path.isfile(mtx_file):
-				A = operator_from_matrix(Chebyshev, np.load(mtx_file))
+				A = ofm(Chebyshev, np.load(mtx_file))
 			else: 
 				A = wr_model.operator.create(J_s, Z)
 				np.save(mtx_file, A)
