@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 from collections import namedtuple
 
-import WR.Operator.Chebyshev
+import WR.Operators.Chebyshev
 
 import time
 
