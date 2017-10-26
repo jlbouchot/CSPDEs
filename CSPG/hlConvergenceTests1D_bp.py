@@ -20,7 +20,7 @@ abar = 4.3
 # what to test: 
 n0s = [5,7,10,14,20,28,40,56,70]
 dimensions = [10,15,20] # Will probably split into  different files to avoid taking too much time -- this shouldn't be a problem for 2 and 1 D cases. 
-algos = ['womp', 'whtp'] # ['bp', 'womp', 'whtp']
+algos = ['bp'] # ['bp', 'womp', 'whtp']
 
 for recovery in algos:
     print("\n \t***** Let's start with {} as a recovery algorithm *****".format(recovery))
