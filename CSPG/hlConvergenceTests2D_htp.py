@@ -28,7 +28,7 @@ for recovery in algos:
         print("\n\t\t***** We'll be working in {} dimensions".format(oneD))
         for n0 in n0s:
             # Generate meaningful output file name
-            outputFile = '_'.join(['diffusion', 'cosines', '2D', 'd', str(oneD), 'n0', str(n0), 'c', str(dat_constant), 'v', str(uniform_weights), 'L', str(L), recovery])'
+            outputFile = '_'.join(['diffusion', 'cosines', '2D', 'd', str(oneD), 'n0', str(n0), 'c', str(dat_constant), 'v', str(uniform_weights), 'L', str(L), recovery])
             # 
             DIFF_2D(outputFile, oneD, tuple([n0, n0]), L, recovery, uniform_weights, L, sampling_name, nb_iter, epsilon, nb_tests, alpha, abar, dat_constant)
 
