@@ -12,7 +12,7 @@ uniform_weights = 1.08
 sampling_name = "p"
 nb_iter = 50
 epsilon = 1e-4
-nb_tests = None
+nb_tests = 10
 
 # what to test: 
 n0s = [5,7,10,14,20,28,40,56,70]
@@ -25,7 +25,8 @@ for recovery in algos:
         print("\n\t\t***** We'll be working in {} dimensions".format(oneD))
         for n0 in n0s:
             # Generate meaningful output file name
-            outputFile = '_'.join(['diffusion', 'cosines', '2D', 'd', str(oneD), 'n0', str(n0), 'c', str(dat_constant), 'v', str(uniform_weights), 'L', str(L), recovery])
+            # outputFile = '_'.join(['diffusion', 'cosines', '2D', 'd', str(oneD), 'n0', str(n0), 'c', str(dat_constant), 'v', str(uniform_weights), 'L', str(L), recovery])
+            outputFile = 'dummies'
             # 
             DIFF_2D(outputFile, oneD, tuple([n0, n0]), L, recovery, uniform_weights, L, sampling_name, nb_iter, epsilon, nb_tests, dat_constant)
 
