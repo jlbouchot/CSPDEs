@@ -18,6 +18,11 @@ for one_L in L_to_plot:
 first_result = results[0] # At that moment, first_result is a multi-level result
 d = first_result.cspde_result[0].d # number of parameters
 
+###### Time being measured as 
+# first_result.cspde_result[i].t_recovery
+# first_result.cspde_result[i].t_samples
+# ##### i = 0,1,L-1
+
 L_to_check = [r.L for r in results]
 print np.max(L_to_check)
 
