@@ -18,6 +18,8 @@ class WRModel:
         self.weights        = weights
         self.get_m_from_s_N = m_from_s_N
         self.check          = check
+        print method
+        type(self.method)
 
     def estimate_ML_samples(self, cspde_result, Z_cross):
         nbLevel = len(cspde_result)
