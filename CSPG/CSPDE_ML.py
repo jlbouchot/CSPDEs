@@ -106,7 +106,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 				A = ofm(Chebyshev, np.load(mtx_file))
 			else: 
 				A = wr_model.operator.create(J_s, Z)
-				np.save(mtx_file, A)
+				np.save(mtx_file, A.A)
 	                t_stop = time.time()
 			t_matrix = t_stop-t_start
 		
