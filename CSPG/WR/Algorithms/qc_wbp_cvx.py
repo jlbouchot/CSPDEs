@@ -22,6 +22,6 @@ def qc_wbp_cvx(Operator, y, w, s, eta, maxiter):
     x = cvx.Variable(Operator.n)
 
     cvx.Problem(cvx.Minimize(cvx.norm(np.diag(w) * x, 1)),
-                [cvx.norm(Operator.A * x - y, 2) <= eta]).solve()
+                [cvx.norm(Operator.A * x - y, 2) <= eta]).solve(solver=cvx.SCS) # Potentially try CVXOPT too
 
     return Result(np.array(x.value).flatten(), -1, 'Quadratically Constrained CVX')
