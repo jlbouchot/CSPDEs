@@ -77,7 +77,8 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 
 
 		else:
-			sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy'
+			sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
+                        # sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy' ## Really HAVE to do this better one day! 
 			if os.path.isfile(sampling_file):
 				Z = np.load(sampling_file)
 			else: 
