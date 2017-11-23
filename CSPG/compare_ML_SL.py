@@ -13,7 +13,7 @@ abar = 4.3
 algos = ['whtp']
 dimensions = [10]
 L = 1
-dat_cs = [2,5,7,10,14,20,28,40,56,80]
+dat_cs = [5,7,10,14,20,28,40,56,80]
 
 n0s = [28] # A reasonably coarse / fine grid
 
