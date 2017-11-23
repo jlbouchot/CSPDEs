@@ -102,7 +102,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 			# Create sampling matrix and weights
 			print("   Creating sample operator ...")
 			t_start = time.time()
-			mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy'
+			mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
 			if os.path.isfile(mtx_file):
 				A = ofm(Chebyshev, np.load(mtx_file))
 			else: 
