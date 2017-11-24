@@ -19,7 +19,7 @@ __all__ = [
     'ConvectionDiffusionFEMModel',
     'DiffusionFEMModel',
     'DiffusionFEMModelML',
-    'UncertainBoundariesDiffusionFEMML',
+#     'UncertainBoundariesDiffusionFEMML',
     'PiecewiseConstantDiffusionFEMModelML',
     'SmallPiecewiseConstantDiffusionFEMModelML',
     'Dim5PiecewiseConstantDiffusionFEMModelML'
@@ -32,7 +32,7 @@ __all__ = [
 
     'ConstantCoefficient',
     'RotatingCoefficient',
-    'BoundaryPiecewiseConstant',
+#     'BoundaryPiecewiseConstant',
     'PiecewiseConstantCoefficient',
     'Exponential2DCoefficient',
     'PartitionUnityConstantCoefficient',
@@ -59,7 +59,7 @@ from HelmholtzFEMModel import *
 
 # ML Models
 from DiffusionFEMModelML import *
-from UncertainBoundariesDiffusionFEMML import *
+# from UncertainBoundariesDiffusionFEMML import *
 from PiecewiseConstantDiffusionFEMModelML import *
 from SmallPiecewiseConstantDiffusionFEMModelML import *
 from Dim5PiecewiseConstantDiffusionFEMModelML import *
@@ -73,7 +73,7 @@ from ConstantCoefficient import *
 from RotatingCoefficient import *
 from LinearCoefficient import *
 from PiecewiseConstantCoefficient import *
-from BoundaryPiecewiseConstant import *
+# from BoundaryPiecewiseConstant import *
 from Exponential2DCoefficient import *
 from TrigCoefficient import *
 from CosineCoef1D import *
