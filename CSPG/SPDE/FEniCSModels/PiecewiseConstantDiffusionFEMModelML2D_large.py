@@ -7,103 +7,123 @@ import numpy as np
 # 2) uncertain splitting points
 class Omega00(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 0 and x[0] <= 1.0/5.0 and x[1] >= 0 and x[1] <= 1.0/5.0 else False
+        return True if x[0] >= 0 and x[0] <= 1.0/6.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
 
 class Omega01(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 0 and x[0] <= 1.0/5.0 and x[1] >= 1.0/5.0 and x[1] <= 2.0/5.0 else False
+        return True if x[0] >= 0 and x[0] <= 1.0/6.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
 
 class Omega02(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 0 and x[0] <= 1.0/5.0 and x[1] >= 2.0/5.0 and x[1] <= 3.0/5.0 else False
+        return True if x[0] >= 0 and x[0] <= 1.0/6.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
 		
 class Omega03(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 0 and x[0] <= 1.0/5.0 and x[1] >= 3.0/5.0 and x[1] <= 4.0/5.0 else False
+        return True if x[0] >= 0 and x[0] <= 1.0/6.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
 		
 class Omega04(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 0 and x[0] <= 1.0/5.0 and x[1] >= 4.0/5.0 and x[1] <= 1.0 else False
+        return True if x[0] >= 0 and x[0] <= 1.0/6.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
+
+class Omega05(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 0 and x[0] <= 1.0/6.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
 
 class Omega10(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 1.0/5.0 and x[0] <= 2.0/5.0 and x[1] >= 0 and x[1] <= 1.0/5.0 else False
+        return True if x[0] >= 1.0/6.0 and x[0] <= 2.0/6.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
 
 class Omega11(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 1.0/5.0 and x[0] <= 2.0/5.0 and x[1] >= 1.0/5.0 and x[1] <= 2.0/5.0 else False
+        return True if x[0] >= 1.0/6.0 and x[0] <= 2.0/6.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
 
 class Omega12(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 1.0/5.0 and x[0] <= 2.0/5.0 and x[1] >= 2.0/5.0 and x[1] <= 3.0/5.0 else False
+        return True if x[0] >= 1.0/6.0 and x[0] <= 2.0/6.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
 		
 class Omega13(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 1.0/5.0 and x[0] <= 2.0/5.0 and x[1] >= 3.0/5.0 and x[1] <= 4.0/5.0 else False
+        return True if x[0] >= 1.0/6.0 and x[0] <= 2.0/6.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
 		
 class Omega14(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 1.0/5.0 and x[0] <= 2.0/5.0 and x[1] >= 4.0/5.0 and x[1] <= 1.0 else False
+        return True if x[0] >= 1.0/6.0 and x[0] <= 2.0/6.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
+
+class Omega15(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 1.0/6.0 and x[0] <= 2.0/6.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
 		
 class Omega20(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 2.0/5.0 and x[0] <= 3.0/5.0 and x[1] >= 0 and x[1] <= 1.0/5.0 else False
+        return True if x[0] >= 2.0/6.0 and x[0] <= 3.0/6.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
 
 class Omega21(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 2.0/5.0 and x[0] <= 3.0/5.0 and x[1] >= 1.0/5.0 and x[1] <= 2.0/5.0 else False
+        return True if x[0] >= 2.0/6.0 and x[0] <= 3.0/6.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
 
 class Omega22(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 2.0/5.0 and x[0] <= 3.0/5.0 and x[1] >= 2.0/5.0 and x[1] <= 3.0/5.0 else False
+        return True if x[0] >= 2.0/6.0 and x[0] <= 3.0/6.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
 		
 class Omega23(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 2.0/5.0 and x[0] <= 3.0/5.0 and x[1] >= 3.0/5.0 and x[1] <= 4.0/5.0 else False
+        return True if x[0] >= 2.0/6.0 and x[0] <= 3.0/6.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
 		
 class Omega24(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 2.0/5.0 and x[0] <= 3.0/5.0 and x[1] >= 4.0/5.0 and x[1] <= 1.0 else False
+        return True if x[0] >= 2.0/6.0 and x[0] <= 3.0/6.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
+
+class Omega25(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 2.0/6.0 and x[0] <= 3.0/6.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
 		
 class Omega30(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 3.0/5.0 and x[0] <= 4.0/5.0 and x[1] >= 0 and x[1] <= 1.0/5.0 else False
+        return True if x[0] >= 3.0/6.0 and x[0] <= 4.0/6.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
 
 class Omega31(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 3.0/5.0 and x[0] <= 4.0/5.0 and x[1] >= 1.0/5.0 and x[1] <= 2.0/5.0 else False
+        return True if x[0] >= 3.0/6.0 and x[0] <= 4.0/6.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
 
 class Omega32(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 3.0/5.0 and x[0] <= 4.0/5.0 and x[1] >= 2.0/5.0 and x[1] <= 3.0/5.0 else False
+        return True if x[0] >= 3.0/6.0 and x[0] <= 4.0/6.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
 		
 class Omega33(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 3.0/5.0 and x[0] <= 4.0/5.0 and x[1] >= 3.0/5.0 and x[1] <= 4.0/5.0 else False
+        return True if x[0] >= 3.0/6.0 and x[0] <= 4.0/6.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
 		
 class Omega34(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 3.0/5.0 and x[0] <= 4.0/5.0 and x[1] >= 4.0/5.0 and x[1] <= 1.0 else False
+        return True if x[0] >= 3.0/6.0 and x[0] <= 4.0/6.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
+
+class Omega35(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 3.0/6.0 and x[0] <= 4.0/6.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
 		
 class Omega40(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/5.0 and x[0] <= 1.0 and x[1] >= 0 and x[1] <= 1.0/5.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
 
 class Omega41(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/5.0 and x[0] <= 1.0 and x[1] >= 1.0/5.0 and x[1] <= 2.0/5.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
 
 class Omega42(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/5.0 and x[0] <= 1.0 and x[1] >= 2.0/5.0 and x[1] <= 3.0/5.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
 		
 class Omega43(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/5.0 and x[0] <= 1.0 and x[1] >= 3.0/5.0 and x[1] <= 4.0/5.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
 		
 class Omega44(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/5.0 and x[0] <= 1.0 and x[1] >= 4.0/5.0 and x[1] <= 1.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
+
+class Omega45(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
 
 tol = 1E-14   # tolerance for coordinate comparisons
 class Left(SubDomain):
@@ -132,7 +152,7 @@ class Top(SubDomain):
         # return on_boundary and abs(x - 1) < tol
 
 
-class PiecewiseConstantDiffusionFEMModelML2D(FEMModel):
+class PiecewiseConstantDiffusionFEMModelML2D_large(FEMModel):
     
     def __init__(self, abar, f, var, mesh_size, M_gen):
         
@@ -167,46 +187,68 @@ class PiecewiseConstantDiffusionFEMModelML2D(FEMModel):
         subdomain3.mark(subdomains, 3)
         subdomain4 = Omega04()
         subdomain4.mark(subdomains, 4)
-        subdomain5 = Omega10()
+        subdomain5 = Omega05()
         subdomain5.mark(subdomains, 5)
-        subdomain6 = Omega11()
+        subdomain6 = Omega10()
         subdomain6.mark(subdomains, 6)
-        subdomain7 = Omega12()
+        subdomain7 = Omega11()
         subdomain7.mark(subdomains, 7)
-        subdomain8 = Omega13()
+        subdomain8 = Omega12()
         subdomain8.mark(subdomains, 8)
-        subdomain9 = Omega14()
+        subdomain9 = Omega13()
         subdomain9.mark(subdomains, 9)
-        subdomain10 = Omega20()
+        subdomain10 = Omega14()
         subdomain10.mark(subdomains, 10)
-        subdomain11 = Omega21()
+        subdomain11 = Omega15()
         subdomain11.mark(subdomains, 11)
-        subdomain12 = Omega22()
+        subdomain12 = Omega20()
         subdomain12.mark(subdomains, 12)
-        subdomain13 = Omega23()
+        subdomain13 = Omega21()
         subdomain13.mark(subdomains, 13)
-        subdomain14 = Omega24()
+        subdomain14 = Omega22()
         subdomain14.mark(subdomains, 14)
-        subdomain15 = Omega30()
+        subdomain15 = Omega23()
         subdomain15.mark(subdomains, 15)
-        subdomain16 = Omega31()
+        subdomain16 = Omega24()
         subdomain16.mark(subdomains, 16)
-        subdomain17 = Omega32()
+        subdomain17 = Omega25()
         subdomain17.mark(subdomains, 17)
-        subdomain18 = Omega33()
+        subdomain18 = Omega30()
         subdomain18.mark(subdomains, 18)
-        subdomain19 = Omega34()
+        subdomain19 = Omega31()
         subdomain19.mark(subdomains, 19)
-        subdomain20 = Omega40()
+        subdomain20 = Omega32()
         subdomain20.mark(subdomains, 20)
-        subdomain21 = Omega41()
+        subdomain21 = Omega33()
         subdomain21.mark(subdomains, 21)
-        subdomain22 = Omega42()
+        subdomain22 = Omega34()
         subdomain22.mark(subdomains, 22)
-        subdomain23 = Omega43()
+        subdomain23 = Omega35()
         subdomain23.mark(subdomains, 23)
-        subdomain24 = Omega44()
+        subdomain24 = Omega40()
         subdomain24.mark(subdomains, 24)
+        subdomain25 = Omega41()
+        subdomain25.mark(subdomains, 25)
+        subdomain26 = Omega42()
+        subdomain26.mark(subdomains, 26)
+        subdomain27 = Omega43()
+        subdomain27.mark(subdomains, 27)
+        subdomain28 = Omega44()
+        subdomain28.mark(subdomains, 28)
+        subdomain29 = Omega45()
+        subdomain29.mark(subdomains, 29)
+        subdomain30 = Omega50()
+        subdomain30.mark(subdomains, 30)
+        subdomain31 = Omega51()
+        subdomain31.mark(subdomains, 31)
+        subdomain32 = Omega52()
+        subdomain32.mark(subdomains, 32)
+        subdomain33 = Omega53()
+        subdomain33.mark(subdomains, 33)
+        subdomain34 = Omega54()
+        subdomain34.mark(subdomains, 34)
+        subdomain35 = Omega55()
+        subdomain35.mark(subdomains, 35)
 
         V0 = FunctionSpace(self.mesh, 'DG', 0) # Function space of constant functions
         # This has to be used for the uncertain diffusion coefficients
