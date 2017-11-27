@@ -23,7 +23,7 @@ def Main(outfile):
     L = 3	
     num_tests = 20
     dat_constant = 8
-    gamma = 1.15 # Used for the uniform weights
+    gamma = 1.1 # Used for the uniform weights
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     d = 9
