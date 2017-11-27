@@ -12,18 +12,18 @@ import numpy as np
 def Main(outfile):
     
     ## SPDEModel
-    d     = 10
+    d     = 9
 
     ## Parameters -- Have to be parts of the command line to be done neatly
     variability = 2.0
-    grid_points = tuple([200,200])
+    grid_points = tuple([100,100])
     abar = 5.0
     nb_iter = 50
     epsilon     = 1e-8
     L = 3	
     num_tests = 20
     dat_constant = 8
-    gamma = 1.1 # Used for the uniform weights
+    gamma = 1.15 # Used for the uniform weights
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     d = 9
@@ -33,7 +33,7 @@ def Main(outfile):
     v = np.hstack((np.repeat(gamma, d), [np.inf]))
     wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
-    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, test_result_tiny)
+    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, "piecewiseLinearConstant2D", test_result_tiny)
 
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
@@ -58,7 +58,7 @@ def Main(outfile):
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     d = 36
-    spde_model = PiecewiseConstantDiffusionFEMModelML2D_small(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
+    spde_model = PiecewiseConstantDiffusionFEMModelML2D_large(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
 
     test_result_large = outfile + '_2D_large', None
     v = np.hstack((np.repeat(gamma, d), [np.inf]))
