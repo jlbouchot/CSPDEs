@@ -103,27 +103,51 @@ class Omega35(SubDomain):
 		
 class Omega40(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 5.0/6.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
 
 class Omega41(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 5.0/6.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
 
 class Omega42(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 5.0/6.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
 		
 class Omega43(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 5.0/6.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
 		
 class Omega44(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 5.0/6.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
 
 class Omega45(SubDomain):
     def inside(self, x, on_boundary):
-        return True if x[0] >= 4.0/6.0 and x[0] <= 1.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
+        return True if x[0] >= 4.0/6.0 and x[0] <= 5.0/6.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
+		
+class Omega50(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 5.0/6.0 and x[0] <= 1.0 and x[1] >= 0 and x[1] <= 1.0/6.0 else False
+
+class Omega51(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 5.0/6.0 and x[0] <= 1.0 and x[1] >= 1.0/6.0 and x[1] <= 2.0/6.0 else False
+
+class Omega52(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 5.0/6.0 and x[0] <= 1.0 and x[1] >= 2.0/6.0 and x[1] <= 3.0/6.0 else False
+		
+class Omega53(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 5.0/6.0 and x[0] <= 1.0 and x[1] >= 3.0/6.0 and x[1] <= 4.0/6.0 else False
+		
+class Omega54(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 5.0/6.0 and x[0] <= 1.0 and x[1] >= 4.0/6.0 and x[1] <= 5.0/6.0 else False
+
+class Omega55(SubDomain):
+    def inside(self, x, on_boundary):
+        return True if x[0] >= 5.0/6.0 and x[0] <= 1.0 and x[1] >= 5.0/6.0 and x[1] <= 1.0 else False
 
 tol = 1E-14   # tolerance for coordinate comparisons
 class Left(SubDomain):
