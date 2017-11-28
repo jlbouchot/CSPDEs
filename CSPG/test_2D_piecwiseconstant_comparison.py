@@ -25,27 +25,27 @@ def Main(outfile):
     dat_constant = 8
     gamma = 1.1 # Used for the uniform weights
 
-    # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    d = 9
-    spde_model = PiecewiseConstantDiffusionFEMModelML2D_tiny(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
-
-    test_result_tiny = outfile + '_2D_tiny', None
-    print(test_result_tiny)
-    v = np.hstack((np.repeat(gamma, d), [np.inf]))
-    wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
-                                    WR.cs_pragmatic_m, WR.check_cs)
-    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, "piecewiseLinearConstant2D", *test_result_tiny)
-
-
-    # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    d = 16
-    spde_model = PiecewiseConstantDiffusionFEMModelML2D_small(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
-
-    test_result_small = outfile + '_2D_small', None
-    v = np.hstack((np.repeat(gamma, d), [np.inf]))
-    wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
-                                    WR.cs_pragmatic_m, WR.check_cs)
-    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, "piecewiseLinearConstant2D", *test_result_small)
+#    # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
+#    d = 9
+#    spde_model = PiecewiseConstantDiffusionFEMModelML2D_tiny(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
+#
+#    test_result_tiny = outfile + '_2D_tiny', None
+#    print(test_result_tiny)
+#    v = np.hstack((np.repeat(gamma, d), [np.inf]))
+#    wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
+#                                    WR.cs_pragmatic_m, WR.check_cs)
+#    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, "piecewiseLinearConstant2D", *test_result_tiny)
+#
+#
+#    # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
+#    d = 16
+#    spde_model = PiecewiseConstantDiffusionFEMModelML2D_small(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
+#
+#    test_result_small = outfile + '_2D_small', None
+#    v = np.hstack((np.repeat(gamma, d), [np.inf]))
+#    wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
+#                                    WR.cs_pragmatic_m, WR.check_cs)
+#    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, "piecewiseLinearConstant2D", *test_result_small)
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     d = 25
