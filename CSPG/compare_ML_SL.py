@@ -13,10 +13,10 @@ abar = 4.3
 algos = ['whtp']
 dimensions = [15]
 L = 1
-dat_cs = range(5,40)
+dat_cs = range(4,15)
 
 # n0s = [20,25,30,40,50,70,100] # A reasonably coarse / fine grid
-n0s = [200,250,300,400,500,700,1000] # A reasonably coarse / fine grid
+n0s = [250,350,500,700,1000] # A reasonably coarse / fine grid
 
 for recovery in algos:
     print("\n \t***** Let's start with {} as a recovery algorithm *****".format(recovery))
