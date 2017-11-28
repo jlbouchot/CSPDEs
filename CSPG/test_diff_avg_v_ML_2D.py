@@ -74,7 +74,7 @@ def Main(outfile = "testCosineCoefDiff2D", d = 5, grid_points = tuple([200, 200]
 
 
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, None, *test_result)
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-(s-1)))
 
