@@ -21,7 +21,7 @@ def Main(outfile):
     nb_iter = 50
     epsilon     = 1e-8
     L = 3	
-    num_tests = 20
+    num_tests = None
     dat_constant = 8
     gamma = 1.1 # Used for the uniform weights
 
@@ -30,10 +30,11 @@ def Main(outfile):
     spde_model = PiecewiseConstantDiffusionFEMModelML2D_tiny(abar, ConstantCoefficient(1.0), variability, grid_points, Average())
 
     test_result_tiny = outfile + '_2D_tiny', None
+    print(test_result_tiny)
     v = np.hstack((np.repeat(gamma, d), [np.inf]))
     wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
-    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, "piecewiseLinearConstant2D", test_result_tiny)
+    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, "piecewiseLinearConstant2D", *test_result_tiny)
 
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
@@ -44,7 +45,7 @@ def Main(outfile):
     v = np.hstack((np.repeat(gamma, d), [np.inf]))
     wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
-    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, test_result_small)
+    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, *test_result_small)
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     d = 25
@@ -54,7 +55,7 @@ def Main(outfile):
     v = np.hstack((np.repeat(gamma, d), [np.inf]))
     wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
-    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, test_result)
+    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, *test_result)
 
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     d = 36
@@ -64,7 +65,7 @@ def Main(outfile):
     v = np.hstack((np.repeat(gamma, d), [np.inf]))
     wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
                                     WR.cs_pragmatic_m, WR.check_cs)
-    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, test_result_large)
+    test(spde_model, wr_model, nb_iter, epsilon, L, [CrossCheck(num_tests)], dat_constant, *test_result_large)
 
             
 
