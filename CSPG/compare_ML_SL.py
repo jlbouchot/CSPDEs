@@ -31,7 +31,7 @@ for recovery in algos:
 
 
 n0s = [5,10,15,20,25,30,40,50,60,70,80,100,150,200]
-dat_cs = range(4,20)
+dat_cs = range(4,15)
 L = 2
 for recovery in algos:
     print("\n \t***** Let's start with {} as a recovery algorithm *****".format(recovery))
