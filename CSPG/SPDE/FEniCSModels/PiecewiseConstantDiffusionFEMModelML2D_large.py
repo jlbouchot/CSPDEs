@@ -199,7 +199,7 @@ class PiecewiseConstantDiffusionFEMModelML2D_large(FEMModel):
             self.init_simple_mesh()
 
         # Create the d subdomains
-        subdomains = MeshFunction('size_t', self.mesh, 2) # The last argument corresponds to the dimension of the cells: here, intervals, dim 1. 
+        subdomains = MeshFunction('size_t', self.mesh, 2) # The last argument corresponds to the dimension of the cells: here, triangles, dim 2. 
         subdomains.set_all(0) ### IMPORTANT! This is not a GOOD way to deal with it. But I have no clue how to solve the problem. It appears that the 'meshes' at the boundaries between two partitions are marked with random numbers
         subdomain0 = Omega00()
         subdomain0.mark(subdomains, 0)
@@ -282,8 +282,15 @@ class PiecewiseConstantDiffusionFEMModelML2D_large(FEMModel):
         # params = self.split_params(self.a + [self.f], z)
         k_values = z*self.var+self.abar
         # Affect the appropriate local diffusion value:
-        help = np.asarray(subdomains.array(), dtype=np.int32)
-        k.vector()[:] = np.choose(help, k_values)		
+        # help = np.asarray(subdomains.array(), dtype=np.int32)
+        # print(help)
+        # print(k_values)
+        # k.vector()[:] = np.choose(help, k_values)
+
+        ## Had to find another way of doing this since the choose() function wouldn't allow for more than 32 pieces. 
+        for cell_no in range(len(subdomains.array())):
+            subdomain_no = subdomains.array()[cell_no]
+            k.vector()[cell_no] = k_values[subdomain_no]		
 
         # Now we can keep going with the usual FEniCS process.
 
