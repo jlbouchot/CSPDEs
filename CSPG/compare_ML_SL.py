@@ -31,7 +31,7 @@ for recovery in algos:
 
 
 n0s = [5,10,15,20,25,30,40,50,60,70,80,100,150,200]
-dat_cs = range(4,15)
+dat_cs = range(8,15)
 L = 2
 for recovery in algos:
     print("\n \t***** Let's start with {} as a recovery algorithm *****".format(recovery))
@@ -44,14 +44,14 @@ for recovery in algos:
                 # 
                 DIFF_2D(outputFile, oneD, tuple([n0, n0]), L, recovery, uniform_weights, L, sampling_name, nb_iter, epsilon, nb_tests, alpha, abar, dat_constant)
 
-L = 3
-for recovery in algos:
-    print("\n \t***** Let's start with {} as a recovery algorithm *****".format(recovery))
-    for oneD in dimensions:
-        print("\n\t\t***** We'll be working in {} dimensions".format(oneD))
-        for n0 in n0s:
-            for dat_constant in dat_cs:
-                # Generate meaningful output file name
-                outputFile = '_'.join(['diffusion', 'cosines', '2D', 'd', str(oneD), 'n0', str(n0), 'c', str(dat_constant), 'v', str(uniform_weights), 'L', str(L), recovery])
-                # 
-                DIFF_2D(outputFile, oneD, tuple([n0, n0]), L, recovery, uniform_weights, L, sampling_name, nb_iter, epsilon, nb_tests, alpha, abar, dat_constant)
+#L = 3
+#for recovery in algos:
+#    print("\n \t***** Let's start with {} as a recovery algorithm *****".format(recovery))
+#    for oneD in dimensions:
+#        print("\n\t\t***** We'll be working in {} dimensions".format(oneD))
+#        for n0 in n0s:
+#            for dat_constant in dat_cs:
+#                # Generate meaningful output file name
+#                outputFile = '_'.join(['diffusion', 'cosines', '2D', 'd', str(oneD), 'n0', str(n0), 'c', str(dat_constant), 'v', str(uniform_weights), 'L', str(L), recovery])
+#                # 
+#                DIFF_2D(outputFile, oneD, tuple([n0, n0]), L, recovery, uniform_weights, L, sampling_name, nb_iter, epsilon, nb_tests, alpha, abar, dat_constant)
