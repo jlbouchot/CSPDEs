@@ -13,7 +13,7 @@ abar = 4.3
 algos = ['whtp']
 dimensions = [15]
 L = 1
-dat_cs = range(4,15)
+dat_cs = range(1,5)
 
 # n0s = [20,25,30,40,50,70,100] # A reasonably coarse / fine grid
 #n0s = [250,350] #,500,700,1000] # A reasonably coarse / fine grid
@@ -30,7 +30,7 @@ dat_cs = range(4,15)
 #                DIFF_2D(outputFile, oneD, tuple([n0, n0]), L, recovery, uniform_weights, L, sampling_name, nb_iter, epsilon, nb_tests, alpha, abar, dat_constant)
 #
 #
-n0s = [150,200]
+n0s = [20,25,30,40,50,70,100,150,200]
 dat_cs = range(4,15)
 #L = 2
 #for recovery in algos:
