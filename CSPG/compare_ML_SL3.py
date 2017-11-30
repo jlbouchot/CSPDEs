@@ -30,7 +30,7 @@ dat_cs = range(4,15)
 #                DIFF_2D(outputFile, oneD, tuple([n0, n0]), L, recovery, uniform_weights, L, sampling_name, nb_iter, epsilon, nb_tests, alpha, abar, dat_constant)
 #
 #
-n0s = [5,10,15,20,25,30,40,50,60,70,80,100,150,200]
+n0s = [150,200]
 dat_cs = range(4,15)
 #L = 2
 #for recovery in algos:
