@@ -44,8 +44,6 @@ class PartitionUnityConstantCoefficient:
     def __call__(self, x, z):
 
         def local_variation(k, x):
-            print x[0]
-            print self.parts[k]
             return conditional(le(ufl.geometry.evaluate(x), self.parts[k]), self.coefs[k], local_variation(k+1,x))
             # if x <= self.parts[k]:
             #     return self.coefs[k]

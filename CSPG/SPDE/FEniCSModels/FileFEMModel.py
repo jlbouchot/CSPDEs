@@ -1,4 +1,4 @@
-from FEMModel import *
+from .FEMModel import *
 parameters["refinement_algorithm"] = "plaza_with_parent_facets" # Bug fix for dolfin 1.5
 
 import os

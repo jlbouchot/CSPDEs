@@ -17,7 +17,7 @@ __lastmodified__ = "2015/09/21"
 import cvxpy as cvx
 
 from WR import eps
-from Result import *
+from .Result import *
 
 
 def exact_wbp_cvx(Operator, y, w, s, eta, maxiter):

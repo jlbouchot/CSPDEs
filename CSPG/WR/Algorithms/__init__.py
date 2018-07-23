@@ -18,11 +18,11 @@ __all__ = [
     'womp',
 ]
 
-from exact_wbp_cvx import *
-from qc_wbp_cvx import *
-from Qc_wbp_precond_primaldual import *
-from wiht import *
-from whtp import *
-from wcosamp import *
-from womp import *
+from .exact_wbp_cvx import *
+from .qc_wbp_cvx import *
+from .Qc_wbp_precond_primaldual import *
+from .wiht import *
+from .whtp import *
+from .wcosamp import *
+from .womp import *
 

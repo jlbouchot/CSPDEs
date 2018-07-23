@@ -1,5 +1,5 @@
 from dolfin import *
-from FEMModel import *
+from .FEMModel import *
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
@@ -22,7 +22,14 @@ class DiffusionFEMModelML(FEMModel):
 
     def solve(self, z):
         # Make FEniCS output only the most important messages
-        set_log_level(WARNING)
+        CRITICAL  = 50 #, // errors that may lead to data corruption and suchlike
+        ERROR     = 40 #, // things that go boom
+        WARNING   = 30 #, // things that may go boom later
+        INFO      = 20 #, // information of general interest
+        PROGRESS  = 16 #, // what's happening (broadly)
+        TRACE     = 13 #, // what's happening (in detail)
+        DBG       = 10#   // sundry
+        set_log_level(ERROR)
 
         # Create mesh if there is none
         if not hasattr(self, 'mesh'):
@@ -50,9 +57,9 @@ class DiffusionFEMModelML(FEMModel):
 
         # Create solver
         problem     = LinearVariationalProblem(A, L, u, bc)
-	self.solver = LinearVariationalSolver(problem) #, solver_parameters={'linear_solver': 'iterative'})
+        self.solver = LinearVariationalSolver(problem) #, solver_parameters={'linear_solver': 'iterative'})
         self.solver.parameters["linear_solver"] ="iterative"
-	# y[k] = assemble(myAverage(mesh, u, dx))
+        # y[k] = assemble(myAverage(mesh, u, dx))
 
         # Compute solution
         self.solver.solve()

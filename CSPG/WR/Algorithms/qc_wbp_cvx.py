@@ -15,7 +15,7 @@ __lastmodified__ = "2015/09/21"
 # import cvxopt as cvx
 import cvxpy as cvx
 
-from Result import *
+from .Result import *
 
 
 def qc_wbp_cvx(Operator, y, w, s, eta, maxiter):

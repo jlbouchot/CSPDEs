@@ -1,7 +1,7 @@
 import numpy as np
 
 from WR import eps
-from Result import Result
+from .Result import Result
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"

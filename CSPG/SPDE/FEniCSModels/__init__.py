@@ -43,40 +43,48 @@ __all__ = [
     'CosineCoef3D'
 ]
 
+CRITICAL  = 50 #, // errors that may lead to data corruption and suchlike
+ERROR     = 40 #, // things that go boom
+WARNING   = 30 #, // things that may go boom later
+INFO      = 20 #, // information of general interest
+PROGRESS  = 16 #, // what's happening (broadly)
+TRACE     = 13 #, // what's happening (in detail)
+DBG       = 10#   // sundry
+
 # Functionals
-from Average import *
-from Absolute import *
-from AbsSquared import *
-from Integration import *
-from Exponential1D import *
-from ExponentialUnnormalized import *
+from .Average import *
+from .Absolute import *
+from .AbsSquared import *
+from .Integration import *
+from .Exponential1D import *
+from .ExponentialUnnormalized import *
 
 # Models
-from ConvectionDiffusionFEMModel import *
-from DiffusionFEMModel import *
-from FinFEMModel import *
-from HelmholtzFEMModel import *
+from .ConvectionDiffusionFEMModel import *
+from .DiffusionFEMModel import *
+from .FinFEMModel import *
+from .HelmholtzFEMModel import *
 
 # ML Models
-from DiffusionFEMModelML import *
+from .DiffusionFEMModelML import *
 # from UncertainBoundariesDiffusionFEMML import *
-from PiecewiseConstantDiffusionFEMModelML import *
-from SmallPiecewiseConstantDiffusionFEMModelML import *
-from Dim5PiecewiseConstantDiffusionFEMModelML import *
-from PiecewiseConstantDiffusionFEMModelML2D import *
-from PiecewiseConstantDiffusionFEMModelML2D_small import *
-from PiecewiseConstantDiffusionFEMModelML2D_large import *
-from PiecewiseConstantDiffusionFEMModelML2D_tiny import *
+from .PiecewiseConstantDiffusionFEMModelML import *
+from .SmallPiecewiseConstantDiffusionFEMModelML import *
+from .Dim5PiecewiseConstantDiffusionFEMModelML import *
+from .PiecewiseConstantDiffusionFEMModelML2D import *
+from .PiecewiseConstantDiffusionFEMModelML2D_small import *
+from .PiecewiseConstantDiffusionFEMModelML2D_large import *
+from .PiecewiseConstantDiffusionFEMModelML2D_tiny import *
 
 # Coefficients
-from ConstantCoefficient import *
-from RotatingCoefficient import *
-from LinearCoefficient import *
-from PiecewiseConstantCoefficient import *
+from .ConstantCoefficient import *
+from .RotatingCoefficient import *
+from .LinearCoefficient import *
+from .PiecewiseConstantCoefficient import *
 # from BoundaryPiecewiseConstant import *
-from Exponential2DCoefficient import *
-from TrigCoefficient import *
-from CosineCoef1D import *
-from CosineCoef2D import *
-from CosineCoef3D import *
-from PartitionUnityConstantCoefficient import *
+from .Exponential2DCoefficient import *
+from .TrigCoefficient import *
+from .CosineCoef1D import *
+from .CosineCoef2D import *
+from .CosineCoef3D import *
+from .PartitionUnityConstantCoefficient import *

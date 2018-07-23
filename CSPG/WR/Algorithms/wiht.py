@@ -1,8 +1,8 @@
 import numpy as np
 
 from WR import eps
-from Result import *
-from weighted_quasi_abslargest import *
+from .Result import *
+from .weighted_quasi_abslargest import *
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"

@@ -1,5 +1,5 @@
 import numpy as np
-import Algorithms
+import WR.Algorithms as Algorithms
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"

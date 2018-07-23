@@ -13,4 +13,4 @@ __all__ = [
     'SPDEModel'
 ]
 
-from SPDEModel import *
+from .SPDEModel import *

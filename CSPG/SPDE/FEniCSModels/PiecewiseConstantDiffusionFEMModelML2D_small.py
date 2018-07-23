@@ -1,5 +1,5 @@
 from dolfin import *
-from FEMModel import *
+from .FEMModel import *
 import numpy as np
 
 # Still have to find the way to 
@@ -194,8 +194,8 @@ class PiecewiseConstantDiffusionFEMModelML2D_small(FEMModel):
 
         # Create solver
         problem     = LinearVariationalProblem(A, L, u, bc)
-	self.solver = LinearVariationalSolver(problem)
-	# y[k] = assemble(myAverage(mesh, u, dx))
+        self.solver = LinearVariationalSolver(problem)
+        # y[k] = assemble(myAverage(mesh, u, dx))
 
         # Compute solution
         self.solver.solve()

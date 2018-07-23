@@ -1,7 +1,7 @@
 import numpy as np
 
-from Result     import *
-from primaldual import *
+from .Result     import *
+from .primaldual import *
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
@@ -54,7 +54,7 @@ class Qc_wbp_precond_primaldual:
         # sigma = 1./np.array([np.sum(np.abs(Operator.apply(np.eye(Operator.n, 1, -k))))     for k in range(Operator.n)])
         # tau   = 1./np.array([np.sum(np.abs(Operator.apply_adj(np.eye(Operator.m, 1, -l)))) for l in range(Operator.m)])
 
-        print "Done computing preconditioning matrices, now actually solving ..."
+        print("Done computing preconditioning matrices, now actually solving ...")
         r = primaldual(Operator, P_Fstar, P_G, self.theta, sigma, tau, E, self.eta_pd, self.maxiter)
 
         return Result(r.x, r.iterations, 'Preconditioned Quadratically Constrained ' + r.methodname)

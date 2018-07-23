@@ -1,5 +1,5 @@
 from dolfin import *
-from .FEMModel import *
+from FEMModel import *
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
@@ -9,20 +9,20 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2017/10/25"
 
-class DiffusionFEMModel(FEMModel):
-    def __init__(self, a, f, M_gen, mesh_size):
+class HeatDiffusionFEMModelML(TimeFEMModel):
+    def __init__(self, a, source, M_gen, mesh_size):
         self.a         = a
-        self.f         = f
+        self.source    = source
+        self.tmin      = T_min
         self.M_gen     = M_gen
 
         self.mesh_size = mesh_size
         self.init_simple_mesh()
 
-    def solve(self, z):
+    def solve(self, z, u_n):
         # Make FEniCS output only the most important messages
-        WARNING = 20
         set_log_level(WARNING)
 
         # Create mesh if there is none
@@ -30,7 +30,7 @@ class DiffusionFEMModel(FEMModel):
             self.init_simple_mesh()
 
         # Create approximation space
-        V = FunctionSpace(self.mesh, 'Lagrange', degree=2)
+        V = FunctionSpace(self.mesh, 'Lagrange', 1)
 
         # Define boundary conditions
         bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
@@ -50,10 +50,10 @@ class DiffusionFEMModel(FEMModel):
         self.M = self.M_gen(self, u, dx)
 
         # Create solver
-        # problem     = LinearVariationalProblem(A, L, u, bc, "gmres", "ilu")
-        problem     = LinearVariationalProblem(A, L, u, bc, solver_parameters={'linear_solver':'mumps'})
-        self.solver = LinearVariationalSolver(problem)
-        # y[k] = assemble(myAverage(mesh, u, dx))
+        problem     = LinearVariationalProblem(A, L, u, bc)
+	self.solver = LinearVariationalSolver(problem) #, solver_parameters={'linear_solver': 'iterative'})
+        self.solver.parameters["linear_solver"] ="iterative"
+	# y[k] = assemble(myAverage(mesh, u, dx))
 
         # Compute solution
         self.solver.solve()

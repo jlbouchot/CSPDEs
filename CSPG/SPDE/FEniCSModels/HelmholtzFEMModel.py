@@ -1,5 +1,5 @@
 from dolfin import *
-from FileFEMModel import *
+from .FileFEMModel import *
 
 
 class HelmholtzFEMModel(FileFEMModel):

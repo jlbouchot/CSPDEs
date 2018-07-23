@@ -26,7 +26,7 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 
 def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None, sampling_fname = None, datamtx_fname = None): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
 	lvl_by_lvl_result = []
-	for oneLvl in xrange(0,L):
+	for oneLvl in range(0,L):
 		# sl = 10+np.max([2**(L-oneLvl),1])
 
 		sl = np.floor(dat_constant*2**(L-oneLvl))
@@ -110,7 +110,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 			else: 
 				A = wr_model.operator.create(J_s, Z)
 				np.save(mtx_file, A.A)
-	                t_stop = time.time()
+			t_stop = time.time()
 			t_matrix = t_stop-t_start
 		
 		print("   Computing weights ...")

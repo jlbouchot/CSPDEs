@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.special import lpmn
 
-from operator_from_matrix import *
-from LD_bounded_operator  import LD_bounded_operator
+from .operator_from_matrix import *
+from .LD_bounded_operator  import LD_bounded_operator
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"

@@ -13,5 +13,5 @@ __all__ = [
     'Polynomial',
 ]
 
-from Constant   import *
-from Polynomial import *
+from .Constant   import *
+from .Polynomial import *

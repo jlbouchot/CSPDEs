@@ -14,6 +14,6 @@ __all__ = [
     'Legendre'
 ]
 
-from Chebyshev import *
-from Cos import *
-from Legendre import *
+from .Chebyshev import *
+from .Cos import *
+from .Legendre import *
