@@ -50,6 +50,7 @@ class FEMModel(SPDEModel):
     def sample(self, z):
         u = self.solve(z)
         # Return functional value for solution
+        # print assemble(self.M)
         return assemble(self.M)
         # return self.solver.evaluate_goal(Form(self.M), u)
 

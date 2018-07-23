@@ -41,18 +41,7 @@ def get_sampling_type(sampling_name):
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
 def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, dat_constant = 10):
 
-    
-    # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
-        # epsilon = 50 # This will be rescaled later
-    # elif algo_name == 'wiht':
-	    # epsilon = 1e-4 
-    # elif algo_name == 'womp':
-	    # epsilon = 1e-4 
-    # elif algo_name == 'bpdn':
-	    # epsilon = 1e-4 
-    # else: 
-        # epsilon = 50 # This will be rescaled later
-		
+    		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(CosineCoef1D(d, alpha, abar), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
@@ -74,7 +63,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
         num_tests = nb_tests # change from 10 for Quinoa tests
 
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, "", *test_result)
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-(s-1)))
 
