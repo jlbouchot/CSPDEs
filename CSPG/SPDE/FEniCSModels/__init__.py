@@ -43,14 +43,6 @@ __all__ = [
     'CosineCoef3D'
 ]
 
-CRITICAL  = 50 #, // errors that may lead to data corruption and suchlike
-ERROR     = 40 #, // things that go boom
-WARNING   = 30 #, // things that may go boom later
-INFO      = 20 #, // information of general interest
-PROGRESS  = 16 #, // what's happening (broadly)
-TRACE     = 13 #, // what's happening (in detail)
-DBG       = 10#   // sundry
-
 # Functionals
 from .Average import *
 from .Absolute import *
