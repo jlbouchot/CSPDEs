@@ -16,7 +16,7 @@ About this project
 ==================
 
 This project stems from the collaboration between 
-* Dr. Jean-Luc Bouchot, Chair C for Mathematics (Analysis), RWTH Aachen ( bouchot@mathc.rwth-aachen.de )
+* Dr. Jean-Luc Bouchot, School of Mathematics and Statistics, Beijing Institute of Technology ( jlbouchot@bit.edu.cn )
 * Benjamin Bykowski, RWTH Aachen
 * Prof. Holger Rauhut, Chair C for Mathematics (Analysis), RWTH Aachen
 * Prof. Christoph Schwab, Seminar for Applied Mathematics, ETH Zurich
@@ -53,6 +53,9 @@ Master's Thesis, Chair C for Mathematics, RWTH Aachen, July 2015. ([Thesis](./Pa
 "Multi-level Compressed Sensing Petrov-Galerkin discretization of high-dimensional parametric PDEs"
 Submitted Jan. 2017, ([Preprint](http://www.mathc.rwth-aachen.de/~rauhut/files/MLCSPG.pdf))
 
+* J.-L. Bouchot
+"Weighted block compressed sensing for parametrized function approximation"
+Submitted Nov. 2018, ([Preprint](https://arxiv.org/abs/1811.04598))
 
 License
 =======
