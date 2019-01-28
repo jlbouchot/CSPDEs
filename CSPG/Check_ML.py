@@ -4,14 +4,14 @@ import time
 import shelve
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
+__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@bit.edu.cn"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2019/01/28"
 
 from collections import namedtuple
 
@@ -42,7 +42,7 @@ def test(spde_model, wr_model, nb_iter, epsilon, L, checks = None, dat_constant 
     ## Execute checks
     if not checks is None:
         print("   Executing checks ... ")
-        map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)
+        list(map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)) # the "list(...)" is required due to the new Python 3.x updates
 
     ## Compute (L_2 estimation of) true Cheb coefs. 
 
@@ -61,6 +61,7 @@ class CrossCheck:
 
             if y_truth is None:
                 # Compute truth values of functional at new samples
+                print("Computing true solutions")
                 y_truth = spde_model.samples(Z_cross, 3) # consider a three times finer grid 
 
             # Compute reconstructed values

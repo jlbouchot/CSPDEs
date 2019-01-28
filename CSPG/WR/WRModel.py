@@ -25,7 +25,7 @@ class WRModel:
         # The Z_cross contains max_{for 0 \leq l \leq L-1} {cspde_result[l-1].d} dimensions!
         y_recon = np.zeros(len(Z_cross))
 
-        for oneLevel in xrange(0,nbLevel):
+        for oneLevel in range(0,nbLevel):
             F_recon = self.operator.create(np.array(cspde_result[oneLevel].J_s)[cspde_result[oneLevel].result.x != 0], Z_cross[:,:cspde_result[oneLevel].d], normalization=np.sqrt(cspde_result[oneLevel].m))
             y_recon = y_recon+F_recon.apply(cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0])
             #print cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0]
