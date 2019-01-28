@@ -5,8 +5,8 @@ from iterative_solution import compute_true_avg_alternate as ctaa
 from multivariate_chebpoly import multi_var_chebpoly as mvc
 from multivariate_chebpoly import vectorized_mvc as vmvc
 
-from sobol_lib import i4_sobol # for QMC points
-import mcint # for automated MC method
+# from sobol_lib import i4_sobol # for QMC points
+# import mcint # for automated MC method
 
 import numpy as np
 import math
