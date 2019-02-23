@@ -16,14 +16,14 @@ import argparse
 
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
-__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Christoph Schwab"]
+__copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2019/02/22"
 
 
 def get_sampling_type(sampling_name):
@@ -39,16 +39,8 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", c = 1.03, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10):
-# we deal here with polynomial weights v_j = c . j^alpha
-    
-    # epsilon = 1e-4
-    # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
-        # epsilon = 1e-6 # We can go a little further than with usual optimization
-    # elif algo_name == 'wiht':
-	    # epsilon = 1e-6 
-    # elif algo_name == 'womp':
-	    # epsilon = 1e-6 
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", c = 1.03, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10, experiment_name = "avg_p_1D", tensor_based=True):
+
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(TrigCoefficient(d, alpha_trig, abar), ConstantCoefficient(10.0),
@@ -62,10 +54,17 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
         ### Reconstruction Model
         # v = np.hstack((np.repeat(c, 2*d), [np.inf]))
         v = np.hstack((c*np.power([val+1 for val in range(d) for dummy_variable in (0,1)], alpha), [np.inf]))
-        wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
+
+        if tensor_based: 
+            wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
                                 get_sampling_type(sampling_name), WR.check_cs)
-        #wr_model   = WR.WRModel(WR.Algorithms.whtp, WR.Operators.Chebyshev, v,
-        #                        WR.cs_pragmatic_m, WR.check_cs) # or cs_theoretic_m
+            prefix_npy = experiment_name + "Tensor_h"
+        else: # The basic way.
+            wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
+                                get_sampling_type(sampling_name), WR.check_cs)
+            prefix_npy = experiment_name + "Classic_h"
+
+
 
 		## Number of tests
         num_tests = nb_tests 
@@ -73,7 +72,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-s))
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, prefix_npy + str(grid_points[0]) + "_", *test_result)
 
 
 ### Main
@@ -95,9 +94,10 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
     parser.add_argument("-b", "--abar", help="Value of the mean field", default=4.3, required=False)
     parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
-
+    parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="", required=False)
+    parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default=True, required=False)
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true")
     # Main(sys.argv[1])
