@@ -2,14 +2,14 @@ import numpy as np
 import WR.Algorithms as Algorithms
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
-__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Christoph Schwab"]
+__copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2019/02/22"
 
 class WRModel:
     def __init__(self, method, operator, weights, m_from_s_N, check):
@@ -26,6 +26,7 @@ class WRModel:
         y_recon = np.zeros(len(Z_cross))
 
         for oneLevel in range(0,nbLevel):
+            # F_recon = self.operator.create(np.array(cspde_result[oneLevel].J_s)[cspde_result[oneLevel].result.x != 0], Z_cross[:,:cspde_result[oneLevel].d])
             F_recon = self.operator.create(np.array(cspde_result[oneLevel].J_s)[cspde_result[oneLevel].result.x != 0], Z_cross[:,:cspde_result[oneLevel].d], normalization=np.sqrt(cspde_result[oneLevel].m))
             y_recon = y_recon+F_recon.apply(cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0])
             #print cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0]

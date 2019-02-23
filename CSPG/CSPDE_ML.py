@@ -11,14 +11,14 @@ import os.path
 
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
-__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Christoph Schwab"]
+__copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2017/10/24"
+__lastmodified__ = "2019/02/22"
 
 from time import sleep
 
@@ -106,10 +106,12 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 			t_start = time.time()
 			mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
 			if os.path.isfile(mtx_file):
-				A = ofm(Chebyshev, np.load(mtx_file))
+				# A = ofm(Chebyshev, np.load(mtx_file))
+				A = wr_model.operator.load(mtx_file)
 			else: 
 				A = wr_model.operator.create(J_s, Z)
-				np.save(mtx_file, A.A)
+				A.save(mtx_file)
+				# np.save(mtx_file, A.A)
 			t_stop = time.time()
 			t_matrix = t_stop-t_start
 		
