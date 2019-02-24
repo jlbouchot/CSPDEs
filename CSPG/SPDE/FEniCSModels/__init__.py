@@ -40,7 +40,8 @@ __all__ = [
     'TrigCoefficient', 
     'CosineCoef1D',
     'CosineCoef2D',
-    'CosineCoef3D'
+    'CosineCoef3D', 
+    'WeightedCosine1D'
 ]
 
 # Functionals
@@ -80,3 +81,4 @@ from .CosineCoef1D import *
 from .CosineCoef2D import *
 from .CosineCoef3D import *
 from .PartitionUnityConstantCoefficient import *
+from .WeightedCosine1D import *
