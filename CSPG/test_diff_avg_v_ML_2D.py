@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/02/22"
+__lastmodified__ = "2019/02/24"
 
 
 def get_sampling_type(sampling_name):
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
     parser.add_argument("-a", "--abar", help="Value of the mean field", default=4.3, required=False)
     parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="", required=False)
-    parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default=True, required=False)
+    parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
     args = parser.parse_args()
 	
     
