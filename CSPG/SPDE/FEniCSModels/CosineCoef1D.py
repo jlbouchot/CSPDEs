@@ -9,7 +9,7 @@ __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Chris
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __lastmodified__ = "2017/10/25"
 
