@@ -1,5 +1,4 @@
 import scipy.integrate as spi
-from compare_true_coefs import get_computed_coefs as gcc
 from iterative_solution import compute_true_avg as cta
 from iterative_solution import compute_true_avg_alternate as ctaa
 from multivariate_chebpoly import multi_var_chebpoly as mvc
@@ -33,7 +32,8 @@ def coefs_dbltpl_wrapper(nu0,nu1,nu2,nu3,nu4,nu5): # Will work only for the 6 di
 def coefs_MC_wrapper(nb_samples, a_nu, with_cheb_weights = False, rhs = 1., variability = 1./6., abar = 5.): 
     domainsize = 1. # math.pow(2,6)
     np.random.seed(1)
-    result, error = mcint.integrate(lambda (x0, x1, x2, x3, x4, x5): integrand(x0,x1,x2,x3,x4,x5, a_nu[0],a_nu[1],a_nu[2],a_nu[3],a_nu[4],a_nu[5], with_cheb_weights, rhs, variability, abar), sampler(), measure=domainsize, n=nb_samples)
+    loc_integrand = lambda x0, x1, x2, x3, x4, x5: integrand(x0,x1,x2,x3,x4,x5, a_nu[0],a_nu[1],a_nu[2],a_nu[3],a_nu[4],a_nu[5], with_cheb_weights, rhs, variability, abar)
+    result, error = mcint.integrate(loc_integrand, sampler(), measure=domainsize, n=nb_samples)
     return result
 
 def coefs_QMCSobol_wrapper(nb_samples, a_nu): # note that a lot of calculations will be repeated by doing this. We need to be smarter!
@@ -113,6 +113,7 @@ def vectorized_MC_integration(tot_tests, a_nu, batch_size = 100000, rhs = 1., va
 
     # Since lists, nd_arrays are not hashable, we need to create a key (unique) for each nu... 
     hashable_nu = '{}'.format(a_nu)
+    print('******************* Current nu = ' + hashable_nu)
 
     ## This definitely needs to be done better! 
     if dump_fname is None:
@@ -139,7 +140,7 @@ def vectorized_MC_integration(tot_tests, a_nu, batch_size = 100000, rhs = 1., va
 
 
     for a_batch in batches:
-        print '\tCurrent number of test samples: {}'.format(a_batch) 
+        print('\tCurrent number of test samples: {}'.format(a_batch)) 
         if a_batch in dict_results[hashable_nu]: 
             # Don't redo the calculation, and load the one already done:
             nb_tests = a_batch
