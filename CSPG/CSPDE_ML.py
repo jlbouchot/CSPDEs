@@ -130,6 +130,14 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 
 	
 	return lvl_by_lvl_result
 
+def J_variant(v):
+    max_degree = 2
+    print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
+    # Remember v contains the weights associated to the operators in the expansion. 
+    aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=len(v))]) # This creates a set of multi-indices with max norm max_degree
+    J = [one_multi_index for one_multi_index in aux if one_multi_index.sum() <= max_degree]
+    return J
+
 
 def J(s, theta, v):
     print("s = {0}, theta = {1}, v = {2}".format(s,theta,v))
