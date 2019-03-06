@@ -18,123 +18,149 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/02/22"
+__lastmodified__ = "2019/03/06"
 
 from time import sleep
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
 
-def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, cspde_result = None, sampling_fname = None, datamtx_fname = None): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
-	lvl_by_lvl_result = []
-	for oneLvl in range(0,L):
-		# sl = 10+np.max([2**(L-oneLvl),1])
+def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L=1, dat_constant = 10, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
+    """
+    Parameters
+    ----------
+    spde_model : SPDEModel 
+        an SPDEModel containing all the FEniCS models required for the computation
+    wr_model : WRModel 
+        an algorithm used for the recovery and containing the sampling matrix 
+    unscaledNbIter : int / float
+        an (absolute) number of iterations for the iterative recovrery algo 
+    epsilon : float 
+        a tolerance on the residual for the recovery algorithms 
+    L : int 
+        number of levels being studied -- Default = 1
+    dat_constant : int 
+        a very poorly chosen name to describe the proportionality constant in the number of samples -- Default = 10 
+    ansatz_space : int, >= 0 
+        Describes how the Ansatz space of polynomial is chosen. 0 is the one describe in the papers, while anything > 0 defines the total degree Ansatz space -- Default = 0 
+    cspde_result = None --- This is reminiscent from an old version and should be deleted /!\ /!\ /!\
+    sampling_fname : string 
+        a string containing the filename to which the samples will be saved -- Default = None
+    datamtx_fname : string 
+        a file containing the precomputed sensing matrix -- Default = None
+    """
+    lvl_by_lvl_result = []
+    for oneLvl in range(0,L):
+        # sl = 10+np.max([2**(L-oneLvl),1])
 
-		sl = np.floor(dat_constant*2**(L-oneLvl))
-		print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl+1,L,sl))
-		## 1. Create index set and draw random samples
-		print("Generating J_s ...")
-	
-		# Compute "active index set" J_s
-		J_s = J(sl, wr_model.operator.theta, wr_model.weights)
+        sl = np.floor(dat_constant*2**(L-oneLvl))
+        print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl+1,L,sl))
+        ## 1. Create index set and draw random samples
+        print("Generating J_s ...")
+        
+        # Compute "active index set" J_s
+        if ansatz_space == 0: 
+            J_s = J(sl, wr_model.operator.theta, wr_model.weights)
+        else:
+            J_s = J_tot_degree(wr_model.weights, ansatz_space)
 
-		# Get total number of coefficients in tensorized chebyshev polynomial base
-		N = len(J_s)
-	
-		# Calculate number of samples
-		m = wr_model.get_m_from_s_N(sl, N)
-	
-		# Get sample dimension
-		d = len(J_s[0])
-	
-		# if not cspde_result is None:
-		#     assert d == cspde_result.d, "New sample space dimension is different from old sample space dimension."
-	
-		# Check whether this even an interesting case
-		print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
-		wr_model.check(N, m)
+        # Get total number of coefficients in tensorized chebyshev polynomial base
+        N = len(J_s)
 
-		if (sampling_fname is None) or (datamtx_fname is None):  
-			Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
-			print("\nComputing {0} SPDE sample approximations ...".format(m))
-			# Get samples
-			t_start = time.time()
-			if oneLvl != 0:
-				y_old = spde_model.samples(Z)
-				spde_model.refine_mesh()
-			else:
-				y_old = np.zeros(m)
-			y_new = spde_model.samples(Z)
-			t_stop = time.time()
-			t_samples = t_stop-t_start
-	
-			## 3. Solve compressed sensing problem
-			print("\nSolving compressed sensing problem ...")
-		
-			# Create sampling matrix and weights
-			print("   Creating sample operator ...")
-			t_start = time.time()
-			A = wr_model.operator.create(J_s, Z)
-			t_stop = time.time()
-			t_matrix = t_stop-t_start
+        # Calculate number of samples
+        m = wr_model.get_m_from_s_N(sl, N)
+        
+        # Get sample dimension
+        d = len(J_s[0])
+
+        # if not cspde_result is None:
+        #     assert d == cspde_result.d, "New sample space dimension is different from old sample space dimension."
+
+        # Check whether this even an interesting case
+        print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
+        wr_model.check(N, m)
+
+        if (sampling_fname is None) or (datamtx_fname is None):  
+            Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+            print("\nComputing {0} SPDE sample approximations ...".format(m))
+            # Get samples
+            t_start = time.time()
+            if oneLvl != 0:
+                y_old = spde_model.samples(Z)
+                spde_model.refine_mesh()
+            else:
+                y_old = np.zeros(m)
+            y_new = spde_model.samples(Z)
+            t_stop = time.time()
+            t_samples = t_stop-t_start
+
+            ## 3. Solve compressed sensing problem
+            print("\nSolving compressed sensing problem ...")
+
+            # Create sampling matrix and weights
+            print("   Creating sample operator ...")
+            t_start = time.time()
+            A = wr_model.operator.create(J_s, Z)
+            t_stop = time.time()
+            t_matrix = t_stop-t_start
 
 
-		else:
-			sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
-                        # sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy' ## Really HAVE to do this better one day!
-			if os.path.isfile(sampling_file):
-				Z = np.load(sampling_file)
-			else: 
-				Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
-				np.save(sampling_file, Z)
-			print("\nComputing {0} SPDE sample approximations ...".format(m))
-			# Get samples
-			t_start = time.time()
-			if oneLvl != 0:
-				y_old = spde_model.samples(Z)
-				spde_model.refine_mesh()
-			else:
-				y_old = np.zeros(m)
-			y_new = spde_model.samples(Z)
-			t_stop = time.time()
-			t_samples = t_stop-t_start
-	
-			## 3. Solve compressed sensing problem
-			print("\nSolving compressed sensing problem ...")
-		
-			# Create sampling matrix and weights
-			print("   Creating sample operator ...")
-			t_start = time.time()
-			mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
-			if os.path.isfile(mtx_file):
-				# A = ofm(Chebyshev, np.load(mtx_file))
-				A = wr_model.operator.load(mtx_file)
-			else: 
-				A = wr_model.operator.create(J_s, Z)
-				A.save(mtx_file)
-				# np.save(mtx_file, A.A)
-			t_stop = time.time()
-			t_matrix = t_stop-t_start
-		
-		print("   Computing weights ...")
-		w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
-	
-		print("   Weighted minimization ...")
-		t_start = time.time()
-		result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-		t_stop = time.time()
-		t_recovery = t_stop-t_start
-		# result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-		lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
-		print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples {2}\n".format(t_recovery, t_matrix, t_samples))
-	
-	
-	return lvl_by_lvl_result
+        else:
+            sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
+            # sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy' ## Really HAVE to do this better one day!
+            if os.path.isfile(sampling_file):
+                Z = np.load(sampling_file)
+            else: 
+                Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+                np.save(sampling_file, Z)
+            print("\nComputing {0} SPDE sample approximations ...".format(m))
+            # Get samples
+            t_start = time.time()
+            if oneLvl != 0:
+                y_old = spde_model.samples(Z)
+                spde_model.refine_mesh()
+            else:
+                y_old = np.zeros(m)
+            y_new = spde_model.samples(Z)
+            t_stop = time.time()
+            t_samples = t_stop-t_start
+    
+            ## 3. Solve compressed sensing problem
+            print("\nSolving compressed sensing problem ...")
+        
+            # Create sampling matrix and weights
+            print("   Creating sample operator ...")
+            t_start = time.time()
+            mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
+            if os.path.isfile(mtx_file):
+                # A = ofm(Chebyshev, np.load(mtx_file))
+                A = wr_model.operator.load(mtx_file)
+            else: 
+                A = wr_model.operator.create(J_s, Z)
+                A.save(mtx_file)
+                # np.save(mtx_file, A.A)
+            t_stop = time.time()
+            t_matrix = t_stop-t_start
+        
+        print("   Computing weights ...")
+        w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
+    
+        print("   Weighted minimization ...")
+        t_start = time.time()
+        result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+        t_stop = time.time()
+        t_recovery = t_stop-t_start
+        # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+        lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
+        print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples {2}\n".format(t_recovery, t_matrix, t_samples))
+    
+    
+    return lvl_by_lvl_result
 
-def J_variant(v):
-    max_degree = 2
+def J_tot_degree(v, max_degree = 2, threshold = np.inf):
     print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
     # Remember v contains the weights associated to the operators in the expansion. 
-    aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=len(v))]) # This creates a set of multi-indices with max norm max_degree
+    # We assume that above a certain weight, it can simply be discarded, the associated coefficient can be discarded. 
+    aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=len([v_i for v_i in v if v_i < threshold]))]) # This creates a set of multi-indices with max norm max_degree
     J = [one_multi_index for one_multi_index in aux if one_multi_index.sum() <= max_degree]
     return J
 
