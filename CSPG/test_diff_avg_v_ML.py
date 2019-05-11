@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/03/06"
+__lastmodified__ = "2019/05/10"
 
 
 def get_sampling_type(sampling_name):
@@ -41,6 +41,12 @@ def get_sampling_type(sampling_name):
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
 def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, dat_constant = 10, experiment_name = "avg_v_1D", tensor_based=True, ansatz_space = 0):
 
+# What needs to be done: 
+# * Delete the loop around the number of levels
+# * Compute the actual approximation width (by opposition to the virtual absolut discretization h_0)
+
+
+    grid_points = 2**(L_min-1)*grid_points
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(CosineCoef1D(d, alpha, abar), ConstantCoefficient(10.0),
@@ -49,26 +55,26 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
     test_result = outfile, None
     # test_result = '_'.join([algo_name, str(d), str(grid_points),outfile]), None
-    for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
+#     for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         ### Reconstruction Model
-        v = np.hstack((np.repeat(gamma, d), [np.inf]))
+    v = np.hstack((np.repeat(gamma, d), [np.inf]))
 
-        if tensor_based: 
-            wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
-                                get_sampling_type(sampling_name), WR.check_cs)
-            prefix_npy = experiment_name + "Tensor_h"
-        else: # The basic way.
-            wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
-                                get_sampling_type(sampling_name), WR.check_cs)
-            prefix_npy = experiment_name + "Classic_h"
+    if tensor_based: 
+        wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
+                            get_sampling_type(sampling_name), WR.check_cs)
+        prefix_npy = experiment_name + "Tensor_h"
+    else: # The basic way.
+        wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
+                            get_sampling_type(sampling_name), WR.check_cs)
+        prefix_npy = experiment_name + "Classic_h"
 
-		## Number of tests
-        num_tests = nb_tests 
+	## Number of tests
+    num_tests = nb_tests 
 
-		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
-		## Don't forget to reset the original mesh
-        spde_model.refine_mesh(2**(-(s-1)))
+    ### Execute test
+    test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
+    ## Don't forget to reset the original mesh
+    spde_model.refine_mesh(2**(-(L_max-1)))
 
 
 ### Main
@@ -83,7 +89,6 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
     parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
-    parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
     parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
@@ -92,6 +97,13 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="", required=False)
     parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
     parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
+    parser.add_argument("-s", "--l-start", help="How many levels (+1) will *NOT* be computed", default=1, required=False)
+    parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default="1", required=False)
+    parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default="1", required=False)
+    parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/3)", default="1/3", required=False)
+    parser.add_argument("--smooth_t", help="What kind of smoothness in the smooth space can be expected (Default is 2/3)", default="2/3", required=False)
+    parser.add_argument("--energy_p", help="What is the expected value for the weighted sum of the expansion (Default is 1)", default="1", required=False)
+    parser.add_argument("--energy_p0", help="What is the expected value for the weighted sum of the expansion (Default is 1)", default="1", required=False)
     args = parser.parse_args()
 	
     
