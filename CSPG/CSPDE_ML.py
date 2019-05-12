@@ -24,7 +24,7 @@ from time import sleep
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
 
-def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, dat_constant = 10, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None, t = 1, tprime = 1, p0 = 1./3., p = 2./3., ): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
+def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, dat_constant = 5, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None, t = 1, tprime = 1, p0 = 1./3., p = 2./3., energy_constant = 10): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
     """
     Parameters
     ----------
@@ -50,8 +50,9 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, da
     """
     # First set up some basic things needed for the rest of the computations
     lvl_by_lvl_result = [] # This will keep the results
-    energy_constant = 10 # This corresponds to the term in front of the expression of s_J dealing with all the unknown energies. 
-    s_L = 5 # This is basically the multiplicative constant in front of the sparsity at the finest level
+    print("This is the constant: {}, this is p: {}, and this is L {} and the first approximation level {}".format(dat_constant, p, L, L_first))
+    s_L = np.floor((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
+    print(s_L)
 
 
 # To be done:

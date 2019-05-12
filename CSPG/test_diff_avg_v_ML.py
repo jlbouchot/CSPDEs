@@ -39,7 +39,7 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, dat_constant = 10, experiment_name = "avg_v_1D", tensor_based=True, ansatz_space = 0):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, dat_constant = 10, experiment_name = "avg_v_1D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
 
 # What needs to be done: 
 # * Delete the loop around the number of levels
@@ -73,7 +73,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
     num_tests = nb_tests 
 
     ### Execute test
-    test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
+    test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
     ## Don't forget to reset the original mesh
     spde_model.refine_mesh(2**(-(L_max-1)))
 
@@ -94,19 +94,18 @@ if __name__ == "__main__":
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
     parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
     parser.add_argument("-a", "--abar", help="Value of the mean field", default=4.3, required=False)
-    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
+    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=5., required=False)
     parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="", required=False)
     parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
     parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
     parser.add_argument("-s", "--l-start", help="How many levels (+1) will *NOT* be computed", default=1, required=False)
     parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default="1", required=False)
     parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default="1", required=False)
-    parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/3)", default="1/3", required=False)
-    parser.add_argument("--smooth_t", help="What kind of smoothness in the smooth space can be expected (Default is 2/3)", default="2/3", required=False)
-    parser.add_argument("--energy_p", help="What is the expected value for the weighted sum of the expansion (Default is 1)", default="1", required=False)
-    parser.add_argument("--energy_p0", help="What is the expected value for the weighted sum of the expansion (Default is 1)", default="1", required=False)
+    parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/4)", default="0.25", required=False)
+    parser.add_argument("--smooth_t", help="What kind of smoothness in the smooth space can be expected (Default is 3/10)", default="0.3", required=False)
+    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 10)", default="10", required=False)
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space), float(args.t_0), float(args.t_prime), float(args.smooth_0), float(args.smooth_t), float(args.const_sJ))
     # Main(sys.argv[1])

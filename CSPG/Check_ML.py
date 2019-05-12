@@ -18,13 +18,13 @@ from collections import namedtuple
 from CSPDE_ML import CSPDE_ML
 
 TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'epsilon', 'L', 'cspde_result'])
-def test(spde_model, wr_model, nb_iter, epsilon, J, L, checks = None, dat_constant = 10, ansatz_space = 0, prefix_fname = None, filename = None, cspde_result = None):
+def test(spde_model, wr_model, nb_iter, epsilon, J, L, checks = None, dat_constant = 10, p = 2/3, p0 = 1/3, t = 1, tprime = 1, energy_constant = 10, ansatz_space = 0, prefix_fname = None, filename = None, cspde_result = None):
     ### Execute CSPDE algorithm
     sampling_fname = prefix_fname + 'sampling_points_Lmax' + str(L)
     datamtx_fname = prefix_fname + 'datamtx_Lmax' + str(L)
     
 
-    cspde_result = CSPDE_ML(spde_model, wr_model, nb_iter, epsilon, J, L, dat_constant, ansatz_space, cspde_result, sampling_fname, datamtx_fname)
+    cspde_result = CSPDE_ML(spde_model, wr_model, nb_iter, epsilon, J, L, dat_constant, ansatz_space, cspde_result, sampling_fname, datamtx_fname, t, tprime, p0, p, energy_constant)
 
     ### Output results and check
     print("\nPostprocessing and outputting solution ...")
