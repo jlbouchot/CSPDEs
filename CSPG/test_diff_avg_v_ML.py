@@ -46,7 +46,8 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
 # * Compute the actual approximation width (by opposition to the virtual absolut discretization h_0)
 
 
-    grid_points = 2**(L_min-1)*grid_points
+    # Adapt to the first approximating level (via a single level approach)
+    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(CosineCoef1D(d, alpha, abar), ConstantCoefficient(10.0),
