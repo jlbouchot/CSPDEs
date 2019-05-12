@@ -50,9 +50,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, da
     """
     # First set up some basic things needed for the rest of the computations
     lvl_by_lvl_result = [] # This will keep the results
-    print("This is the constant: {}, this is p: {}, and this is L {} and the first approximation level {}".format(dat_constant, p, L, L_first))
-    s_L = np.floor((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
-    print(s_L)
+    s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
 
 
 # To be done:
@@ -63,7 +61,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, da
 
 
     # Approximate the Jth level with a single level CSPG 
-    s_J = np.floor(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
+    s_J = np.ceil(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
     print("Computing level {0} (this is a Single Level approximation) from a total of {1}. Current sparsity = {2}".format(L_first,L,s_J))
     ## 1. Create index set and draw random samples
     print("Generating J_s ...")
@@ -109,7 +107,7 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, da
         # sl = 10+np.max([2**(L-oneLvl),1])
 
         # sl = np.floor(dat_constant*2**(L-oneLvl))
-        sl = np.floor(s_L*2**((L-oneLvl)*(t+tprime)*p/(1-p)))
+        sl = np.ceil(s_L*2**((L-oneLvl)*(t+tprime)*p/(1-p)))
         print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl,L,sl))
         ## 1. Create index set and draw random samples
         print("Generating J_s ...")
@@ -142,8 +140,8 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, da
 
         
         print("   Computing weights ...")
-        w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
-    
+        w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)    
+
         print("   Weighted minimization ...")
         t_start = time.time()
         result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...

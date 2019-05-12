@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/05/10"
+__lastmodified__ = "2019/05/12"
 
 
 def get_sampling_type(sampling_name):
@@ -90,11 +90,11 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
     parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
-    parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
+    parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="new", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
     parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
     parser.add_argument("-a", "--abar", help="Value of the mean field", default=4.3, required=False)
-    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=5., required=False)
+    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=15., required=False)
     parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="", required=False)
     parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
     parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default="1", required=False)
     parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/4)", default="0.25", required=False)
     parser.add_argument("--smooth_t", help="What kind of smoothness in the smooth space can be expected (Default is 3/10)", default="0.3", required=False)
-    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 10)", default="10", required=False)
+    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 10)", default="15", required=False)
     args = parser.parse_args()
 	
     
