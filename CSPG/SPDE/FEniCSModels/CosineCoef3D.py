@@ -9,9 +9,9 @@ __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Chris
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2017/10/16"
+__lastmodified__ = "2019/05/30"
 
 class CosineCoef3D:
     def __init__(self, d, alpha, imp = 1, c = None):

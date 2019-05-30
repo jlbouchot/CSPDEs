@@ -23,7 +23,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/03/06"
+__lastmodified__ = "2019/05/30"
 
 
 def get_sampling_type(sampling_name):
@@ -39,9 +39,11 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000,2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, imp = 1, w_cst = 0.5, dat_constant = 10, experiment_name = "weighted_cosine_avg_v_2D", tensor_based=True, ansatz_space = 0):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000,2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, imp = 1, w_cst = 0.5, dat_constant = 10, experiment_name = "weighted_cosine_avg_v_2D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
 
 
+    # Adapt to the first approximating level (via a single level approach)
+    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(WeightedCosine2D(d, alpha, imp, abar, w_cst), ConstantCoefficient(10.0),
@@ -67,7 +69,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000,2000]), L_max = 
         num_tests = nb_tests 
 
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
+        test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
 		## Don't forget to reset the original mesh
         spde_model.refine_mesh(2**(-(s-1)))
 
@@ -99,5 +101,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_y)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.fluctuation_importance), float(args.weight_cosine), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_y)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.fluctuation_importance), float(args.weight_cosine), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space), float(args.t_0), float(args.t_prime), float(args.smooth_0), float(args.smooth_t), float(args.const_sJ))
     # Main(sys.argv[1])
