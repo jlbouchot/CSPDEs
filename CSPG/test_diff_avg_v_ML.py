@@ -39,7 +39,7 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, dat_constant = 10, experiment_name = "avg_v_1D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, imp = 1, dat_constant = 10, experiment_name = "avg_v_1D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
 
 # What needs to be done: 
 # * Delete the loop around the number of levels
@@ -50,7 +50,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
     grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    spde_model = DiffusionFEMModelML(CosineCoef1D(d, alpha, abar), ConstantCoefficient(10.0),
+    spde_model = DiffusionFEMModelML(CosineCoef1D(d, alpha, imp, abar), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=15., required=False)
     parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="", required=False)
     parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
+    parser.add_argument("-i", "--fluctuation-importance", help="What is the importance of the fluctuations with respect to the mean field (default is 1)", default=1, required=False)
     parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
     parser.add_argument("-s", "--l-start", help="How many levels (+1) will *NOT* be computed", default=1, required=False)
     parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default="1", required=False)
@@ -107,5 +108,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space), float(args.t_0), float(args.t_prime), float(args.smooth_0), float(args.smooth_t), float(args.const_sJ))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.fluctuation_importance), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space), float(args.t_0), float(args.t_prime), float(args.smooth_0), float(args.smooth_t), float(args.const_sJ))
     # Main(sys.argv[1])

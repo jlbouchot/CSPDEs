@@ -14,7 +14,7 @@ __status__ = "Development"
 __lastmodified__ = "2017/10/16"
 
 class CosineCoef3D:
-    def __init__(self, d, alpha, c = None):
+    def __init__(self, d, alpha, imp = 1, c = None):
         self.num_params = d
 
         if c is None:
@@ -23,9 +23,10 @@ class CosineCoef3D:
             self.c = c
 
         self.alpha = alpha
+        self.imp = imp
 
     def __call__(self, x, z):
         r = 0
         for k in range(int(len(z))):
             r +=     z[k]   * cos(np.pi * (k+1) * (x[0]**2 + x[1]**2 + x[2]**2)**0.5) / (k+1)**self.alpha
-        return self.c + r
+        return self.c + self.imp*r
