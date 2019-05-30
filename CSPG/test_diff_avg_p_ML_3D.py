@@ -9,11 +9,6 @@ import sys
 import numpy as np
 import argparse
 
-# We still have to pass some inputs to the main:
-# nb_max_iter: the number of max iteration for the greedy algo -> this is to be defined at the first place, it is not done at all for now. 
-# recovery_algo: get to pick between the whtp (nb iter // norm residual // constance of the support), BPDN (norm on the residual), WOMP (norm residual? nb_iter? w(S^n) \leq sl?), wGHTP ('' '')
-# ----> Make sure that all the arguments are passed accordingly. 
-
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -23,7 +18,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/03/06"
+__lastmodified__ = "2019/05/30"
 
 
 def get_sampling_type(sampling_name):
@@ -39,16 +34,11 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_max = 4, algo_name = "whtp", c = 1.05, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10, experiment_name = "avg_p_3D", tensor_based=True, ansatz_space = 0):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_max = 4, algo_name = "whtp", c = 1.05, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, dat_constant = 10, experiment_name = "avg_p_3D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
 # we deal here with polynomial weights v_j = c . j^alpha
     
-    # epsilon = 1e-4
-    # if algo_name == 'whtp': # Really have to find a way to deal with the epsilon/eta/nbIter parameter
-        # epsilon = 1e-6 # We can go a little further than with usual optimization
-    # elif algo_name == 'wiht':
-	    # epsilon = 1e-6 
-    # elif algo_name == 'womp':
-	    # epsilon = 1e-6 
+    # Adapt to the first approximating level (via a single level approach)
+    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(CosineCoef3D(d, alpha_trig, abar), ConstantCoefficient(10.0),
@@ -57,30 +47,27 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
     test_result = outfile, None
     # test_result = '_'.join([algo_name, str(d), str(grid_points),outfile]), None
-    for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
+#    for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         # for gamma in np.arange(1.055, 1.06, 0.01)[::-1]:
         ### Reconstruction Model
         # v = np.hstack((np.repeat(c, 2*d), [np.inf]))
-        print c
-        v = np.hstack((c*np.power([val+1 for val in range(d)], alpha), [np.inf]))
+    v = np.hstack((c*np.power([val+1 for val in range(d)], alpha), [np.inf]))
 
-        if tensor_based: 
-            wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
-                                get_sampling_type(sampling_name), WR.check_cs)
-            prefix_npy = experiment_name + "Tensor_h"
-        else: # The basic way.
-            wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
-                                get_sampling_type(sampling_name), WR.check_cs)
-            prefix_npy = experiment_name + "Classic_h"
+    if tensor_based: 
+        wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
+                            get_sampling_type(sampling_name), WR.check_cs)
+        prefix_npy = experiment_name + "Tensor_h"
+    else: # The basic way.
+        wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
+                            get_sampling_type(sampling_name), WR.check_cs)
+        prefix_npy = experiment_name + "Classic_h"
 
 
 		## Number of tests
-        num_tests = nb_tests 
+    num_tests = nb_tests 
 
-		## Don't forget to reset the original mesh
-        spde_model.refine_mesh(2**(-s))
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
+    test_result = test(spde_model, wr_model, nb_iter, epsilon, s, [CrossCheck(num_tests)], dat_constant, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
 
 
 ### Main
@@ -106,9 +93,16 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for the sparsity per level", default=10., required=False)
     parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="", required=False)
     parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
+    parser.add_argument("-i", "--fluctuation-importance", help="What is the importance of the fluctuations with respect to the mean field (default is 1)", default=1, required=False)
     parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
+    parser.add_argument("-s", "--l-start", help="How many levels (+1) will *NOT* be computed", default=1, required=False)
+    parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default="1", required=False)
+    parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default="1", required=False)
+    parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/4)", default="0.25", required=False)
+    parser.add_argument("--smooth_t", help="What kind of smoothness in the smooth space can be expected (Default is 3/10)", default="0.3", required=False)
+    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 10)", default="15", required=False)
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_y), int(args.mesh_z)]), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_x),int(args.mesh_y), int(args.mesh_z)]), int(args.nb_level), args.recovery_algo.lower(), float(args.constant_weights), float(args.alpha), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space), float(args.t_0), float(args.t_prime), float(args.smooth_0), float(args.smooth_t), float(args.const_sJ))
     # Main(sys.argv[1])

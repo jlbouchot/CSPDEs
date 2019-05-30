@@ -70,8 +70,6 @@ def Main(outfile = "testCosine3D", d = 5, grid_points = tuple([20, 20, 20]), L_m
 
 		### Execute test
         test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
-		## Don't forget to reset the original mesh
-        spde_model.refine_mesh(2**(-(s-1)))
 
 ### Main
 if __name__ == "__main__":
