@@ -27,8 +27,9 @@ class WRModel:
 
         for oneLevel in range(0,nbLevel):
             # F_recon = self.operator.create(np.array(cspde_result[oneLevel].J_s)[cspde_result[oneLevel].result.x != 0], Z_cross[:,:cspde_result[oneLevel].d])
-            F_recon = self.operator.create(np.array(cspde_result[oneLevel].J_s)[cspde_result[oneLevel].result.x != 0], Z_cross[:,:cspde_result[oneLevel].d], normalization=np.sqrt(cspde_result[oneLevel].m))
-            y_recon = y_recon+F_recon.apply(cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0])
+            if sum(cspde_result[oneLevel].result.x != 0) > 0 : # Avoids running into problems in case the resulting sparse vector is the 0 vector!
+                F_recon = self.operator.create(np.array(cspde_result[oneLevel].J_s)[cspde_result[oneLevel].result.x != 0], Z_cross[:,:cspde_result[oneLevel].d], normalization=np.sqrt(cspde_result[oneLevel].m))
+                y_recon = y_recon+F_recon.apply(cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0])
             #print cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0]
 
         return y_recon

@@ -53,12 +53,6 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, da
     s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
 
 
-# To be done:
-# * Remember to have a trace of what J and L are
-# * Make sure you have access to t, t'
-# * Make sure you have an idea of what p, p_0 are
-# * Split the case onelvl = 0 and one lvl >= 1
-
 
     # Approximate the Jth level with a single level CSPG 
     s_J = np.ceil(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
