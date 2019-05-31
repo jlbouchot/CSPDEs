@@ -37,7 +37,7 @@ def get_sampling_type(sampling_name):
 def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", c = 1.03, alpha = 1/2, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha_trig = 2.0, abar = 4.3, imp = 1, dat_constant = 10, experiment_name = "avg_p_1D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
 
     # Adapt to the first approximating level (via a single level approach)
-    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
+    grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(TrigCoefficient(d, alpha_trig, imp, abar), ConstantCoefficient(10.0),

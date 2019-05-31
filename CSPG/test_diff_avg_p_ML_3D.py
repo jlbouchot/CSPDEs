@@ -38,7 +38,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000,2000]), L_
 # we deal here with polynomial weights v_j = c . j^alpha
     
     # Adapt to the first approximating level (via a single level approach)
-    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
+    grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(CosineCoef3D(d, alpha_trig, imp, abar), ConstantCoefficient(10.0),

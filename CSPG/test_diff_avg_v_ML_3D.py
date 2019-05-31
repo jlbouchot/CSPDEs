@@ -43,7 +43,7 @@ def Main(outfile = "testCosine3D", d = 5, grid_points = tuple([20, 20, 20]), L_m
 
     
     # Adapt to the first approximating level (via a single level approach)
-    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
+    grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(CosineCoef3D(d, alpha, imp, abar), ConstantCoefficient(10.0),

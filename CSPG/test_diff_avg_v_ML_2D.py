@@ -38,7 +38,7 @@ def Main(outfile = "testCosineCoefDiff2D", d = 5, grid_points = tuple([200, 200]
     
 
     # Adapt to the first approximating level (via a single level approach)
-    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
+    grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
 		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(CosineCoef2D(d, alpha, imp, abar), ConstantCoefficient(10.0),
