@@ -9,11 +9,6 @@ import sys
 import numpy as np
 import argparse
 
-# We still have to pass some inputs to the main:
-# nb_max_iter: the number of max iteration for the greedy algo -> this is to be defined at the first place, it is not done at all for now. 
-# recovery_algo: get to pick between the whtp (nb iter // norm residual // constance of the support), BPDN (norm on the residual), WOMP (norm residual? nb_iter? w(S^n) \leq sl?), wGHTP ('' '')
-# ----> Make sure that all the arguments are passed accordingly. 
-
 
 __author__ = ["Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -43,7 +38,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000,2000]), L_max = 
 
 
     # Adapt to the first approximating level (via a single level approach)
-    grid_points = tuple(int(2**(L_min-1)*dummy) for dummy in grid_points)
+    grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     spde_model = DiffusionFEMModelML(WeightedCosine2D(d, alpha, imp, abar, w_cst), ConstantCoefficient(10.0),
@@ -52,26 +47,24 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000,2000]), L_max = 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
     test_result = outfile, None
     # test_result = '_'.join([algo_name, str(d), str(grid_points),outfile]), None
-    for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
+#    for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         ### Reconstruction Model
-        v = np.hstack((np.repeat(gamma, d), [np.inf]))
+    v = np.hstack((np.repeat(gamma, d), [np.inf]))
 
-        if tensor_based: 
-            wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
-                                get_sampling_type(sampling_name), WR.check_cs)
-            prefix_npy = experiment_name + "Tensor_h"
-        else: # The basic way.
-            wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
-                                get_sampling_type(sampling_name), WR.check_cs)
-            prefix_npy = experiment_name + "Classic_h"
+    if tensor_based: 
+        wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
+                            get_sampling_type(sampling_name), WR.check_cs)
+        prefix_npy = experiment_name + "Tensor_h"
+    else: # The basic way.
+        wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
+                            get_sampling_type(sampling_name), WR.check_cs)
+        prefix_npy = experiment_name + "Classic_h"
 
 		## Number of tests
-        num_tests = nb_tests 
+    num_tests = nb_tests 
 
 		### Execute test
-        test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
-		## Don't forget to reset the original mesh
-        spde_model.refine_mesh(2**(-(s-1)))
+    test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
 
 
 ### Main
@@ -98,6 +91,11 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--fluctuation-importance", help="What is the importance of the fluctuations with respect to the mean field (default is 1)", default=1, required=False)
     parser.add_argument("-w", "--weight-cosine", help="How much weight the local cosine carries (Default = 0.5)", default=0.5, required=False)
     parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
+    parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default="1", required=False)
+    parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default="1", required=False)
+    parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/4)", default="0.25", required=False)
+    parser.add_argument("--smooth_t", help="What kind of smoothness in the smooth space can be expected (Default is 3/10)", default="0.3", required=False)
+    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 10)", default="10", required=False)
     args = parser.parse_args()
 	
     
