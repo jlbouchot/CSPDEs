@@ -1,4 +1,12 @@
 #!/bin/bash
+#title           :LaunchExperiment1.sh
+#description     :This script tests the influence of the first approximation level.
+#author		 :Jean-Luc Bouchot
+#date            :2019/06/05
+#version         :0.1    
+#usage		 :bash LaunchExperiment1.sh
+#notes           :Install FEniCS, CVXPY, progressbar before using.
+#==============================================================================
 
 # Script to run the first experiment
 # This experiment tests the importance of the first discretization level
