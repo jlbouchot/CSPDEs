@@ -18,7 +18,7 @@
 # List of parameters
 d=20 # number of cosines
 start_h0=40 # will be used as the discretization step for the first level. 
-Lmax=2 # Target number of discretization steps -> Let this vary! 
+Lmax=8 # Target number of discretization steps -> Let this vary! 
 algo=wiht # Which algorithm should be used
 vj=1.08 # Value of the constant coefficients
 nbSamples=new # What should be the number of samples 

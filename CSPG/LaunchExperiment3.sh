@@ -19,7 +19,7 @@
 # List of parameters
 d=20 # number of cosines
 start_h0=10 # will be used as the discretization step for the first level. 
-Lmax=4 # Target number of discretization steps 
+Lmax=8 # Target number of discretization steps 
 Lmin=3 # minimum number of multi-levels computed
 algo=wiht # Which algorithm should be used
 vj=1.08 # Value of the constant coefficients
