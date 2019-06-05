@@ -40,6 +40,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
 # * Delete the loop around the number of levels
 # * Compute the actual approximation width (by opposition to the virtual absolut discretization h_0)
 
+    dict_config = {'d': d, 'J': L_min, "L": L_max, "h0": grid_points, "vj": gamma, "nbSamples": sampling_name, "Tensor": tensor_based, 't': t_0, "tprime": t_prime, 'p0': p0, "p": p, "s_J": const_sJ, "s_L": dat_constant, "alpha": alpha, "abar":abar, "energy_fluctuations": imp, "algo": algo_name, "iter": nb_iter, "tolres": epsilon, "ansatz": ansatz_space}
 
     # Adapt to the first approximating level (via a single level approach)
     grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
@@ -62,13 +63,13 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
     else: # The basic way.
         wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                             get_sampling_type(sampling_name), WR.check_cs)
-        prefix_npy = experiment_name + "Classic_h"
 
 	## Number of tests
     num_tests = nb_tests 
 
     ### Execute test
-    test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
+    test_result = test(spde_model, wr_model, dict_config, [CrossCheck(num_tests)], experiment_name, *test_result)
+    # test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
 
 
 ### Main

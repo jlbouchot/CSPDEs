@@ -2,6 +2,8 @@ import numpy as np
 import datetime
 import time
 import shelve
+import os
+import json # helps keep the config file easily readable (and tunable)!
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -33,9 +35,19 @@ def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, 
     energy_constant = dict_config["s_J"]
     ansatz_space = dict_config["ansatz"] 
 
+
+    # Create target Directory if don't exist
+    if not os.path.exists(prefix_fname):
+        os.mkdir(prefix_fname)
+    else:    
+        print("WARNING: Directory " , prefix_fname ,  " already exists \n ---> You might overwrite important files!!")
+
+    with open(os.path.join(prefix_fname, "config_file.txt"),'w') as f_handler:
+        json.dump(dict_config,f_handler)
+
     ### Execute CSPDE algorithm
-    sampling_fname = prefix_fname + 'sampling_points_Lmax' + str(L)
-    datamtx_fname = prefix_fname + 'datamtx_Lmax' + str(L)
+    sampling_fname = os.path.join(prefix_fname, 'sampling_points_Lmax' + str(L))
+    datamtx_fname = os.path.join(prefix_fname, 'datamtx_Lmax' + str(L))
     
 
     cspde_result = CSPDE_ML(spde_model, wr_model, dict_config, cspde_result, sampling_fname, datamtx_fname)
@@ -50,7 +62,7 @@ def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, 
         filename = 'results_{0}'.format(dt)
 
     print("   Writing results to {0} ...".format(filename))
-    d     = shelve.open(filename)
+    d     = shelve.open(os.path.join(prefix_fname,filename))
     d[dt] = TestResult(spde_model, wr_model, epsilon, L, cspde_result)
     d.close()
 
@@ -59,7 +71,6 @@ def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, 
         print("   Executing checks ... ")
         list(map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)) # the "list(...)" is required due to the new Python 3.x updates
 
-    ## Compute (L_2 estimation of) true Cheb coefs. 
 
     return filename, cspde_result
 

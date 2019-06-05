@@ -36,6 +36,7 @@ def get_sampling_type(sampling_name):
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
 def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000,2000,2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, imp = 1, w_cst = 0.5, dat_constant = 10, experiment_name = "weighted_cosine_avg_v_3D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
 
+    dict_config = {'d': d, 'J': L_min, "L": L_max, "h0": grid_points[0], "vj": gamma, "weightCosine":w_cst, "nbSamples": sampling_name, "Tensor": tensor_based, 't': t_0, "tprime": t_prime, 'p0': p0, "p": p, "s_J": const_sJ, "s_L": dat_constant, "alpha": alpha, "abar":abar, "energy_fluctuations": imp, "algo": algo_name, "iter": nb_iter, "tolres": epsilon, "ansatz": ansatz_space}
 
     # Adapt to the first approximating level (via a single level approach)
     grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
@@ -54,18 +55,16 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000,2000,2000]), L_m
     if tensor_based: 
         wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
                             get_sampling_type(sampling_name), WR.check_cs)
-        prefix_npy = experiment_name + "Tensor_h"
     else: # The basic way.
         wr_model   = WR.WRModel(algo_name, WR.Operators.Chebyshev, v,
                             get_sampling_type(sampling_name), WR.check_cs)
-        prefix_npy = experiment_name + "Classic_h"
 
 	## Number of tests
     num_tests = nb_tests 
 
 		### Execute test
-    test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
-
+#    test_result = test(spde_model, wr_model, nb_iter, epsilon, L_min, L_max, [CrossCheck(num_tests)], dat_constant, p, p0, t_0, t_prime, const_sJ, ansatz_space, prefix_npy + str(grid_points[0]) + "_", *test_result)
+    test_result = test(spde_model, wr_model, dict_config, [CrossCheck(num_tests)], experiment_name, *test_result)
 
 ### Main
 if __name__ == "__main__":
