@@ -42,20 +42,25 @@ Try the following sequence of commands:
 First, create a separate environment for the project
 * conda create --name env-fenics 
 * conda activate env-fenics
+
 Make sure you have FEniCS installed
 * conda install -c conda-forge fenics
+
 Add cvxpy
 * conda config --add channels oxfordcontrol
 * conda install -c conda-forge lapack
 * conda install -c cvxgrp cvxpy=1.0.11
-(Not that the specified version is not the latest one!)
+
+(Note that the specified version is not the latest one!)
 
 * conda install nose
 * nosetests cvxpy
 
 * conda install numba
+
 You also need to install progressbar separately using 
 * python setup.py install 
+
 in the folder where you downloaded and extracted the archive
 
 
