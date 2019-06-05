@@ -33,6 +33,32 @@ To sum up, here is what you may need:
 * cvxpy: http://www.cvxpy.org/en/latest/install/index.html ; used for the convex minimizations needed for the compressed sensing part
 
 
+Installation
+============
+
+We recommend using anaconda for most of the installation. Be aware that these packages are evolving very fast and you might need to adjust here and there some versions of the various packages (most recently (2019/06/04): FEniCS and the latest version of cvxpy are not compatible). 
+Try the following sequence of commands: 
+
+First, create a separate environment for the project
+* conda create --name env-fenics 
+* conda activate env-fenics
+Make sure you have FEniCS installed
+* conda install -c conda-forge fenics
+Add cvxpy
+* conda config --add channels oxfordcontrol
+* conda install -c conda-forge lapack
+* conda install -c cvxgrp cvxpy=1.0.11
+(Not that the specified version is not the latest one!)
+
+* conda install nose
+* nosetests cvxpy
+
+* conda install numba
+You also need to install progressbar separately using 
+* python setup.py install 
+in the folder where you downloaded and extracted the archive
+
+
 Accompanying papers - Theory
 ============================
 The details of these methods can be found in the following publications:
