@@ -24,7 +24,8 @@ from time import sleep
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
 
-def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, dat_constant = 5, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None, t = 1, tprime = 1, p0 = 1./3., p = 2./3., energy_constant = 10): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
+# def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, dat_constant = 5, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None, t = 1, tprime = 1, p0 = 1./3., p = 2./3., energy_constant = 10): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
+def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fname = None, datamtx_fname = None): 
     """
     Parameters
     ----------
@@ -50,6 +51,20 @@ def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, da
     """
     # First set up some basic things needed for the rest of the computations
     lvl_by_lvl_result = [] # This will keep the results
+
+    # Load all the important things from the dictionary 
+    unscaledNbIter = dict_config["iter"] 
+    epsilon = dict_config["tolres"]
+    L_first = dict_config["J"] 
+    L = dict_config["L"] 
+    dat_constant = dict_config["s_L"] 
+    p = dict_config["p"]
+    p0 = dict_config["p0"] 
+    t = dict_config["t"]
+    tprime = dict_config["tprime"]
+    energy_constant = dict_config["s_J"]
+    ansatz_space = dict_config["ansatz"] 
+
     s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
 
 
