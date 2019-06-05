@@ -1,10 +1,10 @@
 #!/bin/bash
-#title           :LaunchExperiment1.sh
-#description     :This script tests the influence of the first approximation level.
+#title           :LaunchExperiment5.sh
+#description     :This script tests the influence of the sparsity.
 #author		 :Jean-Luc Bouchot
 #date            :2019/06/05
 #version         :0.1    
-#usage		 :bash LaunchExperiment1.sh
+#usage		 :bash LaunchExperiment5.sh
 #notes           :Install FEniCS, CVXPY, progressbar before using.
 #==============================================================================
 
@@ -42,8 +42,8 @@ sL=15
 
 while (( $sL <= $sLmax ))
 do
-	echo "RUNNING THE EXPERIMENT WITH J = $J"
-	folder=$expBasename$J
+	echo "RUNNING THE EXPERIMENT WITH sL = $sL"
+	folder=$expBasename$sL
 	python test_wCosine_2D_avg_v_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder
 	sL=$(( $sL + 3 ))
 done

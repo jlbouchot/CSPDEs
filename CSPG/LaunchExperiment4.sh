@@ -1,10 +1,10 @@
 #!/bin/bash
-#title           :LaunchExperiment1.sh
-#description     :This script tests the influence of the first approximation level.
+#title           :LaunchExperiment4.sh
+#description     :This script tests the influence of the fluctuations on the solutions.
 #author		 :Jean-Luc Bouchot
 #date            :2019/06/05
 #version         :0.1    
-#usage		 :bash LaunchExperiment1.sh
+#usage		 :bash LaunchExperiment4.sh
 #notes           :Install FEniCS, CVXPY, progressbar before using.
 #==============================================================================
 
