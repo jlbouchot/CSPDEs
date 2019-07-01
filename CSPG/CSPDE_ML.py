@@ -197,7 +197,7 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, da
         print("\nComputing {0} SPDE sample approximations ...".format(m))
         # Get samples
         t_start = time.time()
-        if onelvl == J:
+        if onelvl != J:
             y_old = spde_model.samples(Z)
             spde_model.refine_mesh()
         else:
