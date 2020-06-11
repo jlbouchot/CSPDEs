@@ -33,35 +33,61 @@ To sum up, here is what you may need:
 * cvxpy: http://www.cvxpy.org/en/latest/install/index.html ; used for the convex minimizations needed for the compressed sensing part
 
 
-Installation
-============
+Package Installation
+====================
 
-We recommend using anaconda for most of the installation. Be aware that these packages are evolving very fast and you might need to adjust here and there some versions of the various packages (most recently (2019/06/04): FEniCS and the latest version of cvxpy are not compatible). 
+We recommend using anaconda for most of the installation. 
+Be aware that these packages are evolving very fast and you might need to adjust here and there some versions of the various packages (most recently (2019/06/04): FEniCS and the latest version of cvxpy are not compatible). 
 Try the following sequence of commands: 
 
-First, create a separate environment for the project
-* conda create --name env-fenics 
-* conda activate env-fenics
+First, create a separate environment for the project (note that you could use the [env-fenics.yml file](env-fenics.yml))
+```
+conda create --name env-fenics 
+conda activate env-fenics
+```
 
-Make sure you have FEniCS installed
-* conda install -c conda-forge fenics
+Make sure you have `FEniCS` installed
+```
+conda install -c conda-forge fenics
+```
 
-Add cvxpy
-* conda config --add channels oxfordcontrol
-* conda install -c conda-forge lapack
-* conda install -c cvxgrp cvxpy=1.0.11
+Add `cvxpy` with the right version
+```
+conda config --add channels oxfordcontrol
+conda install -c conda-forge lapack
+conda install -c cvxgrp cvxpy=1.0.11
+```
 
 (Note that the specified version is not the latest one!)
+```
+conda install nose
+nosetests cvxpy
+```
 
-* conda install nose
-* nosetests cvxpy
+`numba` can be useful for certain speed-ups (not implemented yet)
+```
+conda install numba
+```
 
-* conda install numba
+You also need to install ```progressbar``` separately using -- otherwise, you might be standing in front of your computer, not knowing what is happening
+```
+python setup.py install 
+```
+in the folder where you downloaded and extracted the archive. 
 
-You also need to install progressbar separately using 
-* python setup.py install 
 
-in the folder where you downloaded and extracted the archive
+
+
+
+
+### Installation
+Nothing difficult here: simply clone this repository: 
+```
+git clone https://github.com/jlbouchot/FullParametricSolution.git 
+cd FullParametricSolution
+```
+and you are ready to start playing with things. 
+
 
 
 Accompanying papers - Theory
