@@ -83,8 +83,8 @@ in the folder where you downloaded and extracted the archive.
 ### Installation
 Nothing difficult here: simply clone this repository: 
 ```
-git clone https://github.com/jlbouchot/FullParametricSolution.git 
-cd FullParametricSolution
+git clone https://github.com/jlbouchot/CSPDEs.git
+cd CSPDE
 ```
 and you are ready to start playing with things. 
 

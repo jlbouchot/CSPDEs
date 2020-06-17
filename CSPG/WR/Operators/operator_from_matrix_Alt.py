@@ -67,7 +67,6 @@ def matrix_from_tensor_indices(J, Z, base, normalization=None):
 
 def univ_tensor_from_tensor_indices(J, Z, base, normalization=None):
     Za, Ja = np.array(Z), np.array(J)
-    np.set_printoptions(threshold=np.nan)
     numax=np.amax(Ja,0) #amax returns the maximum entry accodirng to the specified axis in this case the 0-th one
 
     univariate_A = []
