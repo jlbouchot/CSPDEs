@@ -16,26 +16,26 @@ __all__ = [
     'Exponential1D',
     'ExponentialUnnormalized',
 
-    'ConvectionDiffusionFEMModel',
+#    'ConvectionDiffusionFEMModel',
     'DiffusionFEMModel',
     'DiffusionFEMModelML',
 #     'UncertainBoundariesDiffusionFEMML',
-    'PiecewiseConstantDiffusionFEMModelML',
-    'SmallPiecewiseConstantDiffusionFEMModelML',
-    'Dim5PiecewiseConstantDiffusionFEMModelML'
-    'PiecewiseConstantDiffusionFEMModelML2',
-    'PiecewiseConstantDiffusionFEMModelML2_small',
-    'PiecewiseConstantDiffusionFEMModelML2_large',
-    'PiecewiseConstantDiffusionFEMModelML2_tiny',
-    'FinFEMModel',
-    'HelmholtzFEMModel',
+#    'PiecewiseConstantDiffusionFEMModelML',
+#    'SmallPiecewiseConstantDiffusionFEMModelML',
+#    'Dim5PiecewiseConstantDiffusionFEMModelML'
+#    'PiecewiseConstantDiffusionFEMModelML2',
+#    'PiecewiseConstantDiffusionFEMModelML2_small',
+#    'PiecewiseConstantDiffusionFEMModelML2_large',
+#    'PiecewiseConstantDiffusionFEMModelML2_tiny',
+#    'FinFEMModel',
+#    'HelmholtzFEMModel',
 
     'ConstantCoefficient',
-    'RotatingCoefficient',
+#    'RotatingCoefficient',
 #     'BoundaryPiecewiseConstant',
-    'PiecewiseConstantCoefficient',
+#    'PiecewiseConstantCoefficient',
     'Exponential2DCoefficient',
-    'PartitionUnityConstantCoefficient',
+#    'PartitionUnityConstantCoefficient',
     'LinearCoefficient',
     'TrigCoefficient', 
     'CosineCoef1D',
@@ -55,34 +55,34 @@ from .Exponential1D import *
 from .ExponentialUnnormalized import *
 
 # Models
-from .ConvectionDiffusionFEMModel import *
+#from .ConvectionDiffusionFEMModel import *
 from .DiffusionFEMModel import *
-from .FinFEMModel import *
-from .HelmholtzFEMModel import *
+#from .FinFEMModel import *
+#from .HelmholtzFEMModel import *
 
 # ML Models
 from .DiffusionFEMModelML import *
 # from UncertainBoundariesDiffusionFEMML import *
-from .PiecewiseConstantDiffusionFEMModelML import *
-from .SmallPiecewiseConstantDiffusionFEMModelML import *
-from .Dim5PiecewiseConstantDiffusionFEMModelML import *
-from .PiecewiseConstantDiffusionFEMModelML2D import *
-from .PiecewiseConstantDiffusionFEMModelML2D_small import *
-from .PiecewiseConstantDiffusionFEMModelML2D_large import *
-from .PiecewiseConstantDiffusionFEMModelML2D_tiny import *
+#from .PiecewiseConstantDiffusionFEMModelML import *
+#from .SmallPiecewiseConstantDiffusionFEMModelML import *
+#from .Dim5PiecewiseConstantDiffusionFEMModelML import *
+#from .PiecewiseConstantDiffusionFEMModelML2D import *
+#from .PiecewiseConstantDiffusionFEMModelML2D_small import *
+#from .PiecewiseConstantDiffusionFEMModelML2D_large import *
+#from .PiecewiseConstantDiffusionFEMModelML2D_tiny import *
 
 # Coefficients
 from .ConstantCoefficient import *
-from .RotatingCoefficient import *
+#from .RotatingCoefficient import *
 from .LinearCoefficient import *
-from .PiecewiseConstantCoefficient import *
+#from .PiecewiseConstantCoefficient import *
 # from BoundaryPiecewiseConstant import *
 from .Exponential2DCoefficient import *
 from .TrigCoefficient import *
 from .CosineCoef1D import *
 from .CosineCoef2D import *
 from .CosineCoef3D import *
-from .PartitionUnityConstantCoefficient import *
+#from .PartitionUnityConstantCoefficient import *
 from .WeightedCosine1D import *
 from .WeightedCosine2D import *
 from .WeightedCosine3D import *

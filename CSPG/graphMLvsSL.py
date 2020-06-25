@@ -102,7 +102,7 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 
 Lmax = 6
 h0 = 10;
-Js_to_display = [2,3,4,5,6] # Note that J = 6 corresponds to the SL appraoch
+Js_to_display = [1,2,3,4,5,6] # Note that J = 6 corresponds to the SL appraoch
 
 core_folder_name = 'Exp1Dim2WCosine20InfluenceJ'
 fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
