@@ -16,6 +16,7 @@ __all__ = [
     'whtp',
     'wcosamp',
     'womp',
+    'primaldual'
 ]
 
 from .exact_wbp_cvx import *
@@ -25,4 +26,4 @@ from .wiht import *
 from .whtp import *
 from .wcosamp import *
 from .womp import *
-
+from .primaldual import *
