@@ -69,7 +69,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
 
 
     # Approximate the Jth level with a single level CSPG 
-    energy_constant = np.max((energy_constant, dat_constant**(p/p0*(1-p0)/(1-p)) * (L-L_first)**(p/p0*(1-p0)/(1-p)) * 2**((L-L_first-1)*p/p0*(1-p0)/(1-p)*(t+tprime)) * 2**(-L*(t+tprime))+1)) # This ensures that the Jth level has more samples than the J+1
+    # energy_constant = np.max((energy_constant, dat_constant**(p/p0*(1-p0)/(1-p)) * (L-L_first)**(p/p0*(1-p0)/(1-p)) * 2**((L-L_first-1)*p/p0*(1-p0)/(1-p)*(t+tprime)) * 2**(-L*(t+tprime))+1)) # This ensures that the Jth level has more samples than the J+1
     s_J = np.ceil(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
     print("Computing level {0} (this is a Single Level approximation) from a total of {1}. Current sparsity = {2}".format(L_first,L,s_J))
     ## 1. Create index set and draw random samples
