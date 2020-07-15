@@ -51,6 +51,7 @@ class FEMModel(SPDEModel):
         u = self.solve(z)
         # Return functional value for solution
         # print assemble(self.M)
+        # return np.sum(u.vector().get_local())
         return assemble(self.M)
         # return self.solver.evaluate_goal(Form(self.M), u)
 

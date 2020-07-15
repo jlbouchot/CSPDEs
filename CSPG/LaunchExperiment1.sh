@@ -19,12 +19,12 @@
 # List of parameters
 d=20 # number of cosines
 start_h0=10 # will be used as the discretization step for the first level. 
-Lmax=2 # Target number of discretization steps -> Let this vary! 
+Lmax=6 # Target number of discretization steps -> Let this vary! 
 # No need in this example !! Lmin=3 # First level of discretization (this one will use a single level approximation)
 algo=wiht # Which algorithm should be used
 vj=1.08 # Value of the constant coefficients
 nbSamples=new # What should be the number of samples 
-nbtests=100 # A few tests at the end to make sure it somewhat worked
+nbtests=10 # A few tests at the end to make sure it somewhat worked
 powerTrig=4.5 # Power of the trigonometric decay
 abar=10 # Constant mean field
 flucImportance=1 # Importance of the fluctuations
@@ -37,7 +37,7 @@ sJ=40 # Constant used for the first level of approximation
 
 expBasename="Exp1Dim2WCosine${d}InfluenceJ"
 
-for ((J=0; J<=$Lmax; J++))
+for ((J=0; J<=1; J++))
 do
 	echo "RUNNING THE EXPERIMENT WITH J = $J"
 	folder=$expBasename$J

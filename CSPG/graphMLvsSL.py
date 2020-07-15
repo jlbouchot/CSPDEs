@@ -102,7 +102,7 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 
 Lmax = 6
 h0 = 10;
-Js_to_display = [2,3,4,5,6] # Note that J = 6 corresponds to the SL appraoch
+Js_to_display = [1,2,3,4,5,6] # Note that J = 6 corresponds to the SL appraoch
 
 core_folder_name = 'Exp1Dim2WCosine20InfluenceJ'
 fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
@@ -181,10 +181,6 @@ for (idx, oneJ) in enumerate(Js_to_display): # Probably better to just read the 
 	computeTimePDE[idx] = curPdeTimes
 	computeTimeRecovery[idx] = curRecoveryTimes
 
-print(l2error)
-print(linferror)
-print(computeTimePDE)
-print(computeTimeRecovery)
 
 # scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = np.random.randint(0, len(linferror), len(linferror)))
 cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
@@ -193,9 +189,9 @@ for idx,oneJ in enumerate(Js_to_display):
 	scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = np.random.rand(3,) ))
 	# scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = cmapForScatter(idx) ))
 # scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = [] )
-plt.ylabel('$\ell_\infty$ norm of the error')
-plt.xlabel('Computing time (log scale)')
-classes = [str(oneJ) for oneJ in Js_to_display]
+plt.ylabel('$\ell_\infty$ norm of the error (via $\log_10$)')
+plt.xlabel('Computing time ($log_10$ scale)')
+classes = ["J = " + str(oneJ) for oneJ in Js_to_display]
 plt.legend(handles=scatter, labels=classes)
 #plt.legend((str(oneJ) for oneJ in Js_to_display), loc='upper right', fontsize=8)
 plt.show()
