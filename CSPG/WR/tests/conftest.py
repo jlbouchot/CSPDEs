@@ -4,13 +4,13 @@ import WR
 from scipy.sparse import rand
 from WR.Operators.operator_from_matrix_Alt import univ_tensor_from_tensor_indices
 
-parameter_set = {"epsilon": 1e-6,
-                 "density": 0.05,
-                 "n": 1000,
-                 "maxiter": 100,
-                 "d": 5,
-                 "theta": np.sqrt(2),
-                 "v" : 1.05
+parameter_set = {"epsilon": 1e-6, # success in recovery ?
+                 "density": 0.05, # proportion of non zero components
+                 "n": 1000, # UNWEIGHTED ONLY Size of the ambient space, not in the parametric PDE like framework
+                 "maxiter": 100, # maximum number of iterations for the iterative algorithms
+                 "d": 30, # WEIGHTED ONLY number of _virtual_ operators
+                 "theta": np.sqrt(2), # WEIGHTED ONLY l-infinity norm of the univariate operators (see MLCSPG paper)
+                 "v" : 1.05 # WEIGHTED ONLY Uniform weights for the operators
                  }
 
 # >>> ws = np.array([1,1.4, 2.1,3,5])
@@ -33,15 +33,24 @@ parameter_set = {"epsilon": 1e-6,
 # m = int(np.log(n) * density * n)
 nb_test_runs = 6
 
-def weighted_sparse_ground_truth(size, weights, density, randstate):
+def weighted_sparse_ground_truth(size, weights, s, randstate):
     np.random.seed(randstate)
     cumDist = np.cumsum(weights**(-1))
     cumDist = cumDist/cumDist[-1]
     truth = np.zeros(size)
     # sampling with replacement
-    for i in range(0,int(size*density)):
-        rand_loc = find_loc(np.random.rand(1)[0],cumDist) # because random.rand returns an array
-        truth[rand_loc] = np.random.normal()
+    weighted_l0_norm = 0
+    while weighted_l0_norm < s: 
+        rand_loc = find_loc(np.random.rand(1)[0],cumDist)
+        curWeight = weights[rand_loc]
+        print("Position {} with weight {}".format(rand_loc, curWeight))
+        weighted_l0_norm = weighted_l0_norm + curWeight**2
+        truth[rand_loc] = np.random.normal()/curWeight
+        truth[rand_loc] = 1.0/curWeight
+    # for i in range(0,int(size*density)):
+    #     rand_loc = find_loc(np.random.rand(1)[0],cumDist) # because random.rand returns an array
+    #     truth[rand_loc] = np.random.normal()/weights[rand_loc]
+    #     truth[rand_loc] = 1.0/weights[rand_loc]
     return truth
 
 def find_loc(x, dist):
@@ -54,18 +63,19 @@ def calculate_weights(theta, v, J_s):
     return np.array([theta**np.count_nonzero(nu) * np.product(v[np.where(nu > 0)]**nu[np.where(nu > 0)]) for nu in J_s])
 
 #only useful in the unweighted case
-def sparse_ground_truth(size, density, randstate):
+def sparse_ground_truth(size, density, randstate): # Only in the unweighted case
     matrix = rand(size, 1, density=density, format="csr", random_state=randstate).todense()
     return np.squeeze(np.asarray(matrix)) #squeeze needed because rand returns the deprecated matrix and we want to reduce dim
 
-def create_Operator(m,n,randstate):
+def create_Operator(m,n,randstate): # Only in the unweighted case
     np.random.seed(randstate)
+    # Create a random Gaussian matrix, which is known to fulfill (unweighted)RIP with high probability
     matrix = np.random.normal(size=(m,n))
     matrix = matrix/(np.sqrt(m))
     operator = WR.Operators.operator_from_matrix(WR.Operators.Chebyshev, matrix)
     return operator
 
-def create_Operator_Alt(randstate):
+def create_Operator_Alt(randstate): # Only for the weighted case 
     def base(x, k):
         return np.cos(k * np.arccos(x)) * np.sqrt(2)**(k>0)
     np.random.seed(randstate)
@@ -106,7 +116,7 @@ def para_set_Alt(request):
     # fixed the sparsity parameter s at the moment
     # while s=10 the resulting number of len(J) is 56
     # I don't understand how the parameter s correlates to the density value
-    parameter_set["s"] = 10 #int(np.rint(parameter_set["density"]*parameter_set["n"]+0.01))
+    parameter_set["s"] = 20 #int(np.rint(parameter_set["density"]*parameter_set["n"]+0.01))
     # parameter_set["m"] = int(np.ceil(2 * np.log(parameter_set["s"])**2 * parameter_set["s"] * np.log(parameter_set["n"])))
     # to create the operator we don't need the parameter n (which is the size of the ground truth) why don't I need it
     # or where do I have to insert it in the function create_Operator_Alt()?
@@ -129,7 +139,7 @@ def para_set_Alt(request):
     print("n: ", parameter_set["n"], " m: ", parameter_set["m"])
     parameter_set["x_truth"] = weighted_sparse_ground_truth(parameter_set["n"],
                                                     parameter_set["weights"],
-                                                    parameter_set["density"],
+                                                    parameter_set["s"],
                                                    parameter_set["randstate"])
     parameter_set["y"] = create_obs_y(parameter_set["operator"], parameter_set["x_truth"])
     return parameter_set
