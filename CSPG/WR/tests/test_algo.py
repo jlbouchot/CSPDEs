@@ -20,7 +20,7 @@ def tes_algorithms(algo, para_set):
     res = algo(op, y, w, s, eta, para_set["maxiter"])
     # print("x_truth: ", x_truth)
     # print("res[\"x\"]", res[0])
-    assert np.linalg.norm(res[0]-x_truth) <= 1e-32
+    assert np.linalg.norm(res[0]-x_truth) <= 1e-10
 
 def test_algorithms_Alt(algo, para_set_Alt):
     # x_truth = sparse_ground_truth(n)
@@ -32,10 +32,11 @@ def test_algorithms_Alt(algo, para_set_Alt):
     w = para_set_Alt["weights"]
     # w = calculate_weights(para_set_Alt["theta"], para_set_Alt["v_weights"], para_set_Alt["J"])
     eta = para_set_Alt["epsilon"]
-    s = int(np.rint(para_set_Alt["density"]*para_set_Alt["n"]+0.01)) # 0.01 is an ofset because of rounding limitations in numpy.rint
-    res = WR.Algorithms.whtp(op, y, w, s, eta, para_set_Alt["maxiter"])
-    print("x_truth: ", x_truth)
-    print("res[\"x\"]", res[0])
+    # s = int(np.rint(para_set_Alt["density"]*para_set_Alt["n"]+0.01)) # 0.01 is an ofset because of rounding limitations in numpy.rint
+    s = parameter_set["s"]
+    res = algo(op, y, w, s, eta, para_set_Alt["maxiter"])
+    # print("x_truth: ", x_truth)
+    # print("res[\"x\"]", res[0])
     assert np.linalg.norm(res[0]-x_truth) <= 1e-10
 
 # needs to be imported from CSPDE_ML for testing reasons copied here

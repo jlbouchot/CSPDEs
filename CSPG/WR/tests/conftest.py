@@ -31,7 +31,7 @@ parameter_set = {"epsilon": 1e-6, # success in recovery ?
 
 # randstate = 42
 # m = int(np.log(n) * density * n)
-nb_test_runs = 6
+nb_test_runs = 2
 
 def weighted_sparse_ground_truth(size, weights, s, randstate):
     np.random.seed(randstate)
@@ -39,13 +39,14 @@ def weighted_sparse_ground_truth(size, weights, s, randstate):
     cumDist = cumDist/cumDist[-1]
     truth = np.zeros(size)
     # sampling with replacement
+    # TODO: dont replace 
     weighted_l0_norm = 0
-    while weighted_l0_norm < s: 
+    while weighted_l0_norm < s:
         rand_loc = find_loc(np.random.rand(1)[0],cumDist)
         curWeight = weights[rand_loc]
         print("Position {} with weight {}".format(rand_loc, curWeight))
         weighted_l0_norm = weighted_l0_norm + curWeight**2
-        truth[rand_loc] = np.random.normal()/curWeight
+        truth[rand_loc] = np.random.normal()/curWeight #why divide through the weight?
         truth[rand_loc] = 1.0/curWeight
     # for i in range(0,int(size*density)):
     #     rand_loc = find_loc(np.random.rand(1)[0],cumDist) # because random.rand returns an array
@@ -75,7 +76,7 @@ def create_Operator(m,n,randstate): # Only in the unweighted case
     operator = WR.Operators.operator_from_matrix(WR.Operators.Chebyshev, matrix)
     return operator
 
-def create_Operator_Alt(randstate): # Only for the weighted case 
+def create_Operator_Alt(randstate): # Only for the weighted case
     def base(x, k):
         return np.cos(k * np.arccos(x)) * np.sqrt(2)**(k>0)
     np.random.seed(randstate)
@@ -145,7 +146,8 @@ def para_set_Alt(request):
     return parameter_set
 
 @pytest.fixture(params=[WR.Algorithms.whtp, WR.Algorithms.wiht,
-                        WR.Algorithms.womp])#, WR.Algorithms.exact_wbp_cvx,
+                        WR.Algorithms.womp])#,
+                        # WR.Algorithms.exact_wbp_cvx,
                         # WR.Algorithms.qc_wbp_cvx])
 #                         WR.Algorithms.Qc_wbp_precond_primaldual, WR.Algorithms.wcosamp,
 #                         , , WR.Algorithms.primaldual])
