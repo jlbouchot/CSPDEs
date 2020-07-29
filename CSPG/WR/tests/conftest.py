@@ -15,7 +15,7 @@ parameter_set_test_config = {"epsilon": 1e-6,  # success in recovery ?
                              "v": 1.05,  # WEIGHTED ONLY Uniform weights for the operators
                              "s": 15  # will be OVERWRITTEN in UNWEIGHTED Case
                              }
-nb_test_runs = 6 # number of tests
+nb_test_runs = 1  # number of tests
 
 
 def weighted_sparse_ground_truth(size, weights, s, randstate):
@@ -46,10 +46,11 @@ def find_loc(x, dist):
 
 
 # UNWEIGHTED ONLY
-def sparse_ground_truth(size, density, randstate):  # Only in the unweighted case
-    matrix = rand(size, 1, density=density, format="csr", random_state=randstate).todense()
-    return np.squeeze(
-        np.asarray(matrix))  # squeeze needed because rand returns the deprecated matrix and we want to reduce dim
+# def sparse_ground_truth(size, density, randstate):  # Only in the unweighted case
+#     matrix = rand(size, 1, density=density, format="csr", random_state=randstate).todense()
+#     return np.squeeze(
+#         np.asarray(matrix))  # squeeze needed because rand returns the deprecated matrix and we want to reduce dim
+
 
 # Original Operator
 def create_Operator(m, n, randstate):  # Only in the unweighted case
@@ -59,6 +60,7 @@ def create_Operator(m, n, randstate):  # Only in the unweighted case
     matrix = matrix / (np.sqrt(m))
     operator = WR.Operators.operator_from_matrix(WR.Operators.Chebyshev, matrix)
     return operator
+
 
 # new Operator
 def create_Operator_Alt(para_set):  # Only for the weighted case
@@ -78,26 +80,32 @@ def create_Operator_Alt(para_set):  # Only for the weighted case
 def create_obs_y(op, x):
     return op.apply(x)
 
-@pytest.fixture(params=np.asarray(range(nb_test_runs)) + 32)
+
+@pytest.fixture(params=np.asarray(range(nb_test_runs)) + 42)
 def para_set_orig_unw(request):
     parameter_set = dict(parameter_set_test_config)
     parameter_set["randstate"] = request.param
-    parameter_set["s"] = int(parameter_set["n"] * parameter_set["density"])
-    parameter_set["x_truth"] = sparse_ground_truth(parameter_set["n"],
-                                                   parameter_set["density"],
-                                                   parameter_set["randstate"])
-    # TODO: better definition of m in the unweighted case
-    parameter_set["m"] = int(.25*parameter_set["n"])
-    # the below one returns m >> n
-    # parameter_set["m"] = WR.cs_theoretic_m_new(parameter_set["s"], parameter_set["n"])
+    parameter_set["v_weights"] = np.hstack((np.repeat(parameter_set["v"], parameter_set["d"]), [np.inf]))
+    np.random.seed(parameter_set["randstate"])
+    parameter_set["J"] = calc_J(parameter_set["s"], parameter_set["theta"], parameter_set["v_weights"])
+    parameter_set["n"] = len(parameter_set["J"])
+    parameter_set["m"] = WR.cs_theoretic_m_new(parameter_set["s"], len(parameter_set["J"]))
     print("n: {0}, m: {1}".format(parameter_set["n"], parameter_set["m"]))
+    parameter_set["operator"] = create_Operator(parameter_set["m"],
+                                                parameter_set["n"],
+                                                parameter_set["randstate"])
+    parameter_set["weights"] = np.ones(parameter_set["n"])
+    parameter_set["x_truth"] = weighted_sparse_ground_truth(parameter_set["n"],
+                                                            parameter_set["weights"],
+                                                            parameter_set["s"],
+                                                            parameter_set["randstate"])
     parameter_set["operator"] = create_Operator(parameter_set["m"],
                                                 parameter_set["n"],
                                                 parameter_set["randstate"])
     parameter_set["y"] = create_obs_y(parameter_set["operator"], parameter_set["x_truth"])
     return parameter_set
 
-@pytest.fixture(params=np.asarray(range(nb_test_runs)) + 32)
+@pytest.fixture(params=np.asarray(range(nb_test_runs)) + 42)
 def para_set_orig_wei(request):
     parameter_set = dict(parameter_set_test_config)
     parameter_set["randstate"] = request.param
@@ -119,7 +127,7 @@ def para_set_orig_wei(request):
     return parameter_set
 
 
-@pytest.fixture(params=np.asarray(range(nb_test_runs)) + 1)
+@pytest.fixture(params=np.asarray(range(nb_test_runs)) + 42)
 def para_set_Alt(request):
     parameter_set = dict(parameter_set_test_config)  # explicitly copy the basic test configuration from above
     # initialization of the parameters
