@@ -4,7 +4,7 @@ import WR
 from scipy.sparse import rand
 from WR.Operators.operator_from_matrix_Alt import univ_tensor_from_tensor_indices
 
-parameter_set_test_config = {"epsilon": 1e-6,  # success in recovery ?
+parameter_set_test_config = {"epsilon": 1e-10,  # success in recovery ?
                              "density": 0.05,  # proportion of non zero components
                              "n": 1000,
                              # UNWEIGHTED ONLY Size of the ambient space, not in the parametric PDE like framework
@@ -14,8 +14,9 @@ parameter_set_test_config = {"epsilon": 1e-6,  # success in recovery ?
                              # WEIGHTED ONLY l-infinity norm of the univariate operators (see MLCSPG paper)
                              "v": 1.05,  # WEIGHTED ONLY Uniform weights for the operators
                              "s": 15  # will be OVERWRITTEN in UNWEIGHTED Case
+                             # 15 seems to be the upper limit for 16 GB RAM for the cvxpy algorithms
                              }
-nb_test_runs = 1  # number of tests
+nb_test_runs = 4  # number of tests
 
 
 def weighted_sparse_ground_truth(size, weights, s, randstate):
@@ -45,13 +46,6 @@ def find_loc(x, dist):
     return i
 
 
-# UNWEIGHTED ONLY
-# def sparse_ground_truth(size, density, randstate):  # Only in the unweighted case
-#     matrix = rand(size, 1, density=density, format="csr", random_state=randstate).todense()
-#     return np.squeeze(
-#         np.asarray(matrix))  # squeeze needed because rand returns the deprecated matrix and we want to reduce dim
-
-
 # Original Operator
 def create_Operator(m, n, randstate):  # Only in the unweighted case
     np.random.seed(randstate)
@@ -62,10 +56,11 @@ def create_Operator(m, n, randstate):  # Only in the unweighted case
     return operator
 
 
-# new Operator
+# new alternative Operator
 def create_Operator_Alt(para_set):  # Only for the weighted case
     def base(x, k):
         return np.cos(k * np.arccos(x)) * np.sqrt(2) ** (k > 0)
+
     randstate = para_set["randstate"]
     np.random.seed(randstate)
     J = calc_J(para_set["s"], para_set["theta"], para_set["v_weights"])
@@ -87,6 +82,7 @@ def para_set_orig_unw(request):
     parameter_set["randstate"] = request.param
     parameter_set["v_weights"] = np.hstack((np.repeat(parameter_set["v"], parameter_set["d"]), [np.inf]))
     np.random.seed(parameter_set["randstate"])
+    # TODO: make sure the initial values for calc J are correct
     parameter_set["J"] = calc_J(parameter_set["s"], parameter_set["theta"], parameter_set["v_weights"])
     parameter_set["n"] = len(parameter_set["J"])
     parameter_set["m"] = WR.cs_theoretic_m_new(parameter_set["s"], len(parameter_set["J"]))
@@ -104,6 +100,7 @@ def para_set_orig_unw(request):
                                                 parameter_set["randstate"])
     parameter_set["y"] = create_obs_y(parameter_set["operator"], parameter_set["x_truth"])
     return parameter_set
+
 
 @pytest.fixture(params=np.asarray(range(nb_test_runs)) + 42)
 def para_set_orig_wei(request):
@@ -149,8 +146,9 @@ def para_set_Alt(request):
 
 
 @pytest.fixture(params=[WR.Algorithms.whtp, WR.Algorithms.wiht,
-                        WR.Algorithms.womp, WR.Algorithms.exact_wbp_cvx,
-                        WR.Algorithms.qc_wbp_cvx, WR.Algorithms.wcosamp])
+                        WR.Algorithms.womp,
+                        WR.Algorithms.exact_wbp_cvx, WR.Algorithms.qc_wbp_cvx,
+                        WR.Algorithms.wcosamp])
 def algo_orig(request):
     return request.param
 
@@ -162,8 +160,7 @@ def algo(request):
     return request.param
 
 
-# the following functions needs to be imported from CSPDE_ML but we need to write an appropriate init file for CSPG to import from there
-
+# TODO: import functions from CSPDE_ML
 def calculate_weights(theta, v, J_s):
     return np.array(
         [theta ** np.count_nonzero(nu) * np.product(v[np.where(nu > 0)] ** nu[np.where(nu > 0)]) for nu in J_s])
