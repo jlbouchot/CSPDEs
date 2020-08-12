@@ -233,14 +233,39 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, da
 
 
 
-
+# old
+# def J_tot_degree(v, max_degree = 2, threshold = np.inf):
+#     print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
+#     # Remember v contains the weights associated to the operators in the expansion.
+#     # We assume that above a certain weight, it can simply be discarded, the associated coefficient can be discarded.
+#     aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=len([v_i for v_i in v if v_i < threshold]))]) # This creates a set of multi-indices with max norm max_degree
+#     J = [one_multi_index for one_multi_index in aux if one_multi_index.sum() <= max_degree]
+#     return J
 def J_tot_degree(v, max_degree = 2, threshold = np.inf):
     print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
-    # Remember v contains the weights associated to the operators in the expansion. 
-    # We assume that above a certain weight, it can simply be discarded, the associated coefficient can be discarded. 
-    aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=len([v_i for v_i in v if v_i < threshold]))]) # This creates a set of multi-indices with max norm max_degree
-    J = [one_multi_index for one_multi_index in aux if one_multi_index.sum() <= max_degree]
-    return J
+    max_l = len([v_i for v_i in v if v_i < threshold])
+    J = list()
+    for t in range(max_degree+1):
+        J.append(indices_sum_to_k(t,max_l))
+    # reduce the list of lists to a single list
+    J = np.array([x for l in J for x in l])
+    return np.asarray(J)
+
+def indices_sum_to_k(k, n):
+    if n==1:
+        return [k]
+    else:
+        L = list()
+        for i in range(k+1):
+            x = indices_sum_to_k(k-i,n-1)
+            for l in x:
+                if type(l)==int:
+                    L.append([l,i])
+                else:
+                    l.append(i)
+                    L.append(l)
+    return L
+
 
 
 def J(s, theta, v):
