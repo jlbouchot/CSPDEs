@@ -16,7 +16,7 @@ parameter_set_test_config = {"epsilon": 1e-10,  # success in recovery ?
                              "s": 15  # will be OVERWRITTEN in UNWEIGHTED Case
                              # 15 seems to be the upper limit for 16 GB RAM for the cvxpy algorithms
                              }
-nb_test_runs = 4  # number of tests
+nb_test_runs = 2  # number of tests
 
 
 def weighted_sparse_ground_truth(size, weights, s, randstate):
@@ -81,9 +81,11 @@ def para_set_orig_unw(request):
     parameter_set = dict(parameter_set_test_config)
     parameter_set["randstate"] = request.param
     parameter_set["v_weights"] = np.hstack((np.repeat(parameter_set["v"], parameter_set["d"]), [np.inf]))
+    parameter_set["v_weights"] = np.ones(len(parameter_set["v_weights"]))
     np.random.seed(parameter_set["randstate"])
     # TODO: make sure the initial values for calc J are correct
-    parameter_set["J"] = calc_J(parameter_set["s"], parameter_set["theta"], parameter_set["v_weights"])
+    parameter_set["J"] = calc_J_tot_degree(parameter_set["v_weights"])
+    # parameter_set["J"] = calc_J(parameter_set["s"], parameter_set["theta"], parameter_set["v_weights"])
     parameter_set["n"] = len(parameter_set["J"])
     parameter_set["m"] = WR.cs_theoretic_m_new(parameter_set["s"], len(parameter_set["J"]))
     print("n: {0}, m: {1}".format(parameter_set["n"], parameter_set["m"]))
@@ -168,6 +170,47 @@ def calculate_weights(theta, v, J_s):
 
 import itertools
 
+#
+# def calc_J_tot_degree(v, max_degree = 2, threshold = np.inf):
+#     print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
+#     # Remember v contains the weights associated to the operators in the expansion.
+#     # We assume that above a certain weight, it can simply be discarded, the associated coefficient can be discarded.
+#     max_l = len([v_i for v_i in v if v_i < threshold])
+#     aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=max_l)if np.sum(x)<=max_degree]) # This creates a set of multi-indices with max norm max_degree
+#     return aux
+
+#rewrite
+def calc_J_tot_degree(v, max_degree = 2, threshold = np.inf):
+    print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
+    max_l = len([v_i for v_i in v if v_i < threshold])
+    J = list()
+    for t in range(max_degree+1):
+        J.append(indices_sum_to_k(t,max_l))
+    # reduce the list of lists to a single list
+    J = np.array([x for l in J for x in l])
+    return np.asarray(J)
+
+def indices_sum_to_k(k, n):
+    if n==1:
+        return [k]
+    else:
+        L = list()
+        for i in range(k+1):
+            x = indices_sum_to_k(k-i,n-1)
+            for l in x:
+                if type(l)==int:
+                    L.append([l,i])
+                else:
+                    l.append(i)
+                    L.append(l)
+    return L
+
+def gen_J_elem_rec(J_elem, number, max_degree, max_l):
+    curr_sum = np.sum(J_elem)
+    if curr_sum + number <= max_degree:
+        return gen_J_elem_rec(J_elem.append(number), number, max_degree, max_l)
+    if len(J_elem) == max_l:
+        return np.asarray(J_elem)
 
 def calc_J(s, theta, v):
     def iterate(M, a, B, S):
