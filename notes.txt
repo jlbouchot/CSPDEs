@@ -1,0 +1,15 @@
+conda create --name env-fenics36 python=3.6
+conda activate env-fenics36
+conda install -c conda-forge fenics
+conda install cvxpy
+conda install progressbar2
+conda install numba
+conda install matplotlib
+conda install -c conda-forge superlu_dist=6.2.0
+conda install -c conda-forge boost-cpp=1.72.0
+conda install -c conda-forge mpi4py=3.0
+
+python test_wCosine_avg_v_ML.py -d 5 -o WeightedCosine1D -L 4 -s 0 -m 100 -N 20 -r whtp
+
+
+conda list | grep -i <package-name>
