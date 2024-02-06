@@ -1,0 +1,13 @@
+name: env-fenics
+channels:
+  - cvxgrp
+  - conda-forge
+  - oxfordcontrol
+  - defaults
+dependencies:
+  - python=3.9
+  - cvxpy
+  - fenics
+  - matplotlib
+  - numba
+  - progressbar2
