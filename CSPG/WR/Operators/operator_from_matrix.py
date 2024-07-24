@@ -36,7 +36,7 @@ def matrix_from_tensor_indices(J, Z, base, normalization=None):
     Za, Ja = np.array(Z), np.array(J)
 
     # A = np.array([np.array([np.prod(base(z_row, j)) for j in Ja]) for z_row in Za])
-    A = np.reshape(np.fromiter((np.prod(base(z_row, j)) for j in Ja for z_row in Za), np.float), (len(Za), len(Ja)), len(Za)*len(Ja))
+    A = np.reshape(np.fromiter((np.prod(base(z_row, j)) for j in Ja for z_row in Za), np.float64), (len(Za), len(Ja)))
 
     if normalization is None:
         normalization = np.sqrt(np.size(A, 0))

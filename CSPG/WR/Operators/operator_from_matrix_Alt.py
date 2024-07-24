@@ -1,4 +1,5 @@
 import numpy as np
+import os.path
 from numba import njit,prange
 __author__ = ["Falk Pulsmeyer", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -48,8 +49,20 @@ class operator_from_matrix_Alt:
         t = genSubMatrix_Alt_Numba(self.univariate_A,res,U,self.J)
         return t
 
-    def save(self, data_mtx):
-        np.save(data_mtx, [self.A,self.univariate_A,self.J])
+    def save(self, data_file):
+        #print([self.A,self.univariate_A,self.J])
+        #print(np.shape(self.A))
+        #print(np.shape(self.J))
+        #print(np.shape(self.univariate_A))
+        #np.save(data_mtx, [self.A,self.univariate_A,self.J])
+        dirname = os.path.dirname(data_file)
+        bname = os.path.basename(data_file)
+        print(self.univariate_A)
+        for (idx, A) in enumerate(self.univariate_A):
+            print("Row {} has shape {}".format(idx, np.shape(A)))
+        np.save(os.path.join(dirname, "A_"+bname), self.A)
+        np.save(os.path.join(dirname, "univariate_"+bname), self.univariate_A)
+        np.save(os.path.join(dirname, "J_"+bname), self.J)
 
 
 

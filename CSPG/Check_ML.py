@@ -36,7 +36,7 @@ def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, 
     ansatz_space = dict_config["ansatz"] 
 
 
-    # Create target Directory if don't exist
+    # Create target Directory if doesn't exist
     if not os.path.exists(prefix_fname):
         os.mkdir(prefix_fname)
     else:    

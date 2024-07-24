@@ -127,6 +127,8 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
         else:
             J_s = J_tot_degree(wr_model.weights, ansatz_space)
 
+        print("Ansatz space is {}".format(J_s))
+        
         # Get total number of coefficients in tensorized chebyshev polynomial base
         N = len(J_s)
 
@@ -150,6 +152,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
         
         print("   Computing weights ...")
         w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)    
+        print(" Weights are {}".format(w) )
 
         print("   Weighted minimization ...")
         t_start = time.time()
