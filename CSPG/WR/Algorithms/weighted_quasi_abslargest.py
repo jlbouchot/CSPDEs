@@ -8,10 +8,15 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "bouchot@mathc.rwth-aachen.de"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2024/07/24"
 
 def weighted_quasi_abslargest(x, s, w):
-    # Get indices of elements sorted in descending order
+    '''
+    Find the approximate indices of the elements with largest weighted absolute values
+        x: input vector
+        s: target weighted sparsity
+        w: weight sequence
+    '''
     sortIndex = np.argsort((np.abs(x)) * (w**(-1)))[::-1]
 
     k      = 0

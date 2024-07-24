@@ -18,7 +18,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/06/05"
+__lastmodified__ = "2024/07/24"
 
 
 def get_sampling_type(sampling_name):
@@ -51,7 +51,9 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
     # test_result = '_'.join([algo_name, str(d), str(grid_points),outfile]), None
 #    for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         ### Reconstruction Model
-    v = np.hstack((np.repeat(gamma, d), [np.inf]))
+    # TODO: Rename things correctly and pass them as parameters
+    alpha = 0.25
+    v = np.hstack((gamma*np.power([val+1 for val in range(d) for dummy_variable in (0,1)], alpha), [np.inf]))
 
     if tensor_based: 
         wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
@@ -73,7 +75,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description = "")
     parser.add_argument("-d", "--nb-cosines", help="Number of random cosine and sine parameters", default=5, required=False)
-    parser.add_argument("-o", "--output-file", help="File to write the results", default="outputDiffusionML", required=False)
+    parser.add_argument("-o", "--output-file", help="File to write the results", default="outputDiffusionMLPolynomial", required=False)
     parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
     parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
@@ -83,7 +85,7 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
-    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=2.0, required=False)
+    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=4.0, required=False)
     parser.add_argument("-a", "--abar", help="Value of the mean field", default=4.3, required=False)
     parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=15., required=False)
     parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="testingWCosine", required=False)

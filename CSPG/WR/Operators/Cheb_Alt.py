@@ -1,4 +1,5 @@
 import numpy as np
+import os.path
 
 from .operator_from_matrix_Alt import *
 from .LD_bounded_operator  import LD_bounded_operator
@@ -27,6 +28,10 @@ class Cheb_Alt(LD_bounded_operator):
 
     @staticmethod
     def load(data_file):
-        previous_data = np.load(data_file)
+        dirname = os.path.dirname(data_file)
+        bname = os.path.basename(data_file)
+        A = np.load(os.path.join(dirname, "A_"+bname))
+        univariate = np.load(os.path.join(dirname, "univariate_"+bname))
+        J = np.load(os.path.join(dirname, "J_"+bname))
 
-        return operator_from_matrix_Alt(Cheb_Alt, previous_data[0], previous_data[1], previous_data[2])
+        return operator_from_matrix_Alt(Cheb_Alt, A, univariate, J)
