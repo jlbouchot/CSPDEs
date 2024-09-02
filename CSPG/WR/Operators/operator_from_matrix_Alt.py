@@ -53,15 +53,17 @@ class operator_from_matrix_Alt:
         #print([self.A,self.univariate_A,self.J])
         #print(np.shape(self.A))
         #print(np.shape(self.J))
-        #print(np.shape(self.univariate_A))
+        # print(len(self.univariate_A))
+        # print(self.univariate_A)
+        # print("univariate A has type {}".format(type(self.univariate_A)))
         #np.save(data_mtx, [self.A,self.univariate_A,self.J])
         dirname = os.path.dirname(data_file)
         bname = os.path.basename(data_file)
-        print(self.univariate_A)
         for (idx, A) in enumerate(self.univariate_A):
-            print("Row {} has shape {}".format(idx, np.shape(A)))
+            # Write all files one after the other, in the load function, recreate the list
+            # print("Row {} has shape {}".format(idx, np.shape(A)))
+            np.save(os.path.join(dirname, str(idx) + "_univariate_"+bname), self.A)
         np.save(os.path.join(dirname, "A_"+bname), self.A)
-        np.save(os.path.join(dirname, "univariate_"+bname), self.univariate_A)
         np.save(os.path.join(dirname, "J_"+bname), self.J)
 
 

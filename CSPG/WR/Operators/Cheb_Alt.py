@@ -31,7 +31,15 @@ class Cheb_Alt(LD_bounded_operator):
         dirname = os.path.dirname(data_file)
         bname = os.path.basename(data_file)
         A = np.load(os.path.join(dirname, "A_"+bname))
-        univariate = np.load(os.path.join(dirname, "univariate_"+bname))
+        # We're having a bit of issues with the savings of the univariates, which have different sizes
+        # Therefore, we're dealing with an unknown of files, but all having the same names, only indexed: 
+        # {idx}_univariate_{SOMETHING}.npy
+        # Need to pattern match the file names for this purpose
+        nb_valid_files = len([[x for x in os.listdir(dirname) if "univariate" in x]])
+        univariate = []
+        for i in range(nb_valid_files):
+            univariate += np.load(os.path.join(dirname, str(i) + "_univariate_"+bname))
+        # univariate = np.load(os.path.join(dirname, "univariate_"+bname))
         J = np.load(os.path.join(dirname, "J_"+bname))
 
         return operator_from_matrix_Alt(Cheb_Alt, A, univariate, J)
