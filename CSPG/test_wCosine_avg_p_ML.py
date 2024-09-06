@@ -11,14 +11,14 @@ import argparse
 
 
 __author__ = ["Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology, INRIA Sophia Antipolis"
+__copyright__ = "Copyright 2017-2024, INRIA, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology, INRIA Sophia Antipolis"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
-__version__ = "0.1.0-dev"
+__version__ = "0.5.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2024/07/24"
+__lastmodified__ = "2024/09/05"
 
 
 def get_sampling_type(sampling_name):
@@ -34,16 +34,16 @@ def get_sampling_type(sampling_name):
 
 
 # def Main(outfile, d = 10, L_max = 4, orig_mesh_size = 2000):
-def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, alpha = 2.0, abar = 4.3, imp = 1, w_cst = 0.5, dat_constant = 10, experiment_name = "weighted_cosine_avg_v_1D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5):
+def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, algo_name = "whtp", gamma = 1.035, L_min = 1, sampling_name = "p", nb_iter = 500, epsilon = 1e-3, nb_tests = None, mu = 2.0, abar = 4.3, imp = 1, w_cst = 0.5, dat_constant = 10, experiment_name = "weighted_cosine_avg_v_1D", tensor_based=True, ansatz_space = 0, t_0 = 1, t_prime = 1, p0 = 1./4., p = 3./10., const_sJ = 5, no_compute=False, exponent=1.0/4.0):
 
 
-    dict_config = {'d': d, 'J': L_min, "L": L_max, "h0": grid_points, "vj": gamma, "weightCosine":w_cst, "nbSamples": sampling_name, "Tensor": tensor_based, 't': t_0, "tprime": t_prime, 'p0': p0, "p": p, "s_J": const_sJ, "s_L": dat_constant, "alpha": alpha, "abar":abar, "energy_fluctuations": imp, "algo": algo_name, "iter": nb_iter, "tolres": epsilon, "ansatz": ansatz_space}
+    dict_config = {'d': d, 'J': L_min, "L": L_max, "h0": grid_points, "vj": gamma, "weightCosine":w_cst, "nbSamples": sampling_name, "Tensor": tensor_based, 't': t_0, "tprime": t_prime, 'p0': p0, "p": p, "s_J": const_sJ, "s_L": dat_constant, "trig_power": mu, "abar":abar, "energy_fluctuations": imp, "algo": algo_name, "iter": nb_iter, "tolres": epsilon, "ansatz": ansatz_space, "no_compute": no_compute, "alpha": exponent}
 
     # Adapt to the first approximating level (via a single level approach)
     grid_points = tuple(int(2**(L_min)*dummy) for dummy in grid_points)
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
-    spde_model = DiffusionFEMModelML(WeightedCosine1D(d, alpha, imp, abar, w_cst), ConstantCoefficient(10.0),
+    spde_model = DiffusionFEMModelML(WeightedCosine1D(d, mu, imp, abar, w_cst), ConstantCoefficient(10.0),
                                        Average(), grid_points) 
 
 	# Still have to concatenate the output file name with the parameters (i.e. d and h_0)
@@ -52,8 +52,7 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
 #    for s in range(L_min,L_max+1,1): # s corresponds to the number of levels here
         ### Reconstruction Model
     # TODO: Rename things correctly and pass them as parameters
-    alpha = 0.25
-    v = np.hstack((gamma*np.power([val+1 for val in range(d) for dummy_variable in (0,1)], alpha), [np.inf]))
+    v = np.hstack((gamma*np.power([val+1 for val in range(d) for dummy_variable in (0,1)], exponent), [np.inf]))
 
     if tensor_based: 
         wr_model   = WR.WRModel(algo_name, WR.Operators.Cheb_Alt, v, 
@@ -74,25 +73,27 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000]), L_max = 4, al
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description = "")
-    parser.add_argument("-d", "--nb-cosines", help="Number of random cosine and sine parameters", default=5, required=False)
     parser.add_argument("-o", "--output-file", help="File to write the results", default="outputDiffusionMLPolynomial", required=False)
     parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
     parser.add_argument("-m", "--mesh-size", help="Size of the coarsest level (number of grid points)", default=2000, required=False)
     parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
-    parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
     parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
-    parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
     parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
     parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
     parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
-    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion", default=4.0, required=False)
+    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion (~ mu)", default=4.0, required=False)
     parser.add_argument("-a", "--abar", help="Value of the mean field", default=10, required=False)
-    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=15., required=False)
-    parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="testingWCosine", required=False)
     parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
+    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=15., required=False)
+    parser.add_argument("-d", "--nb-cosines", help="Number of random cosine and sine parameters", default=5, required=False)
+    parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
+    parser.add_argument("-E", "--exponent", help="Power of the polynomial weight (~ alpha)", default=1.0/4.0, required=False)
+    parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="testingWCosine", required=False)
+    parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
     parser.add_argument("-i", "--fluctuation-importance", help="What is the importance of the fluctuations with respect to the mean field (default is 1)", default=1, required=False)
     parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
-    parser.add_argument("-w", "--weight-cosine", help="How much weight the local cosine carries (Default = 1)", default=1, required=False)
+    parser.add_argument("-k", "--no-compute", help="Should we skip all computations and only check values for s, m, and N (Default = False)", default=False, required=False)
+    parser.add_argument("-w", "--weight-cosine", help="How much weight the local cosine carries (Default = 1, ~ Upsilon)", default=1, required=False)
     parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default="1", required=False)
     parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default="1", required=False)
     parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/2)", default="0.5", required=False)
@@ -101,6 +102,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 	
     
-    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.fluctuation_importance), float(args.weight_cosine), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space), float(args.t_0), float(args.t_prime), float(args.smooth_0), float(args.smooth_t), float(args.const_sJ))
+    Main(args.output_file, int(args.nb_cosines), tuple([int(args.mesh_size)]), int(args.nb_level), args.recovery_algo.lower(), float(args.gamma), int(args.l_start), args.sampling, int(args.nb_iter), float(args.tol_res), None if args.nb_tests is None else int(args.nb_tests), float(args.power), float(args.abar), float(args.fluctuation_importance), float(args.weight_cosine), float(args.dat_constant), args.prefix_precompute, args.better_compute.lower()=="true", int(args.ansatz_space), float(args.t_0), float(args.t_prime), float(args.smooth_0), float(args.smooth_t), float(args.const_sJ), False if args.nb_tests is None else args.no_compute, float(args.exponent))
     # Main(sys.argv[1])
 
