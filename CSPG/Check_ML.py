@@ -34,6 +34,7 @@ def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, 
     tprime = dict_config["tprime"]
     energy_constant = dict_config["s_J"]
     ansatz_space = dict_config["ansatz"] 
+    no_compute = dict_config["no_compute"]
 
 
     # Create target Directory if doesn't exist
@@ -61,13 +62,14 @@ def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, 
     if filename is None:
         filename = 'results_{0}'.format(dt)
 
-    print("   Writing results to {0} ...".format(filename))
-    d     = shelve.open(os.path.join(prefix_fname,filename))
-    d[dt] = TestResult(spde_model, wr_model, epsilon, L, cspde_result)
-    d.close()
+    if not no_compute:
+        print("   Writing results to {0} ...".format(filename))
+        d     = shelve.open(os.path.join(prefix_fname,filename))
+        d[dt] = TestResult(spde_model, wr_model, epsilon, L, cspde_result)
+        d.close()
 
     ## Execute checks
-    if not checks is None:
+    if checks and (not no_compute):
         print("   Executing checks ... ")
         list(map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)) # the "list(...)" is required due to the new Python 3.x updates
 

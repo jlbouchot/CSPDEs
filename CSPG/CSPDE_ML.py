@@ -63,7 +63,8 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
     t = dict_config["t"]
     tprime = dict_config["tprime"]
     energy_constant = dict_config["s_J"]
-    ansatz_space = dict_config["ansatz"] 
+    ansatz_space = dict_config["ansatz"]
+    no_compute = dict_config["no_compute"]
 
     s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
 
@@ -94,20 +95,22 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
     print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
     wr_model.check(N, m)
 
-    y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
-    A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
+    if not no_compute:
+        y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
+        A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
 
-    print("   Computing weights ...")
-    w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
+        print("   Computing weights ...")
+        w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
 
-    print("   Weighted minimization ...")
-    t_start = time.time()
-    result = wr_model.method(A, y_new-y_old, w, s_J, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-    t_stop = time.time()
-    t_recovery = t_stop-t_start
-    # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-    lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
-    print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples {2}\n".format(t_recovery, t_matrix, t_samples))
+        print("   Weighted minimization ...")
+        t_start = time.time()
+        result = wr_model.method(A, y_new-y_old, w, s_J, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+        t_stop = time.time()
+        t_recovery = t_stop-t_start
+        # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+        lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
+        print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples {2}\n".format(t_recovery, t_matrix, t_samples))
+    
 
 
 
@@ -127,7 +130,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
         else:
             J_s = J_tot_degree(wr_model.weights, ansatz_space)
 
-        print("Ansatz space is {}".format(J_s))
+        # print("Ansatz space is {}".format(J_s))
         
         # Get total number of coefficients in tensorized chebyshev polynomial base
         N = len(J_s)
@@ -146,23 +149,24 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
         wr_model.check(N, m)
 
 
-        y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname)
-        A, t_matrix = get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname)
+        if not no_compute:
+            y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname)
+            A, t_matrix = get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname)
 
         
-        print("   Computing weights ...")
-        w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)    
-        # print(" Weights are {}".format(w) )
+            print("   Computing weights ...")
+            w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)    
+            # print(" Weights are {}".format(w) )
 
-        print("   Weighted minimization ...")
-        t_start = time.time()
-        result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-        t_stop = time.time()
-        t_recovery = t_stop-t_start
-        # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-        lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
-        print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples {2}\n".format(t_recovery, t_matrix, t_samples))
-    
+            print("   Weighted minimization ...")
+            t_start = time.time()
+            result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            t_stop = time.time()
+            t_recovery = t_stop-t_start
+            # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
+            print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples {2}\n".format(t_recovery, t_matrix, t_samples))
+        
     
     return lvl_by_lvl_result
 
@@ -295,8 +299,8 @@ def J(s, theta, v):
 
     # Determine maximal M s.t. for j = 0 ... M-1 is a_j <= A - T
     # M is also the maximal support size
-    # M = np.argmin(a <= A - T)
-    M = np.argmin(a <= A )
+    M = np.argmin(a <= A - T)
+    # M = np.argmin(a <= A )
     assert 0 != M, "Weight array too short. (Last element: {0}. Threshold: {1})".format(a[-1], A-T)
 
     # If A is non-negative the zero vector is always admissible
