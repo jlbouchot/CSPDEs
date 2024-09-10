@@ -17,7 +17,7 @@
 
  
 # List of parameters
-d=20 # number of cosines
+d=10 # number of cosines
 start_h0=10 # will be used as the discretization step for the first level. 
 Lmax=4 # Target number of discretization steps 
 algo=wiht # Which algorithm should be used
@@ -27,7 +27,7 @@ nbtests=50 # A few tests at the end to make sure it somewhat worked
 powerTrig=4 # Power of the trigonometric decay
 abar=10 # Constant mean field
 flucImportance=1 # Importance of the fluctuations
-sL=3 # Constant appearing in front of the number of samples of the target discretization
+sL=5 # Constant appearing in front of the number of samples of the target discretization
 dotensor=True # Use a tensor-based computation instead of building the whole sensing matrix
 wCosine=1 # How important the 'j' component in the decay is
 p0=0.5 # Compressibility in the original space
