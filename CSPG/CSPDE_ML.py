@@ -72,6 +72,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
     # Approximate the Jth level with a single level CSPG 
     # energy_constant = np.max((energy_constant, dat_constant**(p/p0*(1-p0)/(1-p)) * (L-L_first)**(p/p0*(1-p0)/(1-p)) * 2**((L-L_first-1)*p/p0*(1-p0)/(1-p)*(t+tprime)) * 2**(-L*(t+tprime))+1)) # This ensures that the Jth level has more samples than the J+1
     s_J = np.ceil(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
+    s_J = np.max([np.ceil(s_L*2**((L-L_first)*(t+tprime)*p/(1-p))), s_J])
     print("Computing level {0} (this is a Single Level approximation) from a total of {1}. Current sparsity = {2}".format(L_first,L,s_J))
     ## 1. Create index set and draw random samples
     print("Generating J_s ...")
@@ -299,8 +300,8 @@ def J(s, theta, v):
 
     # Determine maximal M s.t. for j = 0 ... M-1 is a_j <= A - T
     # M is also the maximal support size
-    M = np.argmin(a <= A - T)
-    # M = np.argmin(a <= A )
+    # M = np.argmin(a <= A - T)
+    M = np.argmin(a <= A )
     assert 0 != M, "Weight array too short. (Last element: {0}. Threshold: {1})".format(a[-1], A-T)
 
     # If A is non-negative the zero vector is always admissible
