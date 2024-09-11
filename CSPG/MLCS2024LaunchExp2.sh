@@ -19,7 +19,7 @@
 # List of parameters
 d=20 # number of cosines
 start_h0=10 # will be used as the discretization step for the first level. 
-Lmax=5 # Target number of discretization steps 
+Lmax=6 # Target number of discretization steps 
 algo=wiht # Which algorithm should be used
 vj=1.005 # Value of the constant coefficients
 nbSamples=new # What should be the number of samples 
@@ -41,6 +41,6 @@ for ((J=1; J<=$Lmax; J++))
 do
 	echo "RUNNING THE EXPERIMENT WITH J = $J"
 	folder=$expBasename$J
-	python test_wCosine_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -m $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False 
+	python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False 
 	# python test_wCosine_2D_avg_v_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder
 done
