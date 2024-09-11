@@ -78,12 +78,12 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
     print("Generating J_s ...")
     
     # Compute "active index set" J_s
-    t_start = time.clock()
+    t_start = time.process_time()
     if ansatz_space == 0: 
         J_s = J(s_J, wr_model.operator.theta, wr_model.weights)
     else:
         J_s = J_tot_degree(wr_model.weights, ansatz_space)
-    t_stop = time.clock()
+    t_stop = time.process_time()
     t_J = t_stop-t_start
 
     # Get total number of coefficients in tensorized chebyshev polynomial base
@@ -107,9 +107,9 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
         w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
 
         print("   Weighted minimization ...")
-        t_start = time.clock()
+        t_start = time.process_time()
         result = wr_model.method(A, y_new-y_old, w, s_J, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-        t_stop = time.clock()
+        t_stop = time.process_time()
         t_recovery = t_stop-t_start
         # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
         lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
@@ -129,12 +129,12 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
         print("Generating J_s ...")
         
         # Compute "active index set" J_s
-        t_start = time.clock()
+        t_start = time.process_time()
         if ansatz_space == 0: 
             J_s = J(sl, wr_model.operator.theta, wr_model.weights)
         else:
             J_s = J_tot_degree(wr_model.weights, ansatz_space)
-        t_stop = time.clock()
+        t_stop = time.process_time()
         t_J = t_stop-t_start
         
         # print("Ansatz space is {}".format(J_s))
@@ -166,9 +166,9 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
             # print(" Weights are {}".format(w) )
 
             print("   Weighted minimization ...")
-            t_start = time.clock()
+            t_start = time.process_time()
             result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-            t_stop = time.clock()
+            t_stop = time.process_time()
             t_recovery = t_stop-t_start
             # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
             lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
@@ -182,14 +182,14 @@ def get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname
     if (sampling_fname is None) or (datamtx_fname is None):  
         # Create sampling matrix and weights
         print("   Creating sample operator ...")
-        t_start = time.clock()
+        t_start = time.process_time()
         A = wr_model.operator.create(J_s, Z)
-        t_stop = time.clock()
+        t_stop = time.process_time()
         t_matrix = t_stop-t_start
     else:
         # Create sampling matrix and weights
         print("   Creating sample operator ...")
-        t_start = time.clock()
+        t_start = time.process_time()
         mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
         if os.path.isfile(mtx_file):
             # A = ofm(Chebyshev, np.load(mtx_file))
@@ -198,7 +198,7 @@ def get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname
             A = wr_model.operator.create(J_s, Z)
             A.save(mtx_file)
             # np.save(mtx_file, A.A)
-        t_stop = time.clock()
+        t_stop = time.process_time()
         t_matrix = t_stop-t_start
 
     return A, t_matrix
@@ -210,14 +210,14 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, da
         Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
         print("\nComputing {0} SPDE sample approximations ...".format(m))
         # Get samples
-        t_start = time.clock()
+        t_start = time.process_time()
         if onelvl != J:
             y_old = spde_model.samples(Z)
             spde_model.refine_mesh()
         else:
             y_old = np.zeros(m)
         y_new = spde_model.samples(Z)
-        t_stop = time.clock()
+        t_stop = time.process_time()
         t_samples = t_stop-t_start
 
 
@@ -231,14 +231,14 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, da
             np.save(sampling_file, Z)
         print("\nComputing {0} SPDE sample approximations ...".format(m))
         # Get samples
-        t_start = time.clock()
+        t_start = time.process_time()
         if oneLvl != J:
             y_old = spde_model.samples(Z)
             spde_model.refine_mesh()
         else:
             y_old = np.zeros(m)
         y_new = spde_model.samples(Z)
-        t_stop = time.clock()
+        t_stop = time.process_time()
         t_samples = t_stop-t_start
 
     return y_new, y_old, Z, t_samples

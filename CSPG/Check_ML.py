@@ -58,7 +58,7 @@ def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, 
     print("\nPostprocessing and outputting solution ...")
 
     ## Save results
-    dt = datetime.datetime.fromtimestamp(time.clock()).isoformat()
+    dt = datetime.datetime.fromtimestamp(time.process_time()).isoformat()
     if filename is None:
         filename = 'results_{0}'.format(dt)
 

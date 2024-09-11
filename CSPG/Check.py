@@ -17,7 +17,7 @@ def test(spde_model, wr_model, epsilon, s, checks = None, filename = None, cspde
     print("\nPostprocessing and outputting solution ...")
 
     ## Save results
-    dt = datetime.datetime.fromtimestamp(time.clock()).isoformat()
+    dt = datetime.datetime.fromtimestamp(time.process_time()).isoformat()
     if filename is None:
         filename = 'results_{0}'.format(dt)
 
