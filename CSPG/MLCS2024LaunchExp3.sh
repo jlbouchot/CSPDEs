@@ -34,7 +34,7 @@ wCosine=0.25 # How important the 'j' component in the decay is
 p0=0.33 # Compressibility in the original space
 p=0.33 # Compressibility in the smoothness scale
 sJ=40 # Constant used for the first level of approximation
-
+exponent=0.166 #0.25
 expBasename=Exp3Dim2WCosineDimensionalityd
 
 for d in 8 10 13 16 20 25 32
@@ -42,6 +42,6 @@ for d in 8 10 13 16 20 25 32
 do
 	echo "RUNNING THE EXPERIMENT WITH d = $d"
 	folder=$expBasename$d
-	python test_wCosine_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $Lmin -m $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False 
+	python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $Lmin -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False 
 	#python test_wCosine_2D_avg_v_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $Lmin -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder
 done
