@@ -18,8 +18,8 @@
 # List of parameters
 d=20 # number of cosines
 start_h0=250 # will be used as the discretization step for the first level. 
-Lmax=4 # Target number of discretization steps 
-Lmin=2 # minimum number of multi-levels computed
+Lmax=6 # Target number of discretization steps 
+Lmin=5 # minimum number of multi-levels computed
 algo=wiht # Which algorithm should be used
 vj=1.005 # Value of the constant coefficients
 nbSamples=new # What should be the number of samples 

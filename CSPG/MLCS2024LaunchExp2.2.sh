@@ -19,7 +19,7 @@
 # List of parameters
 d=20 # number of cosines
 start_h0=250 # will be used as the discretization step for the first level. 
-Lmax=4 # Target number of discretization steps 
+Lmax=6 # Target number of discretization steps 
 algo=wiht # Which algorithm should be used
 vj=1.005 # Value of the constant coefficients
 nbSamples=new # What should be the number of samples 
@@ -37,7 +37,7 @@ exponent=0.166 #0.25
 expBasename="Exp2Dim2WCosine${d}InfluenceJ"
 
 
-for ((J=1; J<=$Lmax; J++))
+for ((J=5; J<=$Lmax; J++))
 do
 	echo "RUNNING THE EXPERIMENT WITH J = $J"
 	folder=$expBasename$J
