@@ -37,7 +37,7 @@ sJ=40 # Constant used for the first level of approximation
 exponent=0.166 #0.25
 expBasename=Exp3Dim2WCosineDimensionalityd
 
-for d in 8 10 13 16
+for d in 20 25 32
 #for ((d=$Lmin; L<=$Lmax; L++))
 do
 	echo "RUNNING THE EXPERIMENT WITH d = $d"

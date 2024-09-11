@@ -5,14 +5,15 @@ from .Result import *
 from .weighted_quasi_abslargest import *
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
+__copyright__ = "Copyright 2015-2024, INRIA, RWTH Aachen, ETH Zurich, and Beijing Institute of Technology"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__created__ = "2015/09/21"
+__lastmodified__ = "2024/09/11"
 
 def wiht(Operator, y, w, s, eta, maxiter):
     x         = np.zeros(Operator.n)
@@ -30,5 +31,6 @@ def wiht(Operator, y, w, s, eta, maxiter):
         if k > maxiter:
             print('WIHT did not converge after {0} iterations.'.format(k))
             break
+    print("Weighted Recovery:WIHT stopped after {} iterations. Current residual is {}".format(k, np.linalg.norm(Operator.apply(x) - y)))
 
     return Result(x, k, 'Weighted Iterative Hard Thresholding')
