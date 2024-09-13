@@ -22,7 +22,7 @@ __lastmodified__ = "2019/06/05"
 
 from time import sleep
 
-CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
+CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
 # def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, dat_constant = 5, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None, t = 1, tprime = 1, p0 = 1./3., p = 2./3., energy_constant = 10): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
 def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fname = None, datamtx_fname = None): 
@@ -112,7 +112,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
         t_stop = time.process_time()
         t_recovery = t_stop-t_start
         # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-        lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
+        lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
         print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
     
 
@@ -171,7 +171,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
             t_stop = time.process_time()
             t_recovery = t_stop-t_start
             # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-            lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery))
+            lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
             print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
         
     
