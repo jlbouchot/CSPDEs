@@ -1,10 +1,10 @@
 #!/bin/bash
-#title           :MLCSPG2024LaunchExp1.sh
+#title           :MLCSPG2024LaunchExp4.sh
 #description     :This script tests the influence of the target approximation level.
 #author		 :Jean-Luc Bouchot
 #date            :2024/09/05
 #version         :0.1    
-#usage		 :bash MLCSPG2024LaunchExp1.sh
+#usage		 :bash MLCSPG2024LaunchExp4.sh
 #notes           :Install FEniCS, CVXPY, progressbar before using.
 #==============================================================================
 
@@ -18,8 +18,9 @@
 # List of parameters
 d=10 # number of cosines
 start_h0=20 # will be used as the discretization step for the first level. 
-Lmax=4 # Target number of discretization steps 
-Lmin=2 # minimum number of multi-levels computed
+L=6 # Target number of discretization steps 
+Jmin=0 # minimum number of multi-levels computed
+Jmax=3
 algo=wiht # Which algorithm should be used
 vj=1.005 # Value of the constant coefficients
 nbSamples=new # What should be the number of samples 
@@ -34,15 +35,15 @@ p0=0.33 #0.5 # Compressibility in the original space
 p=0.33 #0.5 # Compressibility in the smoothness scale
 sJ=5 # Constant used for the first level of approximation
 exponent=0.166 #0.25
-expBasename=Exp1H0${start_h0}Dim2WCosine${d}InfluenceTarget
+expBasename=Exp4H0${start_h0}Dim2WCosine${d}InfluenceTarget${L}J
 nbDetails=2
 
-for ((L=$Lmin; L<=$Lmax; L++))
+for ((J=$Jmin; J<=$Jmax; J++))
 do
-	echo "RUNNING THE EXPERIMENT WITH L = $L"
-	folder=$expBasename$L
+	echo "RUNNING THE EXPERIMENT WITH J = $J"
+	folder=$expBasename$J
 	mkdir -p $folder
-	J=$(($L-$nbDetails))
+	#J=$(($L-$nbDetails))
 	echo "Starting index is J = $J with end index L = $L" 
 	# python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False > $folder/stdoutput.txt 
 	python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent > $folder/stdoutput.txt # -k False

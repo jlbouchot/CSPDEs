@@ -17,7 +17,7 @@
  
 # List of parameters
 d=10 # number of cosines
-start_h0=100 # will be used as the discretization step for the first level. 
+start_h0=20 # will be used as the discretization step for the first level. 
 Lmax=6 # Target number of discretization steps 
 Lmin=5 # minimum number of multi-levels computed
 algo=wiht # Which algorithm should be used
@@ -34,7 +34,7 @@ p0=0.33 #0.5 # Compressibility in the original space
 p=0.33 #0.5 # Compressibility in the smoothness scale
 sJ=5 # Constant used for the first level of approximation
 exponent=0.166 #0.25
-expBasename=Exp1Dim2WCosine${d}InfluenceTarget
+expBasename=Exp1H0${start_h0}Dim2WCosine${d}InfluenceTarget
 nbDetails=2
 
 
@@ -45,7 +45,8 @@ do
 	mkdir -p $folder
 	J=$(($L-$nbDetails))
 	echo "Starting index is J = $J with end index L = $L" 
-	python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent > $folder/stdoutput.txt
+	python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent > $folder/stdoutput.txt
+	# python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent > $folder/stdoutput.txt
 	# python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False > $folder/stdoutput.txt
 	# python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False 
 	# python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $L -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder
