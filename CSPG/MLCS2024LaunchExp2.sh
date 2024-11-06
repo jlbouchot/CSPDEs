@@ -18,7 +18,7 @@
  
 # List of parameters
 d=10 # number of cosines
-start_h0=100 # will be used as the discretization step for the first level. 
+start_h0=20 # will be used as the discretization step for the first level. 
 Lmax=4 # Target number of discretization steps 
 algo=wiht # Which algorithm should be used
 vj=1.005 # Value of the constant coefficients
@@ -34,7 +34,7 @@ p0=0.33 #0.5 # Compressibility in the original space
 p=0.33 #0.5 # Compressibility in the smoothness scale
 sJ=5 # Constant used for the first level of approximation
 exponent=0.166 #0.25
-expBasename="Exp2Dim2WCosine${d}InfluenceJ"
+expBasename=Exp2H0${start_h0}Dim2WCosine${d}InfluenceJ
 
 
 for ((J=0; J<=2; J++))
@@ -43,6 +43,7 @@ do
 	folder=$expBasename$J
 	mkdir -p $folder
 	# python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent -k False > $folder/stdoutput.txt
-	python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent > $folder/stdoutput.txt
+	python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent > $folder/stdoutput.txt
+	# python test_wCosine_2D_avg_p_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder -E $exponent > $folder/stdoutput.txt
 	# python test_wCosine_2D_avg_v_ML.py -d $d -o WeightedCosine2D -L $Lmax -s $J -x $start_h0 -y $start_h0 -t $nbSamples -r $algo -g $vj -n $nbtests -p $powerTrig -a $abar -c $sL -b $dotensor -i $flucImportance -w $wCosine --smooth_0 $p0 --smooth_t $p --const_sJ $sJ -f $folder
 done
