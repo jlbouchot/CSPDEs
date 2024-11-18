@@ -15,6 +15,7 @@ __lastmodified__ = "2015/09/21"
 class FEMModel(SPDEModel):
     def init_simple_mesh(self):
         # Create mesh and define function space
+        print("Inside the init simple mesh")
         if type(self.mesh_size) is tuple:
             if len(self.mesh_size) == 1:
                 self.mesh = UnitIntervalMesh(*self.mesh_size)
@@ -31,6 +32,10 @@ class FEMModel(SPDEModel):
     def refine_mesh(self, ratio=2): # Note, this can also be used to coarsen the mesh
         self.mesh_size = tuple(int(one_direction*ratio) for one_direction in self.mesh_size)
         self.init_simple_mesh()
+
+    def set_mesh_size(self, mesh_size):
+        self.mesh_size = tuple(one_size for one_size in mesh_size)
+        self.init_simple_mesh
 
     # @staticmethod
     def split_params(self, coeff, z):
