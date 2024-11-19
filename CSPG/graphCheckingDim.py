@@ -1,8 +1,5 @@
 from dolfin import *
 
-#from iterative_solution import compute_true_avg_alternate as ctaa
-#from iterative_solution import compute_true_avg as cta
-
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -14,6 +11,9 @@ import shelve
 import os.path 
 # thanks python >= 3.5 for the next thing! 
 import pathlib # This allows to avoid the if path.exists -> mkdir thing. Hurray!
+
+import pandas as pd
+# import seaborn as sns
 
 from collections import namedtuple
 from collections import defaultdict
@@ -85,13 +85,15 @@ def getComputeTimes(cspdeResultsList):
 		for oneLvl in range(0,nbLvl): 
 			pdeTimes = pdeTimes + cspdeResultsList[oneLvl].t_samples
 			recoveryTimes = recoveryTimes + cspdeResultsList[oneLvl].t_recovery
+			mtxTimes = mtxTimes + cspdeResultsList[oneLvl].t_matrix
+			jsTimes = jsTimes + cspdeResultsList[oneLvl].t_J
 	else: # This is a single CSPDEResult
 			pdeTimes =cspdeResultsList.t_samples
 			recoveryTimes = cspdeResultsList.t_recovery
 			mtxTimes = cspdeResultsList.t_matrix
 			jsTimes = cspdeResultsList.t_J
 
-	return pdeTimes, recoveryTimes
+	return pdeTimes, recoveryTimes, mtxTimes, jsTimes
 
 ################################################3
 # Meat of the script
@@ -105,11 +107,9 @@ TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'epsilon', 'L',
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
 
-# Lmax = 6
-# h0 = 20
 nbDim = 2
 target_mesh_size = [1000]*nbDim
-ds_to_display = [8, 10, 13, 16 ,20 ,25]
+ds_to_display = [8,10,13,16] # [8, 10, 13, 16 ,20 ,25]
 
 core_folder_name = 'Exp3H020Dim2WCosineDimensionalityd'
 fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
@@ -158,6 +158,14 @@ for oned in ds_to_display:
 		# results_all.append(cur_results)
 		results_all[oned] = cur_results
 
+'''
+# Debugging the load of some files: 
+cur_cspde_result = results_all[8].cspde_result
+for bbbb in range(len(cur_cspde_result)):
+	print("Looking at J for level {} from {}".format(bbbb, len(cur_cspde_result)-1))
+	print("\t J = {}".format(cur_cspde_result[bbbb].J_s))
+abort[0]
+'''
 
 
 first_result	= results_all[ds_to_display[-1]] 
@@ -176,62 +184,37 @@ nb_tests 	= 10 # This should be sufficient
 #	if max_mesh_size[0] < current_target_mesh_size[0]: 
 #		max_mesh_size = current_target_mesh_size
 
-#y_GT = {}
-#Z = {}
-l2error = {} # np.zeros(len(ds_to_display))
-linferror = {} # np.zeros(len(ds_to_display))
-computeTimePDE = {} # np.zeros(len(ds_to_display))
-computeTimeRecovery = {} # np.zeros(len(ds_to_display))
-computeTimeMtx = {} # np.zeros(len(ds_to_display))
-computeTimeJs = {} # np.zeros(len(ds_to_display))
-computeTotalTime = {} # np.zeros(len(ds_to_display))
+l2error = {} 
+linferror = {} 
+computeTimePDE = {} 
+computeTimeRecovery = {} 
+computeTimeMtx = {} 
+computeTimeJs = {} 
+computeTotalTime = {} 
+
 for d in ds_to_display: 
+	print("Computing results for d = {}".format(d))
 	spde_model = results_all[d].spde_model 
 	spde_model.set_mesh_size(target_mesh_size)
-	y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, d, nb_tests, GTfolder = 'GTresults_d' + str(d) + 'H' + str(target_mesh_size[0]), GTfilenames = 'GT_')
+	y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, 2*d, nb_tests, GTfolder = 'GTresults_d' + str(2*d) + 'H' + str(target_mesh_size[0]), GTfilenames = 'GT_')
 	# y_estimated = wr_model.estimate_ML_samples(first_result[0].cspde_result, Z)
-	y_estimated = results_all[idx].wr_model.estimate_ML_samples(results_all[idx].cspde_result, Z)
+	y_estimated = results_all[d].wr_model.estimate_ML_samples(results_all[d].cspde_result, Z)
 	l2error[d] = np.linalg.norm(y_estimated - y_GT)
 	linferror[d] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
 	curPdeTimes, curRecoveryTimes, curMtxTimes, curJsTimes = getComputeTimes(results_all[d].cspde_result)
-	computeTimePDE[d] = curPdeTimes
-	computeTimeRecovery[d] = curRecoveryTimes
-	computeTimeMtx[d] = curMtxTimes
-	computeTimeJs[d] = curJsTimes
 	computeTotalTime[d] = curPdeTimes + curRecoveryTimes + curMtxTimes + curJsTimes
+	computeTimePDE[d] = curPdeTimes / computeTotalTime[d]
+	computeTimeRecovery[d] = curRecoveryTimes / computeTotalTime[d]
+	computeTimeMtx[d] = curMtxTimes / computeTotalTime[d]
+	computeTimeJs[d] = curJsTimes / computeTotalTime[d]
+	
+all_data_df = pd.DataFrame(data=[computeTimePDE, computeTimeRecovery, computeTimeMtx, computeTimeJs, computeTotalTime]).rename({0: 'PDE', 1: 'Recovery', 2: 'Matrix', 3: 'J', 4: 'Total'}).transpose()
+print(all_data_df)
 
-abort[0]
-# Save the results: 
-l2error = np.zeros(len(ds_to_display))
-linferror = np.zeros(len(ds_to_display))
-computeTimePDE = np.zeros(len(ds_to_display))
-computeTimeRecovery = np.zeros(len(ds_to_display))
-computeTimeMtx = np.zeros(len(ds_to_display))
-computeTimeJs = np.zeros(len(ds_to_display))
-computeTotalTime = np.zeros(len(ds_to_display))
-
-
-# Let's see how our approximations perform!
-for (idx, oned) in enumerate(ds_to_display): # Probably better to just read the file in this loop too instead of above.
-	# Compute current estimates 
-	y_estimated = results_all[idx].wr_model.estimate_ML_samples(results_all[idx].cspde_result, Z[d])
-	l2error[idx] = np.linalg.norm(y_estimated - y_GT[d])
-	linferror[idx] = np.linalg.norm(y_estimated - y_GT[d], ord=np.inf)
-	curPdeTimes, curRecoveryTimes, curMtxTimes, curJsTimes = getComputeTimes(results_all[idx].cspde_result)
-	computeTimePDE[idx] = curPdeTimes
-	computeTimeRecovery[idx] = curRecoveryTimes
-	computeTimeMtx[idx] = curMtxTimes
-	computeTimeJs[idx] = curJsTimes
-	computeTotalTime[idx] = curPdeTimes + curRecoveryTimes + curMtxTimes + curJsTimes
-
-abort[0]
-# scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = np.random.randint(0, len(linferror), len(linferror)))
 cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
 scatter = []
-for idx,oned in enumerate(ds_to_display): 
-	scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = np.random.rand(3,) ))
-	# scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = cmapForScatter(idx) ))
-# scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = [] )
+for oned in ds_to_display: 
+	scatter.append(plt.scatter(np.log10(computeTotalTime[oned]), np.log10(linferror[oned]), c = np.random.rand(3,) ))
 plt.ylabel('$\ell_\infty$ norm of the error (via $\log_{10}$)')
 plt.xlabel('Computing time ($log_{10}$ scale)')
 classes = ["L = " + str(oned) for oned in ds_to_display]
@@ -239,5 +222,13 @@ plt.legend(handles=scatter, labels=classes)
 #plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
 plt.show()
 
-
-
+cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
+scatter = []
+for oned in ds_to_display: 
+	scatter.append(plt.scatter(computeTimePDE[oned], computeTimeRecovery[oned], c = np.random.rand(3,) ))
+plt.ylabel('Fraction of time used for sparse recovery')
+plt.xlabel('Fraction of time used for PDE computation')
+classes = ["L = " + str(oned) for oned in ds_to_display]
+plt.legend(handles=scatter, labels=classes)
+#plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
+plt.show()

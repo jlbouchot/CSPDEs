@@ -15,7 +15,6 @@ __lastmodified__ = "2015/09/21"
 class FEMModel(SPDEModel):
     def init_simple_mesh(self):
         # Create mesh and define function space
-        print("Inside the init simple mesh")
         if type(self.mesh_size) is tuple:
             if len(self.mesh_size) == 1:
                 self.mesh = UnitIntervalMesh(*self.mesh_size)
