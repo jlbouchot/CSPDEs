@@ -76,17 +76,23 @@ def getComputeTimes(cspdeResultsList):
 
 	pdeTimes = 0
 	recoveryTimes = 0
+	mtxTimes = 0
+	jsTimes = 0
 
 	if isinstance(cspdeResultsList, list): # Run through all level 
 		nbLvl = len(cspdeResultsList)
 		for oneLvl in range(0,nbLvl): 
 			pdeTimes = pdeTimes + cspdeResultsList[oneLvl].t_samples
 			recoveryTimes = recoveryTimes + cspdeResultsList[oneLvl].t_recovery
+			mtxTimes = mtxTimes + cspdeResultsList[oneLvl].t_matrix
+			jsTimes = jsTimes + cspdeResultsList[oneLvl].t_J
 	else: # This is a single CSPDEResult
 			pdeTimes =cspdeResultsList.t_samples
 			recoveryTimes = cspdeResultsList.t_recovery
+			mtxTimes = cspdeResultsList.t_matrix
+			jsTimes = cspdeResultsList.t_J
 
-	return pdeTimes, recoveryTimes
+	return pdeTimes, recoveryTimes, mtxTimes, jsTimes
 
 ################################################3
 # Meat of the script
@@ -97,14 +103,14 @@ def getComputeTimes(cspdeResultsList):
 
 # Remember the things? Surely there is another way to do this!
 TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'epsilon', 'L', 'cspde_result'])
-CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
+CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
 
-Lmax = 6
-h0 = 10;
-Js_to_display = [2,3] #[1,2,3,4,5,6] # Note that J = 6 corresponds to the SL appraoch
+nbDim = 2
+target_mesh_size = [1000]*nbDim
+Js_to_display = [3, 4] #[1,2,3,4,5,6] # Note that J = 6 corresponds to the SL appraoch
 
-core_folder_name = 'Exp1Dim2WCosine20InfluenceJ'
+core_folder_name = 'Exp2H020Dim2WCosine10InfluenceJ'
 fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
 cfg_fname = 'config_file.txt' # This contains all the details from the experiments. I don't think we need it for graphing, but who knows. 
 
@@ -138,29 +144,50 @@ cfg_fname = 'config_file.txt' # This contains all the details from the experimen
 #############
 path_to_GT = 'groundTruth'
 
-# Load and plot results for all J's, one after the other 
-results_all = []
+# Load and plot results for all d's, one after the other 
+results_all = {}
 for oneJ in Js_to_display: 
 	cur_path_to_file = core_folder_name + str(oneJ)
 	print("Loading {0} from folder {1} ...".format(fname_to_read, cur_path_to_file))
 	cur_results = sorted(shelve.open(os.path.join(cur_path_to_file,fname_to_read)).values(), key=lambda r: r.L)
 	if len(cur_results) > 0: 
-		results_all.append(cur_results[0]) # This is the Check_ML.TestResult tuple
+		# results_all.append(cur_results[0]) # This is the Check_ML.TestResult tuple
+		results_all[oneJ] = cur_results[0]
 	else: 
-		results_all.append(cur_results)
+		# results_all.append(cur_results)
+		results_all[oneJ] = cur_results
 
 
-
-first_result	= results_all[:-1] # At that moment, first_result is a single-level result
-d 		= first_result[0].cspde_result[0].d # number of parameters
-#d            = first_result[0][TR_CR_POS][CR_D_POS] # number of parameters
-spde_model 	= first_result[0].spde_model #[TR_SPDE_MODEL_POS]
-epsilon		= first_result[0].epsilon #[TR_EPSILON_POS]
-wr_model 	= first_result[0].wr_model
-nb_tests 	= 100#00 # This should be sufficient
+d 		= results_all[Js_to_display[0]].cspde_result[0].d # number of parameters
+nb_tests 	= 10#00 # This should be sufficient
+wr_model 	= results_all[Js_to_display[0]].wr_model
 
 
-y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, d, nb_tests, GTfolder = 'GTresults', GTfilenames = 'GT_')
+l2error = {} 
+linferror = {} 
+computeTimePDE = {} 
+computeTimeRecovery = {} 
+computeTimeMtx = {} 
+computeTimeJs = {} 
+computeTotalTime = {} 
+
+for oneJ in Js_to_display: 
+	print("Computing results for J = {}".format(oneJ))
+	spde_model = results_all[oneJ].spde_model 
+	spde_model.set_mesh_size(target_mesh_size)
+	y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, 2*d, nb_tests, GTfolder = 'GTresults_d' + str(2*d) + 'H' + str(target_mesh_size[0]), GTfilenames = 'GT_')
+	# y_estimated = wr_model.estimate_ML_samples(first_result[0].cspde_result, Z)
+	y_estimated = results_all[oneJ].wr_model.estimate_ML_samples(results_all[oneJ].cspde_result, Z)
+	l2error[oneJ] = np.linalg.norm(y_estimated - y_GT)
+	linferror[oneJ] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
+	curPdeTimes, curRecoveryTimes, curMtxTimes, curJsTimes = getComputeTimes(results_all[oneJ].cspde_result)
+	computeTotalTime[oneJ] = curPdeTimes + curRecoveryTimes + curMtxTimes + curJsTimes
+	computeTimePDE[oneJ] = curPdeTimes / computeTotalTime[oneJ]
+	computeTimeRecovery[oneJ] = curRecoveryTimes / computeTotalTime[oneJ]
+	computeTimeMtx[oneJ] = curMtxTimes / computeTotalTime[oneJ]
+	computeTimeJs[oneJ] = curJsTimes / computeTotalTime[oneJ]
+
+'''y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, d, nb_tests, GTfolder = 'GTresults', GTfilenames = 'GT_')
 y_estimated = wr_model.estimate_ML_samples(first_result[0].cspde_result, Z)
 
 
@@ -179,14 +206,14 @@ for (idx, oneJ) in enumerate(Js_to_display): # Probably better to just read the 
 	linferror[idx] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
 	curPdeTimes, curRecoveryTimes = getComputeTimes(results_all[idx].cspde_result)
 	computeTimePDE[idx] = curPdeTimes
-	computeTimeRecovery[idx] = curRecoveryTimes
+	computeTimeRecovery[idx] = curRecoveryTimes'''
 
 
 # scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = np.random.randint(0, len(linferror), len(linferror)))
 cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
 scatter = []
 for idx,oneJ in enumerate(Js_to_display): 
-	scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = np.random.rand(3,) ))
+	scatter.append(plt.scatter(np.log10(computeTimePDE[oneJ]+computeTimeRecovery[oneJ]), np.log10(linferror[oneJ]), c = np.random.rand(3,) ))
 	# scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = cmapForScatter(idx) ))
 # scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = [] )
 plt.ylabel('$\ell_\infty$ norm of the error (via $\log_10$)')
@@ -197,4 +224,14 @@ plt.legend(handles=scatter, labels=classes)
 plt.show()
 
 
+cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
+scatter = []
+for oneJ in Js_to_display: 
+	scatter.append(plt.scatter(computeTimePDE[oneJ], computeTimeRecovery[oneJ], c = np.random.rand(3,) ))
+plt.ylabel('Fraction of time used for sparse recovery')
+plt.xlabel('Fraction of time used for PDE computation')
+classes = ["L = " + str(oneJ) for oneJ in Js_to_display]
+plt.legend(handles=scatter, labels=classes)
+#plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
+plt.show()
 
