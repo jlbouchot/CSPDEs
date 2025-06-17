@@ -112,6 +112,8 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 nbDim = 2
 target_mesh_size = [3000]*nbDim
 ds_to_display = [8,10,13,16, 20 ,25]
+#target_mesh_size = [5120]*nbDim
+#ds_to_display = [8, 10, 13, 16 ,20 ,25]
 
 core_folder_name = 'Exp3H020Dim2WCosineDimensionalityd'
 fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 

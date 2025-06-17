@@ -37,7 +37,7 @@ exponent=0.166 #0.25
 expBasename=Exp2H0${start_h0}Dim2WCosine${d}InfluenceJ
 
 
-for ((J=0; J<=2; J++))
+for ((J=1; J<=2; J++))
 do
 	echo "RUNNING THE EXPERIMENT WITH J = $J"
 	folder=$expBasename$J
