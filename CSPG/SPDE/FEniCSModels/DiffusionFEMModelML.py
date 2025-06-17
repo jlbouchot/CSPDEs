@@ -57,10 +57,11 @@ class DiffusionFEMModelML(FEMModel):
 
         # Create solver
         problem     = LinearVariationalProblem(A, L, u, bc)
+        # list_linear_solver_methods()
         self.solver = LinearVariationalSolver(problem) #, solver_parameters={'linear_solver': 'iterative'})
-        self.solver.parameters["linear_solver"] = "ilu"
-        self.solver.parameters["relative_tolerance"] = 1e-3
-        self.solver.parameters["absolute_tolerance"] =1e-6
+        self.solver.parameters["linear_solver"] = "petsc"
+        self.solver.parameters.add("relative_tolerance", 1e-3)
+        self.solver.parameters.add("absolute_tolerance", 1e-6)
         # self.solver.parameters["linear_solver"] ="iterative"
         # y[k] = assemble(myAverage(mesh, u, dx))
 
