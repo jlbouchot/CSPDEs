@@ -1,7 +1,7 @@
+# Graph total compute time, PDE only compuyte time, l1recovery only compute time with respect to J
+
 from dolfin import *
 
-#from iterative_solution import compute_true_avg_alternate as ctaa
-#from iterative_solution import compute_true_avg as cta
 
 import numpy as np
 import matplotlib as mpl
@@ -56,7 +56,6 @@ def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder 
 	else: 
 		nbExistingYs = 0
 
-	print(f"Found {nbExistingYs} existing samples out of the expected {nbSamples}")
 	if nbExistingYs >= nbSamples: 
 		return existingYs[0:nbSamples], Z[0:nbSamples]
 
@@ -91,6 +90,8 @@ def getComputeTimes(cspdeResultsList):
 			recoveryTimes = recoveryTimes + cspdeResultsList[oneLvl].t_recovery
 			mtxTimes = mtxTimes + cspdeResultsList[oneLvl].t_matrix
 			jsTimes = jsTimes + cspdeResultsList[oneLvl].t_J
+
+			print(f"Level {oneLvl} has {cspdeResultsList[oneLvl].m} samples. Ansatz space has {cspdeResultsList[oneLvl].N} elements. PDE Time = {cspdeResultsList[oneLvl].t_samples}. Sparse recovery time = {cspdeResultsList[oneLvl].t_recovery}. Computing the Ansatz space took {cspdeResultsList[oneLvl].t_J}. Creating the matrix of tscheb coef took {cspdeResultsList[oneLvl].t_matrix}")
 	else: # This is a single CSPDEResult
 			pdeTimes =cspdeResultsList.t_samples
 			recoveryTimes = cspdeResultsList.t_recovery
@@ -113,7 +114,7 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 
 nbDim = 2
 target_mesh_size = [3000]*nbDim
-Js_to_display = [1,2,3,4,5] # Note that J = 6 corresponds to the SL appraoch
+Js_to_display = [1,2,3,4,5] # Note that J = 5 corresponds to the SL appraoch
 
 core_folder_name = 'Exp4H020Dim2WCosine10InfluenceTarget5J'
 # core_folder_name = 'Exp4H020Dim2WCosine10InfluenceJ'
@@ -193,51 +194,91 @@ for oneJ in Js_to_display:
 	computeTimeMtx[oneJ] = curMtxTimes / computeTotalTime[oneJ]
 	computeTimeJs[oneJ] = curJsTimes / computeTotalTime[oneJ]
 
-'''y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, d, nb_tests, GTfolder = 'GTresults', GTfilenames = 'GT_')
-y_estimated = wr_model.estimate_ML_samples(first_result[0].cspde_result, Z)
+
+colours = plt.cm.rainbow(np.linspace(0, 1, len(Js_to_display)))
+markers = ["o", "v", "^", "<", ">", "s", "8"]
 
 
-# Save the results: 
-l2error = np.zeros(len(Js_to_display))
-linferror = np.zeros(len(Js_to_display))
-computeTimePDE = np.zeros(len(Js_to_display))
-computeTimeRecovery = np.zeros(len(Js_to_display))
+# plt.figure()
+# cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
+# scatter = []
+# for idx,oneJ in enumerate(Js_to_display): 
+# 	scatter.append(plt.scatter(np.log10(computeTotalTime[oneJ]), np.log10(linferror[oneJ]), color = colours[idx], marker=markers[idx] ))
+# plt.ylabel('$\ell_\infty$ norm of the error (via $\log_{10}$)')
+# plt.xlabel('Total compute time ($log_{10}$ scale)')
+# classes = ["J = " + str(oneJ) for oneJ in Js_to_display]
+# plt.legend(handles=scatter, labels=classes)
+# #plt.legend((str(oneJ) for oneJ in Js_to_display), loc='upper right', fontsize=8)
+# plt.savefig("LinfWRTtotalTime.eps")
+# plt.savefig("LinfWRTtotalTime.jpg")
+# # plt.show()
+
+# plt.figure()
+# cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
+# scatter = []
+# for idx,oneJ in enumerate(Js_to_display):
+# 	scatter.append(plt.scatter(np.log10(computeTimePDE[oneJ]), np.log10(linferror[oneJ]), color = colours[idx], marker=markers[idx] ))
+# plt.ylabel('$\ell_\infty$ norm of the error (via $\log_{10}$)')
+# plt.xlabel('Total PDE solve time ($log_{10}$ scale)')
+# classes = ["J = " + str(oneJ) for oneJ in Js_to_display]
+# plt.legend(handles=scatter, labels=classes)
+# #plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
+# plt.savefig("LinfWRTpdesolve.eps")
+# plt.savefig("LinfWRTpdesolve.jpg")
+# #plt.show()
+
+# plt.figure()
+# cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
+# scatter = []
+# for idx,oneJ in enumerate(Js_to_display):
+# 	scatter.append(plt.scatter(np.log10(computeTimeRecovery[oneJ]), np.log10(linferror[oneJ]), color = colours[idx], marker=markers[idx] ))
+# plt.ylabel('$\ell_\infty$ norm of the error (via $\log_{10}$)')
+# plt.xlabel('Total $WIHT$ recovery time ($\log_{10}$ scale)')
+# classes = ["J = " + str(oneJ) for oneJ in Js_to_display]
+# plt.legend(handles=scatter, labels=classes)
+# #plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
+# plt.savefig("LinfWRTl1solve.eps")
+# plt.savefig("LinfWRTl1solve.jpg")
+# #plt.show()
+
+# plt.figure()
+# # Display the results with J in axis
+# plt.plot(Js_to_display, np.log10([computeTotalTime[j] for j in Js_to_display]), color = colours[0], marker=markers[0])
+# plt.plot(Js_to_display, np.log10([computeTimePDE[j] for j in Js_to_display]), color = colours[1], marker=markers[1])
+# plt.plot(Js_to_display, np.log10([computeTimeRecovery[j] for j in Js_to_display]), color = colours[2], marker=markers[2])
+# plt.legend(["Total compute time", "Total PDE time", "Total sparse recovery time"])
+# plt.xlabel('J (L=5)')
+# plt.savefig("timesWRTjs.eps")
+# plt.savefig("timesWRTjs.jpg")
+# #plt.show()
 
 
-# Let's see how our approximations perform!
-for (idx, oneJ) in enumerate(Js_to_display): # Probably better to just read the file in this loop too instead of above.
-	# Compute current estimates 
-	y_estimated = results_all[idx].wr_model.estimate_ML_samples(results_all[idx].cspde_result, Z)
-	l2error[idx] = np.linalg.norm(y_estimated - y_GT)
-	linferror[idx] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
-	curPdeTimes, curRecoveryTimes = getComputeTimes(results_all[idx].cspde_result)
-	computeTimePDE[idx] = curPdeTimes
-	computeTimeRecovery[idx] = curRecoveryTimes'''
+fig, ax1 = plt.subplots()
 
+ax1.set_xlabel('J')
+ax1.set_ylabel('time (h)') #, color=color)
+ax1.plot(Js_to_display, [computeTotalTime[d]/3600 for d in Js_to_display], color=colours[0], marker=markers[0], label='Total time')
+ax1.plot(Js_to_display, [computeTotalTime[d]*computeTimePDE[d]/3600 for d in Js_to_display], color=colours[1], marker=markers[1], label='Total PDE solve time')
+ax1.plot(Js_to_display, [computeTotalTime[d]*computeTimeRecovery[d]/3600 for d in Js_to_display], color=colours[2], marker=markers[2], label='Total sparse recovery time')
 
-# scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = np.random.randint(0, len(linferror), len(linferror)))
-cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
-scatter = []
-for idx,oneJ in enumerate(Js_to_display): 
-	scatter.append(plt.scatter(np.log10(computeTimePDE[oneJ]+computeTimeRecovery[oneJ]), np.log10(linferror[oneJ]), c = np.random.rand(3,) ))
-	# scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = cmapForScatter(idx) ))
-# scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = [] )
-plt.ylabel('$\ell_\infty$ norm of the error (via $\log_10$)')
-plt.xlabel('Computing time ($log_10$ scale)')
-classes = ["J = " + str(oneJ) for oneJ in Js_to_display]
-plt.legend(handles=scatter, labels=classes)
-#plt.legend((str(oneJ) for oneJ in Js_to_display), loc='upper right', fontsize=8)
+# loc = ax1.get_xticks()
+# ax1.set_xticklabels(np.arange(min(Js_to_display), max(Js_to_display) + 1, step=1))
+ax1.set_xticks(range(0,max(Js_to_display)+1, 1))
+ax1.legend()
+# ax1.tick_params(axis='y', labelcolor=color)
+
+linf_to_display = [np.log10(linferror[d]) for d in Js_to_display]
+min_linf = min(linf_to_display)
+max_linf = max(linf_to_display)
+delta_linf = max_linf-min_linf
+ax2 = ax1.twinx() 
+ax2.set_ylabel('$\log_{10}(\ell_\infty($error$))$')
+ax2.plot(Js_to_display, linf_to_display, color=colours[3], marker=markers[3], label='Final approximation error')
+ax2.set_ylim(min_linf-delta_linf, max_linf+delta_linf)
+# ax2.set_xticks(range(0,max(Js_to_display)+1, 1))
+ax2.legend()
+fig.tight_layout()
+plt.savefig("timesAndErrorWRTjs.eps")
+plt.savefig("timesAndErrorWRTjs.jpg")
+
 plt.show()
-
-
-cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
-scatter = []
-for oneJ in Js_to_display: 
-	scatter.append(plt.scatter(computeTimePDE[oneJ], computeTimeRecovery[oneJ], c = np.random.rand(3,) ))
-plt.ylabel('Fraction of time used for sparse recovery')
-plt.xlabel('Fraction of time used for PDE computation')
-classes = ["L = " + str(oneJ) for oneJ in Js_to_display]
-plt.legend(handles=scatter, labels=classes)
-#plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
-plt.show()
-
