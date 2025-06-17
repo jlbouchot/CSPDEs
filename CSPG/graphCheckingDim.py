@@ -87,6 +87,8 @@ def getComputeTimes(cspdeResultsList):
 			recoveryTimes = recoveryTimes + cspdeResultsList[oneLvl].t_recovery
 			mtxTimes = mtxTimes + cspdeResultsList[oneLvl].t_matrix
 			jsTimes = jsTimes + cspdeResultsList[oneLvl].t_J
+
+			print(f"Level {oneLvl} has {cspdeResultsList[oneLvl].m} samples. Ansatz space has {cspdeResultsList[oneLvl].N} elements. PDE Time = {cspdeResultsList[oneLvl].t_samples}. Sparse recovery time = {cspdeResultsList[oneLvl].t_recovery}. Computing the Ansatz space took {cspdeResultsList[oneLvl].t_J}. Creating the matrix of tscheb coef took {cspdeResultsList[oneLvl].t_matrix}")
 	else: # This is a single CSPDEResult
 			pdeTimes =cspdeResultsList.t_samples
 			recoveryTimes = cspdeResultsList.t_recovery
@@ -108,8 +110,8 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 
 
 nbDim = 2
-target_mesh_size = [1000]*nbDim
-ds_to_display = [8,10,13,16] # [8, 10, 13, 16 ,20 ,25]
+target_mesh_size = [3000]*nbDim
+ds_to_display = [8,10,13,16, 20 ,25]
 
 core_folder_name = 'Exp3H020Dim2WCosineDimensionalityd'
 fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
@@ -173,7 +175,7 @@ d 		= first_result.cspde_result[0].d # number of parameters
 spde_model 	= first_result.spde_model #[TR_SPDE_MODEL_POS]
 epsilon		= first_result.epsilon #[TR_EPSILON_POS]
 wr_model 	= first_result.wr_model
-nb_tests 	= 10 # This should be sufficient
+nb_tests 	= 500 # This should be sufficient
 
 # Get the maximum number of points in the mesh: 
 #max_mesh_size = [1,1]
@@ -209,26 +211,83 @@ for d in ds_to_display:
 	computeTimeJs[d] = curJsTimes / computeTotalTime[d]
 	
 all_data_df = pd.DataFrame(data=[computeTimePDE, computeTimeRecovery, computeTimeMtx, computeTimeJs, computeTotalTime]).rename({0: 'PDE', 1: 'Recovery', 2: 'Matrix', 3: 'J', 4: 'Total'}).transpose()
-print(all_data_df)
 
-cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
-scatter = []
-for oned in ds_to_display: 
-	scatter.append(plt.scatter(np.log10(computeTotalTime[oned]), np.log10(linferror[oned]), c = np.random.rand(3,) ))
-plt.ylabel('$\ell_\infty$ norm of the error (via $\log_{10}$)')
-plt.xlabel('Computing time ($log_{10}$ scale)')
-classes = ["L = " + str(oned) for oned in ds_to_display]
-plt.legend(handles=scatter, labels=classes)
-#plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
-plt.show()
+colours = plt.cm.rainbow(np.linspace(0, 1, len(ds_to_display)))
+markers = ["o", "v", "^", "<", ">", "s", "8"]
 
-cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
-scatter = []
-for oned in ds_to_display: 
-	scatter.append(plt.scatter(computeTimePDE[oned], computeTimeRecovery[oned], c = np.random.rand(3,) ))
-plt.ylabel('Fraction of time used for sparse recovery')
-plt.xlabel('Fraction of time used for PDE computation')
-classes = ["L = " + str(oned) for oned in ds_to_display]
-plt.legend(handles=scatter, labels=classes)
-#plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
+
+# # We have here the graph of compute time wrt target accuracy, for various dimensions 
+# cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
+# plt.figure()
+# scatter = []
+# for idx, oned in enumerate(ds_to_display): 
+# 	scatter.append(plt.scatter(np.log10(computeTotalTime[oned]), np.log10(linferror[oned]), color = colours[idx], marker=markers[idx] ))
+# plt.ylabel('$\log_{10}(\ell_\infty($error$))$')
+# plt.xlabel('Computing time ($log_{10}$ scale)')
+# classes = ["d = " + str(oned) for oned in ds_to_display]
+# plt.legend(handles=scatter, labels=classes)
+# #plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
+# plt.show()
+
+# # # Here we have the ratio of computeTime vs ratio of recovery time
+# # cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
+# # scatter = []
+# # plt.figure()
+# # for idx, oned in enumerate(ds_to_display): 
+# # 	scatter.append(plt.scatter(computeTimePDE[oned], computeTimeRecovery[oned], color = colours[idx], marker=markers[idx] ))
+# # plt.ylabel('Fraction of time used for sparse recovery')
+# # plt.xlabel('Fraction of time used for PDE computation')
+# # classes = ["d = " + str(oned) for oned in ds_to_display]
+# # plt.legend(handles=scatter, labels=classes)
+# # #plt.legend((str(oned) for oned in ds_to_display), loc='upper right', fontsize=8)
+# # plt.show()
+
+# # We may now disply as bar graphs the ratios of various times with changing dimensions of the data
+# plt.figure()
+# plt.bar(x = ds_to_display, height=np.array(all_data_df[["PDE"]]).transpose()[0])
+# plt.bar(x = ds_to_display, height=np.array(all_data_df[["Recovery"]]).transpose()[0], bottom=np.array(all_data_df[["PDE"]]).transpose()[0])
+# plt.bar(x = ds_to_display, height=np.array(all_data_df[["Matrix"]]).transpose()[0], bottom=np.array(all_data_df[["PDE"]]).transpose()[0]+np.array(all_data_df[["Recovery"]]).transpose()[0])
+# plt.bar(x = ds_to_display, height=np.array(all_data_df[["J"]]).transpose()[0], bottom=np.array(all_data_df[["PDE"]]).transpose()[0]+np.array(all_data_df[["Recovery"]]).transpose()[0]+np.array(all_data_df[["J"]]).transpose()[0])
+# plt.legend(["PDE","Sparse recovery","Matrix computation","Index set construction"])
+# plt.show()
+
+# # 4 Graphs representing the four curves with respect to the changing dimensionality
+# plt.figure()
+# plt.plot(all_data_df[["PDE","Recovery","Matrix","J"]])
+# plt.legend(["PDE","Sparse recovery","Matrix computation","Index set construction"])
+# plt.show()
+
+
+
+# 5 All on the same graph!
+colours = plt.cm.rainbow(np.linspace(0, 1, len(ds_to_display)))
+markers = ["o", "v", "^", "<", ">", "s", "8"]
+
+ds = [2*d for d in ds_to_display]
+
+fig, ax1 = plt.subplots()
+
+ax1.set_xlabel('d')
+ax1.set_ylabel('time (h)') #, color=color)
+ax1.plot(ds, [computeTotalTime[d]/3600 for d in ds_to_display], color=colours[0], label='Total time')
+ax1.plot(ds, [computeTotalTime[d]*computeTimePDE[d]/3600 for d in ds_to_display], color=colours[1], label='Total PDE solve time')
+ax1.plot(ds, [computeTotalTime[d]*computeTimeRecovery[d]/3600 for d in ds_to_display], color=colours[2], label='Total sparse recovery time')
+ax1.set_xticklabels(ax1.get_xticks().astype(int))
+ax1.legend()
+# ax1.tick_params(axis='y', labelcolor=color)
+
+linf_to_display = [np.log10(linferror[d]) for d in ds_to_display]
+min_linf = min(linf_to_display)
+max_linf = max(linf_to_display)
+delta_linf = max_linf-min_linf
+ax2 = ax1.twinx() 
+ax2.set_ylabel('$\log_{10}(\ell_\infty($error$))$')
+ax2.plot(ds, linf_to_display, color=colours[3], label='Final approximation error')
+ax2.set_ylim(min_linf-delta_linf, max_linf+delta_linf)
+ax2.legend()
+fig.tight_layout()
+
+plt.savefig("timesAndErrorWRTDs.eps")
+plt.savefig("timesAndErrorWRTDs.jpg")
+
 plt.show()
