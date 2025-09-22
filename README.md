@@ -16,15 +16,21 @@ About this project
 ==================
 
 This project stems from the collaboration between 
-* Dr. Jean-Luc Bouchot, School of Mathematics and Statistics, Beijing Institute of Technology ( jlbouchot@bit.edu.cn )
+* Dr. Jean-Luc Bouchot, INRIA Sophia, France ( jean-luc.bouchot@inria.fr )
 * Benjamin Bykowski, RWTH Aachen
-* Prof. Holger Rauhut, Chair C for Mathematics (Analysis), RWTH Aachen
-* Prof. Christoph Schwab, Seminar for Applied Mathematics, ETH Zurich
+* Prof. Holger Rauhut, Chair C for Mathematics (Analysis), LMU Munich, Germany
+* Prof. Christoph Schwab, Seminar for Applied Mathematics, ETH Zurich, Switzerland
 
 
 Requirements
 ============
 As we are not professional software engineers, take these considerations with caution. 
+
+Tested on:
+* (2024/01) Tests have been done on a small machine: Lenovo idea pad 310, 4GB memory, Intel core i5-7200 @ 2.5GHz. 
+* (2021/06) Tests done on a personal machine: Lenova Thinkpad X1, 16GB Memory, Intal i7, 5th gen
+* (2018) Tests were done on a scientific linux on an HPC cluster at RWTH
+
 Our implementation has been tested on the High Performance Cluster of the RWTH Aachen (more details on the architecture may be found here: http://www.itc.rwth-aachen.de/cms/IT_Center/IT_Center/Aktuelle_Meldungen/~fehc/Wir_heissen_jetzt_IT_Center/?lidx=1 )
 To sum up, here is what you may need:
 * FEniCS: http://fenicsproject.org/ ; used as the black box solver for the PDEs
@@ -36,8 +42,11 @@ To sum up, here is what you may need:
 Package Installation
 ====================
 
-We recommend using anaconda for most of the installation. 
+We recommend using anaconda for most of the installation. Installing everything through virtualenv would require a full recompilation of some parts of DOLFIN, which is needed for FEniCS to work well. 
 Be aware that these packages are evolving very fast and you might need to adjust here and there some versions of the various packages (most recently (2019/06/04): FEniCS and the latest version of cvxpy are not compatible). 
+
+
+
 Try the following sequence of commands: 
 
 First, create a separate environment for the project (note that you could use the [env-fenics.yml file](env-fenics.yml))
