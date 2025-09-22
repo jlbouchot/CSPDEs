@@ -31,24 +31,26 @@ def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder 
 
 	# Now check if a file containing sampling points exists, it is called GTfilenames +"samples.npy"
 	sampleFName = GTfilenames +"samples.npy"
-	if os.path.exists(os.path.join(GTfolder, sampleFName)): 
+	full_path = os.path.join("RESULTS", GTfolder, sampleFName)
+	if os.path.exists(full_path): 
 		# The file exists and we might load it!
-		Z = np.load(os.path.join(GTfolder, sampleFName))
+		Z = np.load(full_path)
 		nbExistingSamples = Z.shape[0] # [1] should be equal to the dimensionality d 
 		if nbExistingSamples < nbSamples: 
 			Z = np.vstack((Z,wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples-nbExistingSamples, d)))))
 	else : 
 		Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples, d) ) )
 	# Now we know there are sufficiently many sampling points. We can save the file
-	np.save(os.path.join(GTfolder,sampleFName), Z)
+	np.save(full_path, Z)
 
 	# Step 2: generate the y values!
 	y_GT = np.zeros(nbSamples)
 	# Check if some of them have already been computed!
 	yValuesFname = GTfilenames + "yGT.npy"
-	if os.path.exists(os.path.join(GTfolder,yValuesFname)): 
+	full_path = os.path.join("RESULTS", GTfolder, yValuesFname)
+	if os.path.exists(full_path): 
 		# A file exists, so let's go ahead and load it 
-		existingYs = np.load(os.path.join(GTfolder,yValuesFname))
+		existingYs = np.load(full_path)
 		nbExistingYs = len(existingYs)
 		if nbExistingYs <= nbSamples: 
 			y_GT[0:nbExistingYs] = existingYs
@@ -66,9 +68,9 @@ def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder 
 		y_GT[k] = spde_model.sample(Z[k])
 		# Save only every so often to avoid going to the hard memory too often
 		if k+1 % 100 == 0: # k+1 because index k means we have computed k+1 data!
-			np.save(os.path.join(GTfolder,yValuesFname), y_GT[0:k])
+			np.save(full_path, y_GT[0:k])
 
-	np.save(os.path.join(GTfolder,yValuesFname), y_GT)
+	np.save(full_path, y_GT)
 
 	return y_GT, Z
 
@@ -111,11 +113,12 @@ CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A
 
 nbDim = 2
 target_mesh_size = [3000]*nbDim
-ds_to_display = [8,10,13,16, 20 ,25]
+# ds_to_display = [16, 20 ,25]
+ds_to_display = [8,10] #,13] #,16, 20 ,25]
 #target_mesh_size = [5120]*nbDim
 #ds_to_display = [8, 10, 13, 16 ,20 ,25]
 
-core_folder_name = 'Exp3H020Dim2WCosineDimensionalityd'
+core_folder_name = 'PERFExp3H020Dim2WCosineDimensionalityd'
 fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
 cfg_fname = 'config_file.txt' # This contains all the details from the experiments. I don't think we need it for graphing, but who knows. 
 
@@ -154,7 +157,7 @@ results_all = {}
 for oned in ds_to_display: 
 	cur_path_to_file = core_folder_name + str(oned)
 	print("Loading {0} from folder {1} ...".format(fname_to_read, cur_path_to_file))
-	cur_results = sorted(shelve.open(os.path.join(cur_path_to_file,fname_to_read)).values(), key=lambda r: r.L)
+	cur_results = sorted(shelve.open(os.path.join("RESULTS", cur_path_to_file,fname_to_read)).values(), key=lambda r: r.L)
 	if len(cur_results) > 0: 
 		# results_all.append(cur_results[0]) # This is the Check_ML.TestResult tuple
 		results_all[oned] = cur_results[0]

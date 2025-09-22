@@ -35,9 +35,9 @@ p0=0.33 # Compressibility in the original space
 p=0.33 # Compressibility in the smoothness scale
 sJ=5 # Constant used for the first level of approximation
 exponent=0.166 #0.25
-expBasename=Exp3H0${start_h0}Dim2WCosineDimensionalityd
+expBasename=RESULTS/PERFExp3H0${start_h0}Dim2WCosineDimensionalityd
 
-for d in 8 10 13 16
+for d in 8 10 # 13 # 16
 #for ((d=$Lmin; L<=$Lmax; L++))
 do
 	echo "RUNNING THE EXPERIMENT WITH d = $d"
