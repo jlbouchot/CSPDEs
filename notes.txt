@@ -14,3 +14,58 @@ python test_wCosine_avg_v_ML.py -d 5 -o WeightedCosine1D -L 4 -s 0 -m 100 -N 20 
 
 
 conda list | grep -i <package-name>
+
+
+python3 -c "from dolfin import *; info(NonlinearVariationalSolver.default_parameters(), True)"
+
+
+
+# Some resources regarding fenics and the likes
+
+## Fenics usage :
+https://www-users.cse.umn.edu/~arnold/8445-8446.14-15/programs/First%20program%20in%20FEniCS.html
+
+## Solvers
+
+https://docs.fenicsproject.org/dolfinx/main/python/generated/dolfinx.fem.petsc.html
+
+### Solver types
+https://petsc.org/main/overview/linear_solve_table/
+With some parameters 
+https://petsc.org/release/manualpages/PC/PCLU/
+https://petsc.org/release/manualpages/PC/PCILU/
+https://petsc.org/main/manual/ksp/#sec-ksp
+
+https://petsc.readthedocs.io/en/latest/overview/linear_solve_table/
+
+https://fenicsproject.discourse.group/t/sparse-solver-choices/9747
+
+https://fenics-cerfacs.readthedocs.io/en/latest/how_to/solver_choice.html
+
+https://jsdokken.com/dolfinx-tutorial/chapter3/neumann_dirichlet_code.html
+
+===> Seems to have ways to parametrize everything 
+https://github.com/FEniCS/dolfinx/blob/main/python/demo/demo_stokes.py
+Look for ksp
+More interesting stuff
+https://colab.research.google.com/github/fem-on-colab/fem-on-colab/blob/main/fenicsx/test-dolfinx.ipynb#scrollTo=intermediate-biology
+
+### Plotting solvers
+http://jsdokken.com/FEniCS23-tutorial/src/mesh_generation.html
+https://pyvista.org/
+https://docs.pyvista.org/getting-started/
+
+### Some remarks on quadrature rules 
+https://fenicsproject.discourse.group/t/how-to-get-quadrature-points-and-their-weights/3523/5
+https://fenicsproject.discourse.group/t/how-many-integration-points-are-included-in-the-tetrahedral-grid/6429
+https://docs.fenicsproject.org/basix/main/python/demo/demo_quadrature.py.html?utm_source=chatgpt.com
+https://olddocs.fenicsproject.org/dolfin/1.3.0/python/programmers-reference/fem/assembling/assemble.html
+https://github.com/FEniCS/fiat/blob/7d418fa0a372ac6f5e103533ab77ad6a9fac764c/FIAT/quadrature.py
+https://github.com/FEniCS/fiat/blob/7d418fa0a372ac6f5e103533ab77ad6a9fac764c/FIAT/quadrature_schemes.py#L40-L50
+Finite Element Method by Zienkiewicsz and Taylor 
+
+
+## Tutorials 
+
+https://jsdokken.com/dolfinx-tutorial/chapter4/solvers.html
+

@@ -35,15 +35,15 @@ class DiffusionFEMModelML(FEMModel):
         if not hasattr(self, 'mesh'):
             self.init_simple_mesh()
 
-        # Create approximation space
-        V = FunctionSpace(self.mesh, 'Lagrange', 1)
+        # # Create approximation space
+        # V = FunctionSpace(self.mesh, 'Lagrange', 1)
 
-        # Define boundary conditions
-        bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
+        # # Define boundary conditions
+        # bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
 
-        # Define variational problem
-        w = TrialFunction(V)
-        v = TestFunction(V)
+        # # Define variational problem
+        # w = TrialFunction(V)
+        # v = TestFunction(V)
 
         params = self.split_params([self.a, self.f], z)
 
@@ -59,7 +59,11 @@ class DiffusionFEMModelML(FEMModel):
         problem     = LinearVariationalProblem(A, L, u, bc)
         # list_linear_solver_methods()
         self.solver = LinearVariationalSolver(problem) #, solver_parameters={'linear_solver': 'iterative'})
-        self.solver.parameters["linear_solver"] = "petsc"
+        self.solver.parameters["linear_solver"] = "gmres"
+        # solver.parameters["preconditioner"] = "ilu"
+        # solver.parameters["linear_solver"] = "petsc"
+        self.solver.parameters["preconditioner"] = "amg"
+        #self.solver.parameters["linear_solver"] = "petsc"
         self.solver.parameters.add("relative_tolerance", 1e-3)
         self.solver.parameters.add("absolute_tolerance", 1e-6)
         # self.solver.parameters["linear_solver"] ="iterative"

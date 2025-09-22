@@ -215,7 +215,9 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
+# Own crap
 
 CSPG/RESULTS/
 CSPG/FIGS/
 CSPG/.ipynb_checkpoints/
+LOGS/

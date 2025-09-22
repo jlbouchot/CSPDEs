@@ -27,6 +27,19 @@ class FEMModel(SPDEModel):
         else:
             self.mesh = UnitIntervalMesh(self.mesh_size)
 
+        self.generate_functions_spaces()
+
+    def generate_functions_spaces(self): 
+        # Create approximation space
+        self.V = FunctionSpace(self.mesh, 'Lagrange', 1)
+
+        # Define boundary conditions
+        self.bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
+
+        # Define variational problem
+        self.w = TrialFunction(V)
+        self.v = TestFunction(V)
+
 
     def refine_mesh(self, ratio=2): # Note, this can also be used to coarsen the mesh
         self.mesh_size = tuple(int(one_direction*ratio) for one_direction in self.mesh_size)
