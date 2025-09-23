@@ -10,7 +10,7 @@ conda install -c conda-forge superlu_dist=6.2.0
 conda install -c conda-forge boost-cpp=1.72.0
 conda install -c conda-forge mpi4py=3.0
 
-python test_wCosine_avg_v_ML.py -d 5 -o WeightedCosine1D -L 4 -s 0 -m 100 -N 20 -r whtp
+python test_wCosine_avg_v_ML.py -d 5 -o WeightedCosine1D -L 4 -s 0 -m 100 -N 20 -r whtp ---> No longer working. Need to review some options on this test file
 
 
 conda list | grep -i <package-name>
