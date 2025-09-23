@@ -48,15 +48,15 @@ class DiffusionFEMModelML(FEMModel):
         params = self.split_params([self.a, self.f], z)
 
         x = SpatialCoordinate(self.mesh)
-        A = self.a(x, Constant(params[0])) * inner(nabla_grad(w), nabla_grad(v)) * dx
-        L = self.f(x, Constant(params[1])) * v * dx
+        A = self.a(x, Constant(params[0])) * inner(nabla_grad(self.w), nabla_grad(self.v)) * dx
+        L = self.f(x, Constant(params[1])) * self.v * dx
 
         # Create goal-functional for error estimation
-        u      = Function(V)
+        u      = Function(self.V)
         self.M = self.M_gen(self, u, dx)
 
         # Create solver
-        problem     = LinearVariationalProblem(A, L, u, bc)
+        problem     = LinearVariationalProblem(A, L, u, self.bc)
         # list_linear_solver_methods()
         self.solver = LinearVariationalSolver(problem) #, solver_parameters={'linear_solver': 'iterative'})
         self.solver.parameters["linear_solver"] = "gmres"
