@@ -39,7 +39,6 @@ class DiffusionFEMModelML(FEMModel):
         # V = FunctionSpace(self.mesh, 'Lagrange', 1)
 
         # # Define boundary conditions
-        # self.generate_functions_spaces()
         # bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
 
         # # Define variational problem
@@ -47,6 +46,19 @@ class DiffusionFEMModelML(FEMModel):
         # v = TestFunction(V)
 
         params = self.split_params([self.a, self.f], z)
+
+        # x = SpatialCoordinate(self.mesh)
+        # A = self.a(x, Constant(params[0])) * inner(nabla_grad(w), nabla_grad(v)) * dx
+        # L = self.f(x, Constant(params[1])) * v * dx
+
+        # # Create goal-functional for error estimation
+        # u      = Function(V)
+        # self.M = self.M_gen(self, u, dx)
+
+        # # Create solver
+        # problem     = LinearVariationalProblem(A, L, u, bc)
+
+        ## Should work when mutualising things
 
         x = SpatialCoordinate(self.mesh)
         A = self.a(x, Constant(params[0])) * inner(nabla_grad(self.w), nabla_grad(self.v)) * dx
