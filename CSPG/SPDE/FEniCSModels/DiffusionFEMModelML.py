@@ -39,7 +39,7 @@ class DiffusionFEMModelML(FEMModel):
         # V = FunctionSpace(self.mesh, 'Lagrange', 1)
 
         # # Define boundary conditions
-        self.generate_functions_spaces()
+        # self.generate_functions_spaces()
         # bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
 
         # # Define variational problem
