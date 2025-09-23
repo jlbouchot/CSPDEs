@@ -75,9 +75,13 @@ class FEMModel(SPDEModel):
     def __getstate__(self):
         odict = self.__dict__.copy()
 
-        # Can't pickle mesh, solver and M
+        # Can't pickle dolfin's mesh, solver and M...
         del odict['mesh']
         del odict['solver']
         del odict['M']
+        del odict['V']
+        del odict['bc']
+        del odict['w']
+        del odict['v']
 
         return odict
