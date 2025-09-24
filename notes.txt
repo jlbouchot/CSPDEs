@@ -11,7 +11,8 @@ conda install -c conda-forge boost-cpp=1.72.0
 conda install -c conda-forge mpi4py=3.0
 
 python test_wCosine_avg_v_ML.py -d 5 -o WeightedCosine1D -L 4 -s 0 -m 100 -N 20 -r whtp ---> No longer working. Need to review some options on this test file
-
+python test_wCosine_2D_avg_p_ML.py -d 5 -o WeightedCosine2D -L 3 -s 2 -x 10 -y 10 -t new -r wiht -g 1.005 -p 5 -a 10 -c 20 -b True -i 1 -w 1 --smooth_0 0.33 --smooth_t 0.33 --const_sJ 5 -f DEVTEST -E 0.1666 > DEVTEST/stdoutput.txt
+python test_wCosine_2D_avg_p_ML.py -d 10 -o WeightedCosine2D -L 4 -s 2 -x 10 -y 10 -t new -r wiht -g 1.005 -p 5 -a 10 -c 80 -b True -i 1 -w 1 --smooth_0 0.33 --smooth_t 0.33 --const_sJ 5 -f DEVTEST -E 0.1666 > DEVTEST/stdoutput.txt
 
 conda list | grep -i <package-name>
 
@@ -68,4 +69,3 @@ Finite Element Method by Zienkiewicsz and Taylor
 ## Tutorials 
 
 https://jsdokken.com/dolfinx-tutorial/chapter4/solvers.html
-
