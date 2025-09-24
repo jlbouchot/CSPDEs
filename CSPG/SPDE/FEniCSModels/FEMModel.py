@@ -31,7 +31,7 @@ class FEMModel(SPDEModel):
 
     def generate_functions_spaces(self): 
         # Create approximation space
-        self.V = FunctionSpace(self.mesh, 'Lagrange', 1)
+        self.V = FunctionSpace(self.mesh, 'Lagrange', 2)
 
         # Define boundary conditions
         self.bc = DirichletBC(self.V, Constant(0.0), lambda x, on_boundary: on_boundary)
