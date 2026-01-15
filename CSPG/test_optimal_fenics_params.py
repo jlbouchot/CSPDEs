@@ -46,12 +46,13 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000]), L_max =
     h0 = 20
 
 
-    nb_tests = 1
-    nb_levels = 2
+    nb_tests = 10
+    nb_levels = 6
     L_start = 0
-    preconditioners = {"gmres": ["amg", "ilu"]}
+    # preconditioners = {"gmres": ["amg", "ilu"]}
     # preconditioners = {"gmres": ["amg", "petsc_amg", "hypre_amg"], "petsc": ["lu"]}
     # preconditioners = {"gmres": ["amg", "petsc_amg", "hypre_amg"], "petsc": ["lu", "SuperLU"]}
+    preconditioners = {"petsc": ["lu", "SuperLU", None]}
     preonly = {"petsc": True}
 
     results = pd.DataFrame(columns=["solver", "preconditioner", "level", "wall-clock", "user", "cpu"])
@@ -124,8 +125,9 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000]), L_max =
                         # solver.parameters["linear_solver"] = "mumps"
                         ############################################
                         solver.parameters["linear_solver"] = s
-                        if p is not None: 
-                            solver.parameters["preconditioner"] = p
+                        # if p is not None: 
+                        #     solver.parameters["preconditioner"] = p
+                        solver.parameters["preconditioner"] = p
 
                         # if ksp: 
                         #     solver.parameters["ksp_type"] = "preonly"

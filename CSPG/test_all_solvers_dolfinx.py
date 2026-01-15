@@ -16,7 +16,7 @@ import time
 import resource
 
 
-h = 1280
+h = 1280 # Corresponds to L = 6, with h0 = 20
 mesh = dolfinx.mesh.create_unit_square(mpi4py.MPI.COMM_WORLD, h,h, dolfinx.mesh.CellType.triangle)
 
 V = dolfinx.fem.functionspace(mesh, ("Lagrange", 1))
