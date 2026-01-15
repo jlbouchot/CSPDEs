@@ -12,7 +12,7 @@ import time
 import resource
 
 
-h = 1280
+h = 1280 # Corresponds to L = 6, with h0 = 20
 mesh = UnitSquareMesh(h,h)
 
 V = FunctionSpace(mesh, "Lagrange", 1)
