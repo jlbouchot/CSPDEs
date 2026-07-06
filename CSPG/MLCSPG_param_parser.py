@@ -3,14 +3,19 @@ import configparser
 from pathlib import Path
 from typing import Any, Dict, Tuple
 
-int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space"]
-float_arg_list = ["const_sJ", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
-        "dat_constant", "t_0", "t_prime", "smooth_0", "smooth_t"]
-bool_arg_list = ["better_compute"]
+int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space", "n"]
+float_arg_list = ["const_sj", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
+        "dat_constant", "t_0", "t_prime", "p_0", "p_t"]
+bool_arg_list = ["do_tensor", "no_compute"]
 args_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "recovery_algo", "gamma", "l_start", 
         "sampling", "nb_iter", "tol_res", "nb_tests", "power", "abar", "fluctuation_importance", "weight_cosine", 
-        "dat_constant", "prefix_precompute", "better_compute", "ansatz_space", "t_0", "t_prime", "smooth_0", "smooth_t", 
-        "const_sJ", "no_compute", "exponent"]
+        "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", "t_0", "t_prime", "p_0", "p_t", 
+        "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n"]
+pde_arg_list = ["preconditioner", "linear_solver"]
+sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res"]
+main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "l_start", "sampling", "power", "abar", 
+        "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", 
+        "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n"]
 
 
 # def parse_config_file(path_to_file = None: str, exp = None: str) -> Tuple[Dict[str,Any], Dict[str,Any]]:
@@ -40,51 +45,59 @@ def parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file 
 def define_MLCSPG_cli_parser(): 
     ''' List all potential command line arguments to be used in the MLCSPG algorithm. '''
     parser = argparse.ArgumentParser(description = "")
-    parser.add_argument("-o", "--output-file", help="File to write the results", default="outputDiffusionMLPolynomial", required=False)
-    parser.add_argument("-L", "--nb-level", help="Number of levels used", default=4, required=False)
-    parser.add_argument("-x", "--mesh-x", help="Size of the coarsest level (number of grid points) in the x direction", default=2000, required=False)
-    parser.add_argument("-y", "--mesh-y", help="Size of the coarsest level (number of grid points) in the y direction", default=2000, required=False)
-    parser.add_argument("-N", "--nb-iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=50, required=False)
-    parser.add_argument("-r", "--recovery-algo", help="String for the algorithm for weighted l1 recovery", default="whtp", required=False)
-    parser.add_argument("-s", "--l-start", help="Instead of going through all the levels, give it a starting point", default=1, required=False)
-    parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default="pragmatic", required=False)
-    parser.add_argument("-n", "--nb-tests", help="Number of tests 'on the fly'", default=None, required=False)
-    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion (~ mu)", default=4.0, required=False)
-    parser.add_argument("-a", "--abar", help="Value of the mean field", default=10, required=False)
-    parser.add_argument("-b", "--better-compute", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default="True", required=False)
-    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=15., required=False)
-    parser.add_argument("-d", "--nb-cosines", help="Number of random cosine and sine parameters", default=5, required=False)
-    parser.add_argument("-e", "--tol-res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=1e-4, required=False)
-    parser.add_argument("-E", "--exponent", help="Power of the polynomial weight (~ alpha)", default=1.0/4.0, required=False)
-    parser.add_argument("-f", "--prefix-precompute", help="How should the precomputed data for this test be called?", default="testingWCosine", required=False)
-    parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=1.035, required=False)
-    parser.add_argument("-i", "--fluctuation-importance", help="What is the importance of the fluctuations with respect to the mean field (default is 1)", default=1, required=False)
-    parser.add_argument("-j", "--ansatz-space", help="What type of Ansatz space is used? (Default is 0)", default="0", required=False)
-    parser.add_argument("-k", "--no-compute", help="Should we skip all computations and only check values for s, m, and N (Default = False)", default=False, required=False)
-    parser.add_argument("-w", "--weight-cosine", help="How much weight the local cosine carries (Default = 1, ~ Upsilon)", default=1, required=False)
-    parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default="1", required=False)
-    parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default="1", required=False)
-    parser.add_argument("--smooth_0", help="What kind of smoothness in the original space can be expected (Default is 1/2)", default="0.5", required=False)
-    parser.add_argument("--smooth_t", help="What kind of smoothness in the smooth space can be expected (Default is 1/2)", default="0.5", required=False)
-    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 15)", default="15", required=False)
+    parser.add_argument("-o", "--output_file", help="File to write the results", default=None, required=False)
+    parser.add_argument("-L", "--nb_level", help="Number of levels used", default=None, required=False)
+    parser.add_argument("-x", "--mesh_x", help="Size of the coarsest level (number of grid points) in the x direction", default=None, required=False)
+    parser.add_argument("-y", "--mesh_y", help="Size of the coarsest level (number of grid points) in the y direction", default=None, required=False)
+    parser.add_argument("-N", "--nb_iter", help="Number of iterations for the (potential) iterative greedy algorithm", default=None, required=False)
+    parser.add_argument("-r", "--recovery_algo", help="String for the algorithm for weighted l1 recovery", default=None, required=False)
+    parser.add_argument("-s", "--l_start", help="Instead of going through all the levels, give it a starting point", default=None, required=False)
+    parser.add_argument("-t", "--sampling", help="Select a sampling strategy (pragmatic or theoretic or new)", default=None, required=False)
+    parser.add_argument("-n", "--nb_tests", help="Number of tests 'on the fly'", default=None, required=False)
+    parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion (~ mu)", default=None, required=False)
+    parser.add_argument("-a", "--abar", help="Value of the mean field", default=None, required=False)
+    parser.add_argument("-b", "--do_tensor", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default=None, required=False)
+    parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=None, required=False)
+    parser.add_argument("-d", "--nb_cosines", help="Number of random cosine and sine parameters", default=None, required=False)
+    parser.add_argument("-e", "--tol_res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=None, required=False)
+    parser.add_argument("-E", "--exponent", help="Power of the polynomial weight (~ alpha)", default=None, required=False)
+    parser.add_argument("-f", "--experiment_name", help="How should the precomputed data for this test be called?", default=None, required=False)
+    parser.add_argument("-g", "--gamma", help="Value of the constant coefficients", default=None, required=False)
+    parser.add_argument("-i", "--fluctuation_importance", help="What is the importance of the fluctuations with respect to the mean field (default is 1)", default=None, required=False)
+    parser.add_argument("-j", "--ansatz_space", help="What type of Ansatz space is used? (Default is 0)", default=None, required=False)
+    parser.add_argument("-k", "--no_compute", help="Should we skip all computations and only check values for s, m, and N (Default = False)", default=None, required=False)
+    parser.add_argument("-w", "--weight_cosine", help="How much weight the local cosine carries (Default = 1, ~ Upsilon)", default=None, required=False)
+    parser.add_argument("--t_0", help="What is the smoothness of the data (Default is 1)", default=None, required=False)
+    parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default=None, required=False)
+    parser.add_argument("--p_0", help="What kind of smoothness in the original space can be expected (Default is 1/2)", default=None, required=False)
+    parser.add_argument("--p_t", help="What kind of smoothness in the smooth space can be expected (Default is 1/2)", default=None, required=False)
+    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 15)", default=None, required=False)
+    parser.add_argument("--preconditioner", help="Preconditioner chosen among those available from FEniCS", default=None, required=False) 
+    parser.add_argument("--linear_solver", help="Type of solver used for the PDE solves", default=None, required=False)
+    parser.add_argument("--cfg", help="Specific config file for the current experiment", default=None,required=False)
     # Add config file parameter
     return parser
 
-def parse_cli_args(config, cli_args, field_list): 
+def parse_cli_args(main_cfg, pde_solver_cfg, sparse_solver_cfg, cli_args): 
     '''
-        TODO: Add the other config things (pde and sparse solvers)
+        TODO: Potentially add the possibility to have more than one config file, i.e. iterate over specific names
     '''
-    for field in field_list:
-        '''
-        [
-            "input_mesh", "output_file",
-            "max_iter", "tolerance",
-            "levels", "alpha", "beta"
-        ]:
-        '''
+    # Check if a specific config file exists for this particular experiment
+    specific_fname = getattr(cli_args, "cfg", None)
+    if specific_fname:
+        parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file = specific_fname)
+    for field in main_arg_list:
         val = getattr(cli_args, field, None)
         if val is not None:
-            config[field] = val
+            main_cfg[field] = val
+    for field in pde_arg_list:
+        val = getattr(cli_args, field, None)
+        if val is not None:
+            pde_solver_cfg[field] = val
+    for field in sparse_arg_list:
+        val = getattr(cli_args, field, None)
+        if val is not None:
+            sparse_solver_cfg[field] = val
 
 def parse_cfg_file_and_args(all_args): 
     '''
@@ -99,12 +112,8 @@ def parse_cfg_file_and_args(all_args):
     sparse_solver_cfg = {}
     # Parse config file modifies in place main and solver cfg
     parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file = "mlcspg-default-cfg.ini")
-    # Check if a specific config file exists for this particular experiment
-    specific_fname = getattr(all_args, "cfg", None)
-    if specific_fname:
-        parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file = specific_fname)
     # Parse all CLI argument and overload previous values if conflicting
-    parse_cli_args(main_cfg, all_args, args_list) # TODO: Add the other config dicts
+    parse_cli_args(main_cfg, pde_solver_cfg, sparse_solver_cfg, all_args)
     main_keys = main_cfg.keys()
     pde_solver_keys = pde_solver_cfg.keys()
     sparse_solver_keys = sparse_solver_cfg.keys()

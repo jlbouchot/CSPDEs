@@ -11,21 +11,22 @@ import os.path
 
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__copyright__ = "Copyright 2019 - 2026, INRIA, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/06/05"
+__lastmodified__ = "2026/01/22"
 
 from time import sleep
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
 # def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, dat_constant = 5, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None, t = 1, tprime = 1, p0 = 1./3., p = 2./3., energy_constant = 10): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
-def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fname = None, datamtx_fname = None): 
+# def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = None, sampling_fname = None, datamtx_fname = None): 
+def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = None): 
     """
     Parameters
     ----------
@@ -53,18 +54,23 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
     lvl_by_lvl_result = [] # This will keep the results
 
     # Load all the important things from the dictionary 
-    unscaledNbIter = dict_config["iter"] 
-    epsilon = dict_config["tolres"]
-    L_first = dict_config["J"] 
-    L = dict_config["L"] 
-    dat_constant = dict_config["s_L"] 
-    p = dict_config["p"]
-    p0 = dict_config["p0"] 
-    t = dict_config["t"]
-    tprime = dict_config["tprime"]
-    energy_constant = dict_config["s_J"]
-    ansatz_space = dict_config["ansatz"]
+    unscaledNbIter = sparse_config["nb_iter"] 
+    epsilon = sparse_config["tol_res"]
+    L_first = dict_config["l_start"] 
+    L = dict_config["nb_level"] 
+    dat_constant = dict_config["dat_constant"] 
+    p = dict_config["p_t"]
+    p0 = dict_config["p_0"] 
+    t = dict_config["t_0"]
+    tprime = dict_config["t_prime"]
+    energy_constant = dict_config["const_sj"]
+    ansatz_space = dict_config["ansatz_space"]
     no_compute = dict_config["no_compute"]
+    prefix_fname = dict_config["experiment_name"]
+    filename = dict_config["output_file"]
+
+    sampling_fname = os.path.join(prefix_fname, 'sampling_points_Lmax' + str(L))
+    datamtx_fname = os.path.join(prefix_fname, 'datamtx_Lmax' + str(L))
 
     s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
 
@@ -98,8 +104,11 @@ def CSPDE_ML(spde_model, wr_model, dict_config, cspde_result = None, sampling_fn
     # Check whether this even an interesting case
     print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
     wr_model.check(N, m)
+    print(15*"=" + f"Should we avoid computing things? {no_compute}")
+    print(15*"=" + f"Should we go ahead?  {not no_compute}")
 
-    if not no_compute:
+    if (not no_compute):
+        print(20*"=" + "Actually computing stuff here!")
         y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
         A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
 

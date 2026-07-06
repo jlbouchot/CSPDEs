@@ -3,14 +3,14 @@ import numpy as np
 from ..     import SPDEModel
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2015, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
+__copyright__ = "Copyright 2015-2026, INRIA, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__lastmodified__ = "2026/01/22"
 
 class FEMModel(SPDEModel):
     def init_simple_mesh(self):
@@ -23,7 +23,7 @@ class FEMModel(SPDEModel):
             elif len(self.mesh_size) == 3:
                 self.mesh = UnitCubeMesh(*self.mesh_size)
             else:
-                assert False, "Only one to three dimensional problems supported"
+                assert False, f"Init simple mesh passed a {len(self.mesh_size)} dimensional problem. Only 1 to 3 dimensions supported"
         else:
             self.mesh = UnitIntervalMesh(self.mesh_size)
 
