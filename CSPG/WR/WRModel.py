@@ -2,14 +2,14 @@ import numpy as np
 import WR.Algorithms as Algorithms
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__copyright__ = "Copyright 2019-2026, INRIA, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/02/22"
+__lastmodified__ = "2026/01/22"
 
 class WRModel:
     def __init__(self, method, operator, weights, m_from_s_N, check):

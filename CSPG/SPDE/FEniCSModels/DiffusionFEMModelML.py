@@ -78,7 +78,7 @@ class DiffusionFEMModelML(FEMModel):
         self.solver.parameters["preconditioner"] = "amg"
         #self.solver.parameters["linear_solver"] = "petsc"
         self.solver.parameters.add("relative_tolerance", 1e-3)
-        self.solver.parameters.add("absolute_tolerance", 1e-6)
+        self.solver.parameters.add("absolute_tolerance", 1e-6) # TODO: Question: Is add the same as the dict like addition?
         # self.solver.parameters["linear_solver"] ="iterative"
         # y[k] = assemble(myAverage(mesh, u, dx))
 
