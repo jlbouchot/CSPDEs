@@ -13,3 +13,5 @@ conda install matplotlib
 conda install -c conda-forge superlu_dist=6.2.0
 conda install -c conda-forge boost-cpp=1.72.0
 conda install -c conda-forge mpi4py=3.0
+# Test things
+python -c "from dolfin import *; info(NonlinearVariationalSolver.default_parameters(), True)"
