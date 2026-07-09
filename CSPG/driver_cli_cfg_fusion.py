@@ -1,3 +1,6 @@
+''' driver_cli_cfg_fusion.py 
+File to test the installation of the MLCSPG toolbox's in/out handling.
+'''
 import MLCSPG_param_parser as MLCSPGParse
 
 import WR
