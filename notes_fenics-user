@@ -1,3 +1,93 @@
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
+----- Installing python 3.6 with miniconda -----
+conda create --name env-fenics36 python=3.6
+conda activate env-fenics36
+conda install -c conda-forge fenics
+# Same tests as anaconda installs, same results
+# ... 
+conda install -c conda-forge superlu_dist=6.2.0
+conda install -c conda-forge mpi4py=3.0
+
+
+python -c "from dolfin import *; info(NonlinearVariationalSolver.default_parameters(), True)"
+
+
+##### CUT HER EFOR MLCSPG SPECIFIC THINGS #####
+conda install -c conda-forge cvxpy=1.1
+conda install numba
+conda install progressbar2
+conda install matplotlib
+
+##### Testing things #####
+python driver_cli_cfg_fusion.py # Does quite a few things!
+python test_wCosine_2D_avg_p_ML.py -d 5 -o TestCase -L 3 -s 2 -x 20 -y 20 -t new -r wiht -g 1.005 -p 5 -a 10 -c 80 -b True -i 1 -w 1 --smooth_0 0.33 --smooth_t 0.33 --const_sJ 5 -f TESTMLCSPG -E 0.166 -k false > TESTMLCSPG/stdoutput.txt
+
+
+----- Installing python 3.8 with miniconda -----
+conda create --name env-fenics38 python=3.8
+conda activate env-fenics38
+conda install -c conda-forge fenics
+# Same tests as anaconda installs, same results
+# ... 
+# Note, caching might be an issue, try
+# conda clean --index-cache 
+# or 
+# conda clean --all
+# 
+# Check if you have the appropriate version available: 
+# conda search -c conda-forge superlu_dist --json | grep version
+conda install -c conda-forge superlu_dist=6.2.0 # Maybe be patient...
+conda install -c conda-forge mpi4py=3.0
+
+
+python -c "from dolfin import *; info(NonlinearVariationalSolver.default_parameters(), True)"
+
+
+===>>> Trouble getting mpich to work correctly with superlu
+Trying another thing
+1. Remove current package: 
+
+2. Recreate a new one with the actual channel priority
+
+conda create -n env-fenics38 \
+    -c conda-forge \
+    --strict-channel-priority \
+    python=3.8 \
+    fenics=2019.1.0 \
+    superlu_dist=7.1.1
+
+python -c "import dolfin"
+ works fine
+python -c "from dolfin import *; info(NonlinearVariationalSolver.default_parameters(), True)"
+
+
+##### CUT HER EFOR MLCSPG SPECIFIC THINGS #####
+conda install -c conda-forge cvxpy=1.1
+conda install -c conda-forge numba
+conda install progressbar2
+conda install -c conda-forge matplotlib
+
+##### Testing things #####
+python driver_cli_cfg_fusion.py # Does quite a few things!
+## Forget about the next one since it needs to be adapted to the new dictionary propagation work
+#python test_wCosine_2D_avg_p_ML.py -d 5 -o TestCase -L 3 -s 2 -x 20 -y 20 -t new -r wiht -g 1.005 -p 5 -a 10 -c 80 -b True -i 1 -w 1 --smooth_0 0.33 --smooth_t 0.33 --const_sJ 5 -f TESTMLCSPG -E 0.166 -k false > TESTMLCSPG/stdoutput.txt
+
+
+python test_optimal_fenics_params.py
+=> Issues with pandas being absent
+conda install pandas
+
+
+----- Installing fenicsx and dolfinx -----
+
+
+
+----- Installing with anaconda -----
+
+
+
 curl -O https://repo.anaconda.com/archive/Anaconda3-2025.12-2-Linux-x86_64.sh
 bash Anaconda3-2025.12-2-Linux-x86_64.sh
 

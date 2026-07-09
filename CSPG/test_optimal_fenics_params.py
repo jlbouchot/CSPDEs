@@ -51,8 +51,8 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000]), L_max =
     L_start = 0
     # preconditioners = {"gmres": ["amg", "ilu"]}
     # preconditioners = {"gmres": ["amg", "petsc_amg", "hypre_amg"], "petsc": ["lu"]}
-    # preconditioners = {"gmres": ["amg", "petsc_amg", "hypre_amg"], "petsc": ["lu", "SuperLU"]}
-    preconditioners = {"petsc": ["lu", "SuperLU", None]}
+    preconditioners = {"gmres": ["amg", "petsc_amg", "hypre_amg"], "petsc": ["lu", "SuperLU", None]}
+    # preconditioners = {"petsc": ["lu", "SuperLU", None]}
     preonly = {"petsc": True}
 
     results = pd.DataFrame(columns=["solver", "preconditioner", "level", "wall-clock", "user", "cpu"])
@@ -60,8 +60,8 @@ def Main(outfile = "thatTest", d = 5, grid_points = tuple([2000, 2000]), L_max =
     # for s in ["petsc", "gmres"]:
     all_wc_time = time.time()
     all_s_resource = resource.getrusage(resource.RUSAGE_SELF)
-    # for s in ["mumps", "superlu", "petsc", "umfpack", "gmres"]:
-    for s in ["petsc"]: 
+    for s in ["mumps", "superlu", "petsc", "umfpack", "gmres"]:
+    # for s in ["petsc"]: 
         print(f"Current solver is {s}")
 
         if s in preconditioners.keys():
