@@ -9,35 +9,43 @@ This toolbox is provided as is so far. There is absolutely no guarantees that it
 
 -----------------------------------
 
-DISCLAIMER: This is a python package relying on the FEniCS solver. I will *not* provide assistance with installing FEniCS (but will happily help with your particular problem regarding this implementation, ellipticity conditions, or any compressed sensing remarks)
+DISCLAIMER: This is a python package relying on the FEniCS solver. 
+No assistance will be provided with installing FEniCS (but will happily help with your particular problem regarding this implementation, ellipticity conditions, or any compressed sensing remarks)
 
 
 About this project
 ==================
 
 This project stems from the collaboration between 
-* Dr. Jean-Luc Bouchot, School of Mathematics and Statistics, Beijing Institute of Technology ( jlbouchot@bit.edu.cn )
+* Dr. Jean-Luc Bouchot, INRIA Saclay, GammaO Team ( jean-luc.bouchot@inria.fr , previously at RWTH Aachen Chair C for Mathematics, then at Beijing Institute of Technology School of Mathematics and Statistics)
 * Benjamin Bykowski, RWTH Aachen
-* Prof. Holger Rauhut, Chair C for Mathematics (Analysis), RWTH Aachen
+* Prof. Holger Rauhut, Ludwig Maximilian University (then at Chair C for Mathematics (Analysis), RWTH Aachen)
 * Prof. Christoph Schwab, Seminar for Applied Mathematics, ETH Zurich
 
 
 Requirements
 ============
 As we are not professional software engineers, take these considerations with caution. 
-Our implementation has been tested on the High Performance Cluster of the RWTH Aachen (more details on the architecture may be found here: http://www.itc.rwth-aachen.de/cms/IT_Center/IT_Center/Aktuelle_Meldungen/~fehc/Wir_heissen_jetzt_IT_Center/?lidx=1 )
+Our implementation has been tested on a local laptop running Ubuntu 20.02, and Fedora 43 as well as on INRIA's HPC [Margaret](https://clusters-saclay.gitlabpages.inria.fr/clusters-docs/docs/margaret/home/). 
+Some tests have been done on LMU's supercomputing centre, reach out to us if you need to know more. 
 To sum up, here is what you may need:
-* FEniCS: http://fenicsproject.org/ ; used as the black box solver for the PDEs
-* ProgressBar: https://pypi.python.org/pypi/progressbar ; used to keep track of the advancement of the PDE solves
-* Scientific Linux (including in particular scipy, numpy, etc... ) - Ubuntu works just fine too!
-* cvxpy: http://www.cvxpy.org/en/latest/install/index.html ; used for the convex minimizations needed for the compressed sensing part
+* [FEniCS](http://fenicsproject.org/): used as the black box solver for the PDEs
+* [ProgressBar2](https://pypi.org/project/progressbar2/): used to keep track of the advancement of the PDE solves
+* Some linux (Tested on scientific linux, fedora, ubuntu)
+* [cvxpy](http://www.cvxpy.org/en/latest/install/index.html). used for the convex minimizations needed for the compressed sensing part
 
+A remark on the une of FEniCS: As we started developping this, FEniCSx was not yet out and we have not worked out the adaptation for this. 
+As a consequence, some care should be taken when installing the various packages since some newer versions of certain packages are no longer compatible with previous versions of FEniCS.
 
 Package Installation
 ====================
 
 We recommend using anaconda for most of the installation. 
 Be aware that these packages are evolving very fast and you might need to adjust here and there some versions of the various packages (most recently (2019/06/04): FEniCS and the latest version of cvxpy are not compatible). 
+
+WARNING: This set of commands is now a bit outdates. Check the ```notes``` files for now for some guidance. 
+The present README file will be updated soon after thorough testing. 
+
 Try the following sequence of commands: 
 
 First, create a separate environment for the project (note that you could use the [env-fenics.yml file](env-fenics.yml))
@@ -69,7 +77,7 @@ nosetests cvxpy
 conda install numba
 ```
 
-You also need to install ```progressbar``` separately using -- otherwise, you might be standing in front of your computer, not knowing what is happening
+You also need to install ```progressbar2``` separately using -- otherwise, you might be standing in front of your computer, not knowing what is happening
 ```
 python setup.py install 
 ```

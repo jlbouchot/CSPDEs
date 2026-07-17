@@ -1,7 +1,24 @@
 import argparse
 import configparser
 from pathlib import Path
+import os.path
+import inspect
 from typing import Any, Dict, Tuple
+
+__author__ = ["Jean-Luc Bouchot"]
+__copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology, INRIA Sophia Antipolis"
+__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
+__license__ = "GPL"
+__version__ = "0.5.0-dev"
+__maintainer__ = "Jean-Luc Bouchot"
+__email__ = "jlbouchot@gmail.com"
+__status__ = "Development"
+__created__ = "2026/07/09"
+__lastmodified__ = "2026/07/09"
+
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+
 
 int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space", "n"]
 float_arg_list = ["const_sj", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
@@ -111,7 +128,7 @@ def parse_cfg_file_and_args(all_args):
     pde_solver_cfg = {}
     sparse_solver_cfg = {}
     # Parse config file modifies in place main and solver cfg
-    parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file = "mlcspg-default-cfg.ini")
+    parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file = os.path.join(parentdir, 'data', 'mlcspg-default-cfg.ini'))
     # Parse all CLI argument and overload previous values if conflicting
     parse_cli_args(main_cfg, pde_solver_cfg, sparse_solver_cfg, all_args)
     main_keys = main_cfg.keys()
