@@ -24,8 +24,6 @@ from time import sleep
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
-# def CSPDE_ML(spde_model, wr_model, unscaledNbIter, epsilon, L_first = 1, L=1, dat_constant = 5, ansatz_space = 0, cspde_result = None, sampling_fname = None, datamtx_fname = None, t = 1, tprime = 1, p0 = 1./3., p = 2./3., energy_constant = 10): # the filenames are early only if we already computed quite a few solutions and don't want to have to recompute the whole matrix. In theory, we wouldn't need this for all practical purposes.
-# def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = None, sampling_fname = None, datamtx_fname = None): 
 def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = None): 
     """
     Parameters
@@ -104,11 +102,11 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
     # Check whether this even an interesting case
     print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
     wr_model.check(N, m)
-    print(15*"=" + f"Should we avoid computing things? {no_compute}")
-    print(15*"=" + f"Should we go ahead?  {not no_compute}")
+    # print(15*"=" + f"Should we avoid computing things? {no_compute}")
+    # print(15*"=" + f"Should we go ahead?  {not no_compute}")
 
     if (not no_compute):
-        print(20*"=" + "Actually computing stuff here!")
+        # print(20*"=" + "Actually computing stuff here!")
         y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
         A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
 

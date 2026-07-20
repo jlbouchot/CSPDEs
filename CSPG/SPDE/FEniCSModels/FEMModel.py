@@ -31,7 +31,7 @@ class FEMModel(SPDEModel):
 
     def generate_functions_spaces(self): 
         # Create approximation space
-        self.V = FunctionSpace(self.mesh, 'Lagrange', 2)
+        self.V = FunctionSpace(self.mesh, self.pde_cfg.get("elements", "Lagrange"), self.pde_cfg.get("degree", 1))
 
         # Define boundary conditions
         self.bc = DirichletBC(self.V, Constant(0.0), lambda x, on_boundary: on_boundary)
@@ -40,6 +40,22 @@ class FEMModel(SPDEModel):
         self.w = TrialFunction(self.V)
         self.v = TestFunction(self.V)
 
+    def set_solver_parameters(self):
+        """
+        Parse the PDE configuration dictionary to set solver parameters.
+        Parameters
+        ----------
+        pde_cfg : dict
+            Dictionary containing PDE solver configuration parameters.
+
+        TODO: Add more parameters to be parsed as needed.
+        TODO: Propagate the use of pde config dict to other FEMModels.
+        """
+        self.linear_solver = self.pde_cfg.get("linear_solver", "gmres")
+        self.preconditioner = self.pde_cfg.get("preconditioner", "amg")
+        self.relative_tolerance = self.pde_cfg.get("relative_tolerance", 1e-6)
+        self.absolute_tolerance = self.pde_cfg.get("absolute_tolerance", 1e-10)
+
 
     def refine_mesh(self, ratio=2): # Note, this can also be used to coarsen the mesh
         self.mesh_size = tuple(int(one_direction*ratio) for one_direction in self.mesh_size)
@@ -47,7 +63,7 @@ class FEMModel(SPDEModel):
 
     def set_mesh_size(self, mesh_size):
         self.mesh_size = tuple(one_size for one_size in mesh_size)
-        self.init_simple_mesh
+        self.init_simple_mesh()
 
     # @staticmethod
     def split_params(self, coeff, z):
