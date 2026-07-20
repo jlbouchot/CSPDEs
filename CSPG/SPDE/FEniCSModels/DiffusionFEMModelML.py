@@ -12,15 +12,18 @@ __status__ = "Development"
 __lastmodified__ = "2017/10/25"
 
 class DiffusionFEMModelML(FEMModel):
-    def __init__(self, a, f, M_gen, mesh_size):
+    def __init__(self, a, f, M_gen, mesh_size, pde_cfg):
         self.a         = a
         self.f         = f
         self.M_gen     = M_gen
+        self.pde_cfg    = pde_cfg
 
         self.mesh_size = mesh_size
         self.init_simple_mesh()
+        # self.parse_pde_cfg(pde_cfg)
 
     def solve(self, z):
+        # TODO: Make this a bit more elegant, likely letting the log level being specified on the fly, and moving the various values to another file.
         # Make FEniCS output only the most important messages
         CRITICAL  = 50 #, // errors that may lead to data corruption and suchlike
         ERROR     = 40 #, // things that go boom
@@ -35,30 +38,7 @@ class DiffusionFEMModelML(FEMModel):
         if not hasattr(self, 'mesh'):
             self.init_simple_mesh()
 
-        # # Create approximation space
-        # V = FunctionSpace(self.mesh, 'Lagrange', 1)
-
-        # # Define boundary conditions
-        # bc = DirichletBC(V, Constant(0.0), lambda x, on_boundary: on_boundary)
-
-        # # Define variational problem
-        # w = TrialFunction(V)
-        # v = TestFunction(V)
-
         params = self.split_params([self.a, self.f], z)
-
-        # x = SpatialCoordinate(self.mesh)
-        # A = self.a(x, Constant(params[0])) * inner(nabla_grad(w), nabla_grad(v)) * dx
-        # L = self.f(x, Constant(params[1])) * v * dx
-
-        # # Create goal-functional for error estimation
-        # u      = Function(V)
-        # self.M = self.M_gen(self, u, dx)
-
-        # # Create solver
-        # problem     = LinearVariationalProblem(A, L, u, bc)
-
-        ## Should work when mutualising things
 
         x = SpatialCoordinate(self.mesh)
         A = self.a(x, Constant(params[0])) * inner(nabla_grad(self.w), nabla_grad(self.v)) * dx
@@ -70,17 +50,12 @@ class DiffusionFEMModelML(FEMModel):
 
         # Create solver
         problem     = LinearVariationalProblem(A, L, u, self.bc)
-        # list_linear_solver_methods()
-        self.solver = LinearVariationalSolver(problem) #, solver_parameters={'linear_solver': 'iterative'})
-        self.solver.parameters["linear_solver"] = "gmres"
-        # solver.parameters["preconditioner"] = "ilu"
-        # solver.parameters["linear_solver"] = "petsc"
-        self.solver.parameters["preconditioner"] = "amg"
-        #self.solver.parameters["linear_solver"] = "petsc"
-        self.solver.parameters.add("relative_tolerance", 1e-3)
-        self.solver.parameters.add("absolute_tolerance", 1e-6) # TODO: Question: Is add the same as the dict like addition?
-        # self.solver.parameters["linear_solver"] ="iterative"
-        # y[k] = assemble(myAverage(mesh, u, dx))
+        self.solver = LinearVariationalSolver(problem)
+        self.set_solver_parameters()
+        # self.solver.parameters["linear_solver"] = self.linear_solver
+        # self.solver.parameters["preconditioner"] = self.preconditioner
+        # self.solver.parameters.add("relative_tolerance", self.relative_tolerance)
+        # self.solver.parameters.add("absolute_tolerance", self.absolute_tolerance)
 
         # Compute solution
         self.solver.solve()

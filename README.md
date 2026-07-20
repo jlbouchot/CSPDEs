@@ -131,6 +131,14 @@ Test examples
 You will find some (dirty) test examples, usually named test_XXX. In the notation, diff stands for a diffusion problem, ML for Multi-level, v for constant coefficients while p is for polynomially growing weights, pwld for PieceWise Linear Diffusion. 
 Better structured tests will be made available soon. 
 
+Playing with the solvers
+========================
+```python
+info(LinearVariationalSolver.default_parameters(), True)
+info(NonlinearVariationalSolver.default_parameters(), True)
+```
+
+
 Acknowledgments
 ===============
 This work was partly supported by the European Research Council through the grant StG 258926. Part of this work was developed as J.-L. B. and H. R. were visiting the Hausdorff Research Center for Mathematics as part of the Hausdorff Trimester Program on Mathematics of Signal Processing. 

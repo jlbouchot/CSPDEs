@@ -11,7 +11,7 @@ __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __lastmodified__ = "2026/01/22"
 
-class WRModel:
+class WRModel(object):
     def __init__(self, method, operator, weights, m_from_s_N, check):
         self.method         = get_recovery_algo_from_string(method)
         self.operator       = operator
@@ -33,6 +33,12 @@ class WRModel:
             #print cspde_result[oneLevel].result.x[cspde_result[oneLevel].result.x != 0]
 
         return y_recon
+    
+    def __str__(self):
+        return "WRModel with recovery algorithm {0} and operator {1}".format(self.method, self.operator)
+    
+    def __repr__(self):
+        return self.__str__()
 
 
 def check_cs(N, m):

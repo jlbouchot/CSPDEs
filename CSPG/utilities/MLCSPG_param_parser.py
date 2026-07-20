@@ -20,19 +20,19 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 
 
-int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space", "n"]
+int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space", "n", "degree"]
 float_arg_list = ["const_sj", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
         "dat_constant", "t_0", "t_prime", "p_0", "p_t"]
 bool_arg_list = ["do_tensor", "no_compute"]
 args_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "recovery_algo", "gamma", "l_start", 
         "sampling", "nb_iter", "tol_res", "nb_tests", "power", "abar", "fluctuation_importance", "weight_cosine", 
         "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", "t_0", "t_prime", "p_0", "p_t", 
-        "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n"]
-pde_arg_list = ["preconditioner", "linear_solver"]
+        "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n", "degree", "experiment_name", "elements"]
+pde_arg_list = ["preconditioner", "linear_solver", "elements", "degree"]
 sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res"]
 main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "l_start", "sampling", "power", "abar", 
         "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", 
-        "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n"]
+        "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name"]
 
 
 # def parse_config_file(path_to_file = None: str, exp = None: str) -> Tuple[Dict[str,Any], Dict[str,Any]]:
@@ -92,6 +92,8 @@ def define_MLCSPG_cli_parser():
     parser.add_argument("--preconditioner", help="Preconditioner chosen among those available from FEniCS", default=None, required=False) 
     parser.add_argument("--linear_solver", help="Type of solver used for the PDE solves", default=None, required=False)
     parser.add_argument("--cfg", help="Specific config file for the current experiment", default=None,required=False)
+    parser.add_argument("--degree", help="Degree of the finite elements used in the FEM discretization", default=1, required=False)
+    parser.add_argument("--elements", help="Type of finite elements used in the FEM discretization", default="Lagrange", required=False)
     # Add config file parameter
     return parser
 

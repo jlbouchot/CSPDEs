@@ -13,19 +13,15 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/01/22"
+__lastmodified__ = "2026/07/20"
 
 from collections import namedtuple
 
 from CSPDE_ML import CSPDE_ML
 
-TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'epsilon', 'L', 'cspde_result'])
-# def test(spde_model, wr_model, nb_iter, epsilon, J, L, checks = None, dat_constant = 10, p = 2/3, p0 = 1/3, t = 1, tprime = 1, energy_constant = 10, ansatz_space = 0, prefix_fname = None, filename = None, cspde_result = None):
-def test(spde_model, wr_model, dict_config, sparse_config, checks = None, cspde_result = None):
-# def test(spde_model, wr_model, dict_config, checks = None, prefix_fname = None, filename = None, cspde_result = None):
+TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'L', 'cspde_result'])
+def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = None, cspde_result = None):
 
-    nb_iter = sparse_config["nb_iter"] 
-    epsilon = sparse_config["tol_res"]
     J = dict_config["l_start"] 
     L = dict_config["nb_level"] 
     dat_constant = dict_config["dat_constant"]  # TODO: Eventually change this name! This is ugly. --> const_sL
@@ -46,9 +42,6 @@ def test(spde_model, wr_model, dict_config, sparse_config, checks = None, cspde_
     else:    
         print("WARNING: Directory " , prefix_fname ,  " already exists \n ---> You might overwrite important files!!")
 
-    with open(os.path.join(prefix_fname, "config_file.txt"),'w') as f_handler:
-        json.dump(dict_config,f_handler) # Probably no longer need this, since everything works with config files to start with.
-
     ### Execute CSPDE algorithm
     cspde_result = CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result)
 
@@ -63,13 +56,24 @@ def test(spde_model, wr_model, dict_config, sparse_config, checks = None, cspde_
     if not no_compute:
         print("   Writing results to {0} ...".format(filename))
         d     = shelve.open(os.path.join(prefix_fname,filename))
-        d[dt] = TestResult(spde_model, wr_model, epsilon, L, cspde_result)
+        d[dt] = TestResult(spde_model, wr_model, L, cspde_result)
         d.close()
 
+    with open(os.path.join(prefix_fname, filename + "_config_file.txt"),'w') as f_handler:
+        f_handler.write("### MLCSPG configuration file ###\n")
+        f_handler.write("##  MAIN DICTIONARY   ##\n")
+        json.dump(dict_config,f_handler) # Probably no longer need this, since everything works with config files to start with.
+        f_handler.write("\n\n")
+        f_handler.write("##  SPARSE DICTIONARY ##\n")
+        json.dump(sparse_config,f_handler)
+        f_handler.write("\n\n")
+        f_handler.write("##  PDE DICTIONARY    ##\n")
+        json.dump(pde_config,f_handler) # Assuming you have a PDE config dictionary
+        f_handler.write("\n")
     ## Execute checks
     if checks and (not no_compute):
         print("   Executing checks ... ")
-        checks(spde_model, wr_model, nb_iter, epsilon, cspde_result)
+        checks(spde_model, wr_model, cspde_result)
         # list(map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)) # the "list(...)" is required due to the new Python 3.x updates
 
 
@@ -79,7 +83,7 @@ class CrossCheck:
     def __init__(self, num_tests):
         self.num_tests = num_tests
 
-    def __call__(self, spde_model, wr_model, nb_iter, epsilon, cspde_result, y_truth=None):
+    def __call__(self, spde_model, wr_model, cspde_result, y_truth=None):
         # Compute truth values
         if self.num_tests == [] or self.num_tests is None or self.num_tests == 0: 
             return None
