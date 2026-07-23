@@ -10,7 +10,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/01/22"
+__lastmodified__ = "2026/07/21"
 
 class FEMModel(SPDEModel):
     def init_simple_mesh(self):
@@ -92,12 +92,7 @@ class FEMModel(SPDEModel):
         odict = self.__dict__.copy()
 
         # Can't pickle dolfin's mesh, solver and M...
-        del odict['mesh']
-        del odict['solver']
-        del odict['M']
-        del odict['V']
-        del odict['bc']
-        del odict['w']
-        del odict['v']
-
+        for key in ['mesh', 'solver', 'M', 'V', 'bc', 'w', 'v']:
+            if key in odict:
+                del odict[key]
         return odict

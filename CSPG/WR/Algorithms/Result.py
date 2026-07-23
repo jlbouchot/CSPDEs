@@ -4,10 +4,11 @@ __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Chris
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__created__ = "2015/09/21"
+__lastmodified__ = "2026/07/21"
 
 from collections import namedtuple
 
-Result = namedtuple('Result', ['x', 'iterations', 'methodname'])
+Result = namedtuple('Result', ['x', 'iterations', 'methodname', 'success','tWC', 'tUser', 'tSys'])

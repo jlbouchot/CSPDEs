@@ -1,5 +1,8 @@
 import numpy as np
 
+import time
+import os
+
 from .operator_from_matrix import *
 from .LD_bounded_operator  import LD_bounded_operator
 
@@ -11,7 +14,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/02/22"
+__lastmodified__ = "2026/07/21"
 
 class Chebyshev(LD_bounded_operator):
     # L_inf norm of the basis functions associated to this operator
@@ -26,7 +29,10 @@ class Chebyshev(LD_bounded_operator):
         return operator_from_matrix(Chebyshev, matrix_from_tensor_indices(J, Z, base, normalization))
 
 
-    def load(data_file):
+    def load(data_file, t_fname):
+        
+        A = operator_from_matrix(Chebyshev, np.load(data_file))
+        t_matrix = np.load(t_fname)
 
-        return operator_from_matrix(Chebyshev, np.load(data_file))
+        return A, t_matrix
 

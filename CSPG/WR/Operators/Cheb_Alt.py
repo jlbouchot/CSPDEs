@@ -5,14 +5,14 @@ from .operator_from_matrix_Alt import *
 from .LD_bounded_operator  import LD_bounded_operator
 
 __author__ = ["Falk Pulsmeyer", "Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__copyright__ = "Copyright 2026, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/02/22"
+__lastmodified__ = "2026/07/21"
 
 class Cheb_Alt(LD_bounded_operator):
     # L_inf norm of the basis functions associated to this operator
@@ -25,21 +25,19 @@ class Cheb_Alt(LD_bounded_operator):
             return np.cos(k * np.arccos(x)) * np.sqrt(2)**(k>0)
         return operator_from_matrix_Alt(Cheb_Alt, matrix_from_tensor_indices(J, Z, base, normalization), univ_tensor_from_tensor_indices(J, Z, base, normalization),J)
 
-
     @staticmethod
-    def load(data_file):
+    def load(data_file, t_fname):
         dirname = os.path.dirname(data_file)
         bname = os.path.basename(data_file)
         A = np.load(os.path.join(dirname, "A_"+bname))
-        # We're having a bit of issues with the savings of the univariates, which have different sizes
-        # Therefore, we're dealing with an unknown of files, but all having the same names, only indexed: 
-        # {idx}_univariate_{SOMETHING}.npy
-        # Need to pattern match the file names for this purpose
-        nb_valid_files = len([[x for x in os.listdir(dirname) if "univariate" in x]])
+        # Univariate blocks were saved as "{idx}_univariate_<bname>.npy". Collect and load them.
+        univariate_files = [f for f in os.listdir(dirname) if f.endswith("_univariate_"+bname)]
+        # Sort by the leading index to preserve original order (assumes integer prefixes)
+        univariate_files.sort(key=lambda s: int(s.split("_univariate_")[0]))
         univariate = []
-        for i in range(nb_valid_files):
-            univariate += np.load(os.path.join(dirname, str(i) + "_univariate_"+bname))
+        for fname in univariate_files:
+            univariate.append(np.load(os.path.join(dirname, fname)))
         # univariate = np.load(os.path.join(dirname, "univariate_"+bname))
         J = np.load(os.path.join(dirname, "J_"+bname))
 
-        return operator_from_matrix_Alt(Cheb_Alt, A, univariate, J)
+        return operator_from_matrix_Alt(Cheb_Alt, A, univariate, J), np.load(t_fname)
