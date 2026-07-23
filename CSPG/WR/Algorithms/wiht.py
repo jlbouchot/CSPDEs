@@ -1,5 +1,11 @@
 import numpy as np
 
+## Add utilities to the path
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'utilities'))
+import utils as u
+
 from WR import eps
 from .Result import *
 from .weighted_quasi_abslargest import *
@@ -20,6 +26,8 @@ def wiht(Operator, y, w, s, eta, maxiter):
     last_norm = 0
     k         = 0
 
+    t = u.time_things()
+
     while np.linalg.norm(Operator.apply(x) - y) > eta:
         residuum = y - Operator.apply(x)
         cur_norm = np.linalg.norm(residuum)
@@ -27,10 +35,10 @@ def wiht(Operator, y, w, s, eta, maxiter):
         x, dummy  = weighted_quasi_abslargest(x + Operator.apply_adj(residuum), 3 * s, w)
         last_norm = cur_norm
         k         = k + 1
-
         if k > maxiter:
             print('WIHT did not converge after {0} iterations.'.format(k))
             break
-    print("Weighted Recovery:WIHT stopped after {} iterations. Current residual is {}".format(k, np.linalg.norm(Operator.apply(x) - y)))
+    
+    t = u.time_things(t)
 
-    return Result(x, k, 'Weighted Iterative Hard Thresholding')
+    return Result(x, k, 'Weighted Iterative Hard Thresholding', k <= maxiter, t[0], t[1], t[2])

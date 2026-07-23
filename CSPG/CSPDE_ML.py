@@ -9,6 +9,10 @@ import time
 
 import os.path
 
+## Add utilities to the path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), './utilities'))
+import utils as u
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2019 - 2026, INRIA, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -67,8 +71,9 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
     prefix_fname = dict_config["experiment_name"]
     filename = dict_config["output_file"]
 
+    # sampling_fname = os.path.join(prefix_fname, 'sampling_points' + ('_tensor' if dict_config["do_tensor"] else '_no_tensor') + '_Lmax' + str(L))
     sampling_fname = os.path.join(prefix_fname, 'sampling_points_Lmax' + str(L))
-    datamtx_fname = os.path.join(prefix_fname, 'datamtx_Lmax' + str(L))
+    datamtx_fname = os.path.join(prefix_fname, 'datamtx' + ('_tensor' if dict_config["do_tensor"] else '_no_tensor') + '_Lmax' + str(L))
 
     s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
 
@@ -82,14 +87,10 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
     print("Generating J_s ...")
     
     # Compute "active index set" J_s
-    t_start = time.process_time()
     if ansatz_space == 0: 
-        J_s = J(s_J, wr_model.operator.theta, wr_model.weights)
+        J_s, t_J = J(s_J, wr_model.operator.theta, wr_model.weights)
     else:
-        J_s = J_tot_degree(wr_model.weights, ansatz_space)
-    t_stop = time.process_time()
-    t_J = t_stop-t_start
-
+        J_s, t_J = J_tot_degree(wr_model.weights, ansatz_space)
     # Get total number of coefficients in tensorized chebyshev polynomial base
     N = len(J_s)
 
@@ -102,23 +103,17 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
     # Check whether this even an interesting case
     print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
     wr_model.check(N, m)
-    # print(15*"=" + f"Should we avoid computing things? {no_compute}")
-    # print(15*"=" + f"Should we go ahead?  {not no_compute}")
 
     if (not no_compute):
-        # print(20*"=" + "Actually computing stuff here!")
-        y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
-        A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, sampling_fname, datamtx_fname)
+        y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname)
+        A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, datamtx_fname)
 
         print("   Computing weights ...")
         w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
 
         print("   Weighted minimization ...")
-        t_start = time.process_time()
         result = wr_model.method(A, y_new-y_old, w, s_J, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-        t_stop = time.process_time()
-        t_recovery = t_stop-t_start
-        # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+        t_recovery = [result.tWC, result.tUser, result.tSys]
         lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
         print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
     
@@ -138,14 +133,12 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
         # Compute "active index set" J_s
         t_start = time.process_time()
         if ansatz_space == 0: 
-            J_s = J(sl, wr_model.operator.theta, wr_model.weights)
+            J_s, t_J = J(sl, wr_model.operator.theta, wr_model.weights)
         else:
-            J_s = J_tot_degree(wr_model.weights, ansatz_space)
+            J_s, t_J = J_tot_degree(wr_model.weights, ansatz_space)
         t_stop = time.process_time()
         t_J = t_stop-t_start
-        
-        # print("Ansatz space is {}".format(J_s))
-        
+                
         # Get total number of coefficients in tensorized chebyshev polynomial base
         N = len(J_s)
 
@@ -154,6 +147,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
         
         # Get sample dimension
         d = len(J_s[0])
+        # print(f"d is currently {d} and J_s is {J_s}")
 
         # if not cspde_result is None:
         #     assert d == cspde_result.d, "New sample space dimension is different from old sample space dimension."
@@ -164,8 +158,10 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
 
 
         if not no_compute:
-            y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname)
-            A, t_matrix = get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname)
+            y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname)
+            # print(f"   Computing sensing matrix for level {oneLvl} ...")
+            # print(f"   Using Z = {Z} \t\t J = {J_s} \t\t y_new = {y_new}, y_old = {y_old}")
+            A, t_matrix = get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, datamtx_fname)
 
         
             print("   Computing weights ...")
@@ -173,10 +169,8 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
             # print(" Weights are {}".format(w) )
 
             print("   Weighted minimization ...")
-            t_start = time.process_time()
             result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-            t_stop = time.process_time()
-            t_recovery = t_stop-t_start
+            t_recovery = [result.tWC, result.tUser, result.tSys]
             # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
             lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
             print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
@@ -185,68 +179,74 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
     return lvl_by_lvl_result
 
 
-def get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname): 
-    if (sampling_fname is None) or (datamtx_fname is None):  
+def get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, datamtx_fname): 
+    if (datamtx_fname is None):  
         # Create sampling matrix and weights
         print("   Creating sample operator ...")
-        t_start = time.process_time()
+        t_start = u.time_things()
         A = wr_model.operator.create(J_s, Z)
-        t_stop = time.process_time()
-        t_matrix = t_stop-t_start
+        t_matrix = u.time_things(t_start)
     else:
         # Create sampling matrix and weights
-        print("   Creating sample operator ...")
-        t_start = time.process_time()
         mtx_file = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
-        if os.path.isfile(mtx_file):
-            # A = ofm(Chebyshev, np.load(mtx_file))
-            A = wr_model.operator.load(mtx_file)
+        t_fname = datamtx_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '_time.npy'
+        if os.path.isfile(t_fname):
+            print("   Loading precomputed sample operator from {0} ...".format(mtx_file))
+            A, t_matrix = wr_model.operator.load(mtx_file, t_fname)
         else: 
+            print("   Creating sample operator ...")
+            t_start = u.time_things()
             A = wr_model.operator.create(J_s, Z)
             A.save(mtx_file)
-            # np.save(mtx_file, A.A)
-        t_stop = time.process_time()
-        t_matrix = t_stop-t_start
-
+            t_matrix = u.time_things(t_start)
+            np.save(t_fname, t_matrix)
+            
     return A, t_matrix
 
 
 
-def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname, datamtx_fname):
-    if (sampling_fname is None) or (datamtx_fname is None):  
+def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname):
+    if (sampling_fname is None):  
         Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
         print("\nComputing {0} SPDE sample approximations ...".format(m))
         # Get samples
-        t_start = time.process_time()
-        if onelvl != J:
-            y_old = spde_model.samples(Z)
-            spde_model.refine_mesh()
-        else:
-            y_old = np.zeros(m)
-        y_new = spde_model.samples(Z)
-        t_stop = time.process_time()
-        t_samples = t_stop-t_start
-
-
-    else:
-        sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
-        # sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy' ## Really HAVE to do this better one day!
-        if os.path.isfile(sampling_file):
-            Z = np.load(sampling_file)
-        else: 
-            Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
-            np.save(sampling_file, Z)
-        print("\nComputing {0} SPDE sample approximations ...".format(m))
-        # Get samples
-        t_start = time.process_time()
+        t_start = u.time_things()
         if oneLvl != J:
             y_old = spde_model.samples(Z)
             spde_model.refine_mesh()
         else:
             y_old = np.zeros(m)
         y_new = spde_model.samples(Z)
-        t_stop = time.process_time()
-        t_samples = t_stop-t_start
+        t_samples = u.time_things(t_start)
+
+    else:
+        sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '.npy'
+        y_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '_s_' + str(sl) + '_y.npz'
+        # sampling_file = sampling_fname + '_d' + str(d) + '_l' + str(oneLvl) + '.npy' ## Really HAVE to do this better one day!
+        if os.path.isfile(sampling_file):
+            Z = np.load(sampling_file)
+        else: 
+            Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+            np.save(sampling_file, Z)
+
+        if os.path.isfile(y_file):
+            print("\nLoading precomputed SPDE sample approximations from {0} ...".format(y_file))
+            loaded = np.load(y_file)
+            y_new = loaded['y_new']
+            y_old = loaded['y_old']
+            t_samples = [float(t) for t in loaded['t_samples']] if 't_samples' in loaded else [0.0, 0.0, 0.0]
+        else:
+            print("\nComputing {0} SPDE sample approximations ...".format(m))
+            # Get samples
+            t_start = u.time_things()
+            if oneLvl != J:
+                y_old = spde_model.samples(Z)
+                spde_model.refine_mesh()
+            else:
+                y_old = np.zeros(m)
+            y_new = spde_model.samples(Z)
+            t_samples = u.time_things(t_start)
+            np.savez(y_file, y_new=y_new, y_old=y_old, t_samples=t_samples)
 
     return y_new, y_old, Z, t_samples
 
@@ -259,9 +259,11 @@ def J_tot_degree(v, max_degree = 2, threshold = np.inf):
     print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
     # Remember v contains the weights associated to the operators in the expansion. 
     # We assume that above a certain weight, it can simply be discarded, the associated coefficient can be discarded. 
+    t = u.time_things()
     aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=len([v_i for v_i in v if v_i < threshold]))]) # This creates a set of multi-indices with max norm max_degree
+    t = u.time_things(t)
     J = [one_multi_index for one_multi_index in aux if one_multi_index.sum() <= max_degree]
-    return J
+    return J, t
 
 
 def J(s, theta, v):
@@ -322,6 +324,7 @@ def J(s, theta, v):
     L = [np.zeros(M, dtype='int')]
 
     # Iterate through support sets of cardinality k = 1 ... M
+    t = u.time_things()
     for k in range(1, M + 1):
         new_indices = []
     
@@ -332,8 +335,10 @@ def J(s, theta, v):
             break
 
         L += new_indices
+
+    t = u.time_things(t)
     
-    return L
+    return L, t
 
 
 def calculate_weights(theta, v, J_s):

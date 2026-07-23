@@ -60,24 +60,28 @@ class operator_from_matrix_Alt:
         dirname = os.path.dirname(data_file)
         bname = os.path.basename(data_file)
         for (idx, A) in enumerate(self.univariate_A):
-            # Write all files one after the other, in the load function, recreate the list
+            # Write each univariate block to its own file so sizes can differ
             # print("Row {} has shape {}".format(idx, np.shape(A)))
-            np.save(os.path.join(dirname, str(idx) + "_univariate_"+bname), self.A)
+            np.save(os.path.join(dirname, str(idx) + "_univariate_"+bname), A)
         np.save(os.path.join(dirname, "A_"+bname), self.A)
         np.save(os.path.join(dirname, "J_"+bname), self.J)
 
 
 
 def matrix_from_tensor_indices(J, Z, base, normalization=None):
-    Za, Ja = np.array(Z), np.array(J)
+    """
+    Only used for consistency with the non tensor based computations
+    Should be removed once code has been improved.
+    """
+    # Za, Ja = np.array(Z), np.array(J)
 
     # A = np.array([np.array([np.prod(base(z_row, j)) for j in Ja]) for z_row in Za])
     # A = np.reshape(np.fromiter((np.prod(base(z_row, j)) for j in Ja for z_row in Za), np.float), (len(Za), len(Ja)), len(Za)*len(Ja))
     A = np.zeros((3,3))
-    if normalization is None:
-        normalization = np.sqrt(np.size(A, 0))
+    # if normalization is None:
+    #     normalization = np.sqrt(np.size(A, 0))
 
-    return A/normalization
+    return A # /normalization
 
 
 def univ_tensor_from_tensor_indices(J, Z, base, normalization=None):

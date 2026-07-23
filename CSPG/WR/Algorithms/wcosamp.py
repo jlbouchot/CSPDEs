@@ -1,5 +1,11 @@
 import numpy as np
 
+## Add utilities to the path
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'utilities'))
+import utils as u
+
 from WR import eps
 from .Result import Result
 from .weighted_quasi_abslargest import *
@@ -10,9 +16,10 @@ __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Holger Rauhut", "Chris
 __license__ = "GPL"
 __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
-__email__ = "bouchot@mathc.rwth-aachen.de"
+__email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2015/09/21"
+__created__ = "2015/09/21"
+__lastmodified__ = "2026/07/21"
 
 def wcosamp(Operator, y, w, s, eta, maxiter):
     x = np.zeros(Operator.n)
@@ -21,6 +28,8 @@ def wcosamp(Operator, y, w, s, eta, maxiter):
 
     last_norm = np.inf
     k         = 0
+
+    t = u.time_things()
 
     while k < s:
         if k > maxiter:
@@ -40,5 +49,6 @@ def wcosamp(Operator, y, w, s, eta, maxiter):
 
         U_old = U
         k     = k + 1
+    t = u.time_things(t)
 
-    return Result(x, k, 'Weighted CoSaMP')
+    return Result(x, k, 'Weighted CoSaMP', k <= maxiter, t[0], t[1], t[2])

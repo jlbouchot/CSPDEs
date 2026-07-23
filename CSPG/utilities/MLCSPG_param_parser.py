@@ -6,7 +6,7 @@ import inspect
 from typing import Any, Dict, Tuple
 
 __author__ = ["Jean-Luc Bouchot"]
-__copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology, INRIA Sophia Antipolis"
+__copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
 __license__ = "GPL"
 __version__ = "0.5.0-dev"
@@ -14,7 +14,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/07/09"
-__lastmodified__ = "2026/07/09"
+__lastmodified__ = "2026/07/21"
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
