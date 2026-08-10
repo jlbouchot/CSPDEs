@@ -51,6 +51,9 @@ class DiffusionFEMModelML(FEMModel):
         # Create solver
         problem     = LinearVariationalProblem(A, L, u, self.bc)
         self.solver = LinearVariationalSolver(problem)
+        # self.solver = LinearVariationalSolver(problem, solver_parameters={
+        #   "linear_solver": "gmres", 
+        #   "preconditioner": "amg"})
         self.set_solver_parameters()
         # self.solver.parameters["linear_solver"] = self.linear_solver
         # self.solver.parameters["preconditioner"] = self.preconditioner
