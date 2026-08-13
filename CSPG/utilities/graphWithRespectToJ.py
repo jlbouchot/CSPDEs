@@ -139,7 +139,6 @@ for oneJ in Js_to_display:
 	# spde_model = results_all[oneJ].spde_model 
 	# spde_model.set_mesh_size(target_mesh_size)
 	# y_estimated = wr_model.estimate_ML_samples(first_result[0].cspde_result, Z)
-	print(f"Type of results_all is {type(results_all)} and current result's type is {type(results_all[oneJ])}")
 	y_estimated = results_all[oneJ].wr_model.estimate_ML_samples(results_all[oneJ].cspde_result, Z)
 	l2error[oneJ] = np.linalg.norm(y_estimated - y_GT)
 	linferror[oneJ] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
@@ -163,7 +162,7 @@ for oneJ in Js_to_display:
 	computeTimeJsSys[oneJ] = curJsTimes[2] / computeTotalTimeSys[oneJ]
 
 
-colours = plt.cm.rainbow(np.linspace(0, 1, len(Js_to_display)))
+colours = plt.cm.rainbow(np.linspace(0, 1, len(Js_to_display)+1))
 markers = ["o", "v", "^", "<", ">", "s", "8"]
 
 
@@ -224,15 +223,18 @@ markers = ["o", "v", "^", "<", ">", "s", "8"]
 fig, ax1 = plt.subplots()
 
 ax1.set_xlabel('J')
-ax1.set_ylabel('time (h)') #, color=color)
-ax1.plot(Js_to_display, [computeTotalTime[d]/3600 for d in Js_to_display], color=colours[0], marker=markers[0], label='Total time')
-ax1.plot(Js_to_display, [computeTotalTime[d]*computeTimePDE[d]/3600 for d in Js_to_display], color=colours[1], marker=markers[1], label='Total PDE solve time')
-ax1.plot(Js_to_display, [computeTotalTime[d]*computeTimeRecovery[d]/3600 for d in Js_to_display], color=colours[2], marker=markers[2], label='Total sparse recovery time')
+ax1.set_ylabel('Wall clock time (h)') #, color=color)
+ax1.plot(Js_to_display, [computeTotalTimeWC[d]/3600 for d in Js_to_display], color=colours[0], marker=markers[0], label='Total time')
+ax1.plot(Js_to_display, [computeTotalTimeWC[d]*computeTimePDEWC[d]/3600 for d in Js_to_display], color=colours[1], marker=markers[1], label='Total PDE solve time')
+ax1.plot(Js_to_display, [computeTotalTimeWC[d]*computeTimeRecoveryWC[d]/3600 for d in Js_to_display], color=colours[2], marker=markers[2], label='Total sparse recovery time')
 
 # loc = ax1.get_xticks()
 # ax1.set_xticklabels(np.arange(min(Js_to_display), max(Js_to_display) + 1, step=1))
 ax1.set_xticks(range(0,max(Js_to_display)+1, 1))
-ax1.legend()
+# combine legends from both axes into a single stacked legend below the plot
+# get handles/labels from both axes
+handles1, labels1 = ax1.get_legend_handles_labels()
+# ax2 may not yet have handles when called from here, so we'll get them after plotting on ax2
 # ax1.tick_params(axis='y', labelcolor=color)
 
 linf_to_display = [np.log10(linferror[d]) for d in Js_to_display]
@@ -241,11 +243,17 @@ max_linf = max(linf_to_display)
 delta_linf = max_linf-min_linf
 ax2 = ax1.twinx() 
 ax2.set_ylabel('$\log_{10}(\ell_\infty($error$))$')
-ax2.plot(Js_to_display, linf_to_display, color=colours[3], marker=markers[3], label='Final approximation error')
+ax2.plot(Js_to_display, linf_to_display, color=colours[len(Js_to_display)], marker=markers[len(Js_to_display)], label='Final approximation error')
 ax2.set_ylim(min_linf-delta_linf, max_linf+delta_linf)
 # ax2.set_xticks(range(0,max(Js_to_display)+1, 1))
-ax2.legend()
-fig.tight_layout()
+handles2, labels2 = ax2.get_legend_handles_labels()
+all_handles = handles1 + handles2
+all_labels = labels1 + labels2
+# place a single legend below the axes, stacked vertically (one column)
+#fig.legend(all_handles, all_labels, loc='lower center', bbox_to_anchor=(0.5, -0.18), ncol=1)
+fig.legend(all_handles, all_labels, loc='upper center')
+# leave room at the bottom for the legend
+fig.tight_layout(rect=[0, 0.06, 1, 1])
 plt.savefig("timesAndErrorWRTjs.eps")
 plt.savefig("timesAndErrorWRTjs.jpg")
 

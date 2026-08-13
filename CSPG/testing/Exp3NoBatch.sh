@@ -10,7 +10,7 @@
 #notes          :Install FEniCS, CVXPY, progressbar before using.
 #==============================================================================
 
-# Test file to call all tests for the MLCSPG paper, experiment number 3: h final evolving, number of multi-levels increasing, h0 fixed. 
+# Test file to call all tests for the MLCSPG paper, experiment number 3: h final fixes, L fixed, h0 fixed,number of multi-levels increasing. 
 # 1. Call the small driver_MLCSPG_2D.py script with its specific config file and redirecting logs
 # 2. Call the small driver_MLCSPG_2D.py script with more options making sure everything works fine.
 
@@ -18,13 +18,13 @@ outdir="results/Exp3"
 if [[ -z "$DEBUG_MODE" ]]; then
     # Default execution.
     # h_0_values=(640 320 160 80 40 20 10)
-    J_values=(6 5 4 3 2 1 0)
-    L_val=6
+    J_values=(8 7 6 5 4 3 2 1 0)
+    L_val=8
     tol_res_val=0.0000078125
 else
     # Debug execution.
-    J_values=(3 2 1)
-    L_val=3
+    J_values=(4 3 2)
+    L_val=4
     tol_res_val=0.000125
     outdir="${outdir}_debug"
 fi

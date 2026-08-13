@@ -14,7 +14,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/07/22"
-__lastmodified__ = "2026/07/22"
+__lastmodified__ = "2026/07/23"
 
 import os.path
 import sys
@@ -30,7 +30,7 @@ import WR
 import utilities.utils as u
 
 from SPDE              import FEniCSModels
-from SPDE.FEniCSModels import DiffusionFEMModelML, WeightedCosine1D, ConstantCoefficient, Average
+from SPDE.FEniCSModels import DiffusionFEMModelML, WeightedCosine2D, ConstantCoefficient, Average
 
 from Check_ML import test, CrossCheck
 
