@@ -51,11 +51,10 @@ class FEMModel(SPDEModel):
         TODO: Add more parameters to be parsed as needed.
         TODO: Propagate the use of pde config dict to other FEMModels.
         """
-        self.linear_solver = self.pde_cfg.get("linear_solver", "gmres")
-        self.preconditioner = self.pde_cfg.get("preconditioner", "amg")
-        self.relative_tolerance = self.pde_cfg.get("relative_tolerance", 1e-6)
-        self.absolute_tolerance = self.pde_cfg.get("absolute_tolerance", 1e-10)
-
+        self.solver.parameters["linear_solver"] = self.pde_cfg.get("linear_solver", "gmres")
+        self.solver.parameters["preconditioner"] = self.pde_cfg.get("preconditioner", "amg")
+        self.solver.parameters["krylov_solver"]["relative_tolerance"] = self.pde_cfg.get("relative_tolerance", 1e-6)
+        self.solver.parameters["krylov_solver"]["absolute_tolerance"] = self.pde_cfg.get("absolute_tolerance", 1e-10)
 
     def refine_mesh(self, ratio=2): # Note, this can also be used to coarsen the mesh
         self.mesh_size = tuple(int(one_direction*ratio) for one_direction in self.mesh_size)
@@ -80,7 +79,9 @@ class FEMModel(SPDEModel):
             params.append(z_c)
         return params
 
-    def sample(self, z):
+    def sample(self, z, new_params=None):
+        if new_params is not None:
+            self.pde_cfg = new_params
         u = self.solve(z)
         # Return functional value for solution
         # print assemble(self.M)
