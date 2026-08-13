@@ -14,22 +14,22 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/07/09"
-__lastmodified__ = "2026/07/21"
+__lastmodified__ = "2026/08/03"
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 
 
-int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space", "n", "degree"]
+int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space", "n", "degree", "log"]
 float_arg_list = ["const_sj", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
         "dat_constant", "t_0", "t_prime", "p_0", "p_t"]
 bool_arg_list = ["do_tensor", "no_compute"]
-args_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "recovery_algo", "gamma", "l_start", 
-        "sampling", "nb_iter", "tol_res", "nb_tests", "power", "abar", "fluctuation_importance", "weight_cosine", 
-        "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", "t_0", "t_prime", "p_0", "p_t", 
-        "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n", "degree", "experiment_name", "elements"]
-pde_arg_list = ["preconditioner", "linear_solver", "elements", "degree"]
-sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res"]
+# args_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "recovery_algo", "gamma", "l_start", 
+#         "sampling", "nb_iter", "tol_res", "nb_tests", "power", "abar", "fluctuation_importance", "weight_cosine", 
+#         "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", "t_0", "t_prime", "p_0", "p_t", 
+#         "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n", "degree", "experiment_name", "elements"]
+pde_arg_list = ["preconditioner", "linear_solver", "elements", "degree", "log"]
+sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res", "log"]
 main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "l_start", "sampling", "power", "abar", 
         "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", 
         "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name"]
@@ -94,6 +94,7 @@ def define_MLCSPG_cli_parser():
     parser.add_argument("--cfg", help="Specific config file for the current experiment", default=None,required=False)
     parser.add_argument("--degree", help="Degree of the finite elements used in the FEM discretization", default=1, required=False)
     parser.add_argument("--elements", help="Type of finite elements used in the FEM discretization", default="Lagrange", required=False)
+    parser.add_argument("-l, --log", help="Frequency of logging the results to the output file (Default is 10)", default=10, required=False)
     # Add config file parameter
     return parser
 

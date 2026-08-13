@@ -19,110 +19,39 @@ import pathlib # This allows to avoid the if path.exists -> mkdir thing. Hurray!
 
 from collections import namedtuple
 
-from progressbar import Bar, ETA, Percentage, ProgressBar
+## Add utilities to the path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import Check_ML
+from utilities.utils import getComputeTimes, getGroundTruthFromModel
 
-
-#################################
-#### This function should be externalised for reusability purposes
-#################################
-def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder = 'TargetL_GTresults', GTfilenames = 'GT_'): 
-
-	pathlib.Path(GTfolder).mkdir(parents=True, exist_ok=True) # parents = True allow to generate subfolder recursively. exist_ok prevents raising exception if the folder already exists. 
-	# Folder exists for sure now!
-
-	# Now check if a file containing sampling points exists, it is called GTfilenames +"samples.npy"
-	sampleFName = GTfilenames +"samples.npy"
-	if os.path.exists(os.path.join(GTfolder, sampleFName)): 
-		# The file exists and we might load it!
-		Z = np.load(os.path.join(GTfolder, sampleFName))
-		nbExistingSamples = Z.shape[0] # [1] should be equal to the dimensionality d 
-		if nbExistingSamples < nbSamples: 
-			Z = np.vstack((Z,wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples-nbExistingSamples, d)))))
-	else : 
-		Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples, d) ) )
-	# Now we know there are sufficiently many sampling points. We can save the file
-	np.save(os.path.join(GTfolder,sampleFName), Z)
-
-	# Step 2: generate the y values!
-	y_GT = np.zeros(nbSamples)
-	# Check if some of them have already been computed!
-	yValuesFname = GTfilenames + "yGT.npy"
-	if os.path.exists(os.path.join(GTfolder,yValuesFname)): 
-		# A file exists, so let's go ahead and load it 
-		existingYs = np.load(os.path.join(GTfolder,yValuesFname))
-		nbExistingYs = len(existingYs)
-		if nbExistingYs <= nbSamples: 
-			y_GT[0:nbExistingYs] = existingYs
-	else: 
-		nbExistingYs = 0
-
-	print(f"Found {nbExistingYs} existing samples out of the expected {nbSamples}")
-	if nbExistingYs >= nbSamples: 
-		return existingYs[0:nbSamples], Z[0:nbSamples]
-
-	# Show a progressbar
-	# spde_model.refine_mesh(2)
-	# print("Current FEM width is {}".format(spde_model.mesh_size[0]))
-	widgets = [Percentage(), ' ', Bar(), ' ', ETA()]
-	pbar    = ProgressBar(widgets=widgets)
-
-	for k in pbar(range(nbExistingYs, nbSamples)):
-		y_GT[k] = spde_model.sample(Z[k])
-		# Save only every so often to avoid going to the hard memory too often
-		if ((k+1) % 100) == 0: # k+1 because index k means we have computed k+1 data!
-			np.save(os.path.join(GTfolder,yValuesFname), y_GT[0:k])
-
-	np.save(os.path.join(GTfolder,yValuesFname), y_GT)
-
-	return y_GT, Z
-
-
-def getComputeTimes(cspdeResultsList):
-
-	pdeTimes = 0
-	recoveryTimes = 0
-	mtxTimes = 0
-	jsTimes = 0
-
-	if isinstance(cspdeResultsList, list): # Run through all level 
-		nbLvl = len(cspdeResultsList)
-		for oneLvl in range(0,nbLvl): 
-			pdeTimes = pdeTimes + cspdeResultsList[oneLvl].t_samples
-			recoveryTimes = recoveryTimes + cspdeResultsList[oneLvl].t_recovery
-			mtxTimes = mtxTimes + cspdeResultsList[oneLvl].t_matrix
-			jsTimes = jsTimes + cspdeResultsList[oneLvl].t_J
-
-			print(f"Level {oneLvl} has {cspdeResultsList[oneLvl].m} samples. Ansatz space has {cspdeResultsList[oneLvl].N} elements. PDE Time = {cspdeResultsList[oneLvl].t_samples}. Sparse recovery time = {cspdeResultsList[oneLvl].t_recovery}. Computing the Ansatz space took {cspdeResultsList[oneLvl].t_J}. Creating the matrix of tscheb coef took {cspdeResultsList[oneLvl].t_matrix}")
-	else: # This is a single CSPDEResult
-			pdeTimes =cspdeResultsList.t_samples
-			recoveryTimes = cspdeResultsList.t_recovery
-			mtxTimes = cspdeResultsList.t_matrix
-			jsTimes = cspdeResultsList.t_J
-
-	return pdeTimes, recoveryTimes, mtxTimes, jsTimes
-
-################################################3
-# Meat of the script
-
+__author__ = ["Jean-Luc Bouchot"]
+__copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
+__license__ = "GPL"
+__version__ = "0.5.0-dev"
+__maintainer__ = "Jean-Luc Bouchot"
+__email__ = "jlbouchot@gmail.com"
+__status__ = "Development"
+__lastmodified__ = "2026/08/07"
 
 # Keep in mind the results' folders will all have the following form: 
-# Exp1H020Dim2WCosine10InfluenceTarget{StartJ}
+# TODO: Add proper naming conventions
 
-# Remember the things? Surely there is another way to do this!
+# Remember the things? Surely there is another way to do this! ==> Pass it in the utils? 
 TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'epsilon', 'L', 'cspde_result'])
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery'])
 
 
-Lmax = 6
-h0 = 10
+Lmax = [2,3,4]
 nbDim = 2
-target_mesh_size = [3000]*nbDim
-print(f"Target mesh size is {target_mesh_size}")
-Js_to_display = [2,3,4,5,6] # Note that J = 6 corresponds to the SL appraoch
+target_mesh_size = [3000]*nbDim # TODO: Will need to change this!!!
+Js_to_display = [l - 2 for l in Lmax] # Note that J = 6 corresponds to the SL appraoch
 
 
-core_folder_name = 'Exp1H020Dim2WCosine10InfluenceTarget'
-fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
+core_folder_name = os.path.join('results', 'Exp1_debug')
+base_fname = 'L_val_'
+# fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
 cfg_fname = 'config_file.txt' # This contains all the details from the experiments. I don't think we need it for graphing, but who knows. 
 
 ## Placeholder macros
@@ -157,8 +86,9 @@ path_to_GT = 'groundTruth'
 
 # Load and plot results for all J's, one after the other 
 results_all = {}
-for oneJ in Js_to_display: 
-	cur_path_to_file = core_folder_name + str(oneJ)
+for idx, oneJ in enumerate(Js_to_display): 
+	cur_path_to_file = core_folder_name # + str(oneJ)
+	fname_to_read = base_fname + str(Lmax[idx])
 	print("Loading {0} from folder {1} ...".format(fname_to_read, cur_path_to_file))
 	cur_results = sorted(shelve.open(os.path.join(cur_path_to_file,fname_to_read)).values(), key=lambda r: r.L)
 	# print(cur_results)
@@ -184,14 +114,13 @@ finest_result	= results_all[Js_to_display[-1]]
 d 		= finest_result.cspde_result[0].d # number of parameters
 #d            = finest_result[0][TR_CR_POS][CR_D_POS] # number of parameters
 spde_model 	= finest_result.spde_model #[TR_SPDE_MODEL_POS]
-epsilon		= finest_result.epsilon #[TR_EPSILON_POS]
+# epsilon		= finest_result.epsilon #[TR_EPSILON_POS]
 wr_model 	= finest_result.wr_model
-nb_tests 	= 500 # This should be sufficient
-
+nb_tests 	= 1000
 
 spde_model.set_mesh_size(target_mesh_size)
 print("Getting ground truth from model with width {}".format(spde_model.mesh_size[0]))
-y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, 2*d, nb_tests, GTfolder = 'GTresults_d' + str(2*d) + 'H' + str(target_mesh_size[0]), GTfilenames = 'GT_')
+y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, d, nb_tests, GTfolder = 'GTresults_d' + str(d) + 'H' + str(target_mesh_size[0]), GTfilenames = 'GT_')
 # y_estimated = wr_model.estimate_ML_samples(finest_result[0].cspde_result, Z)
 
 
@@ -203,12 +132,23 @@ y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, 2*d, nb_tests, GTfolder 
 
 l2error = {} 
 linferror = {} 
-computeTimePDE = {} 
-computeTimeRecovery = {} 
-computeTimeMtx = {} 
-computeTimeJs = {} 
-computeTotalTime = {} 
+computeTimePDEWC = {} 
+computeTimeRecoveryWC = {} 
+computeTimeMtxWC = {} 
+computeTimeJsWC = {} 
+computeTotalTimeWC = {} 
 
+computeTimePDEUser = {} 
+computeTimeRecoveryUser = {} 
+computeTimeMtxUser = {} 
+computeTimeJsUser = {} 
+computeTotalTimeUser = {} 
+
+computeTimePDESys = {} 
+computeTimeRecoverySys = {} 
+computeTimeMtxSys = {} 
+computeTimeJsSys = {} 
+computeTotalTimeSys = {}
 
 # Let's see how our approximations perform!
 for oneJ in Js_to_display: # Probably better to just read the file in this loop too instead of above.
@@ -217,11 +157,23 @@ for oneJ in Js_to_display: # Probably better to just read the file in this loop 
 	l2error[oneJ] = np.linalg.norm(y_estimated - y_GT)
 	linferror[oneJ] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
 	curPdeTimes, curRecoveryTimes, curMtxTimes, curJsTimes = getComputeTimes(results_all[oneJ].cspde_result)
-	computeTotalTime[oneJ] = curPdeTimes + curRecoveryTimes + curMtxTimes + curJsTimes
-	computeTimePDE[oneJ] = curPdeTimes / computeTotalTime[oneJ]
-	computeTimeRecovery[oneJ] = curRecoveryTimes / computeTotalTime[oneJ]
-	computeTimeMtx[oneJ] = curMtxTimes / computeTotalTime[oneJ]
-	computeTimeJs[oneJ] = curJsTimes / computeTotalTime[oneJ]
+	computeTotalTimeWC[oneJ] = curPdeTimes[0] + curRecoveryTimes[0] + curMtxTimes[0] + curJsTimes[0]
+	computeTimePDEWC[oneJ] = curPdeTimes[0] / computeTotalTimeWC[oneJ]
+	computeTimeRecoveryWC[oneJ] = curRecoveryTimes[0] / computeTotalTimeWC[oneJ]
+	computeTimeMtxWC[oneJ] = curMtxTimes[0] / computeTotalTimeWC[oneJ]
+	computeTimeJsWC[oneJ] = curJsTimes[0] / computeTotalTimeWC[oneJ]
+
+	computeTotalTimeUser[oneJ] = curPdeTimes[1] + curRecoveryTimes[1] + curMtxTimes[1] + curJsTimes[1]
+	computeTimePDEUser[oneJ] = curPdeTimes[1] / computeTotalTimeUser[oneJ]
+	computeTimeRecoveryUser[oneJ] = curRecoveryTimes[1] / computeTotalTimeUser[oneJ]
+	computeTimeMtxUser[oneJ] = curMtxTimes[1] / computeTotalTimeUser[oneJ]
+	computeTimeJsUser[oneJ] = curJsTimes[1] / computeTotalTimeUser[oneJ]
+
+	computeTotalTimeSys[oneJ] = curPdeTimes[2] + curRecoveryTimes[2] + curMtxTimes[2] + curJsTimes[2]
+	computeTimePDESys[oneJ] = curPdeTimes[2] / computeTotalTimeSys[oneJ]
+	computeTimeRecoverySys[oneJ] = curRecoveryTimes[2] / computeTotalTimeSys[oneJ]
+	computeTimeMtxSys[oneJ] = curMtxTimes[2] / computeTotalTimeSys[oneJ]
+	computeTimeJsSys[oneJ] = curJsTimes[2] / computeTotalTimeSys[oneJ]
 
 	# l2error[idx] = np.linalg.norm(y_estimated - y_GT)
 	# linferror[idx] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
@@ -229,7 +181,7 @@ for oneJ in Js_to_display: # Probably better to just read the file in this loop 
 	# computeTimePDE[idx] = curPdeTimes
 	# computeTimeRecovery[idx] = curRecoveryTimes
 
-all_data_df = pd.DataFrame(data=[computeTimePDE, computeTimeRecovery, computeTimeMtx, computeTimeJs, computeTotalTime]).rename({0: 'PDE', 1: 'Recovery', 2: 'Matrix', 3: 'J', 4: 'Total'}).transpose()
+all_data_df = pd.DataFrame(data=[computeTimePDEWC, computeTimeRecoveryWC, computeTimeMtxWC, computeTimeJsWC, computeTotalTimeWC, computeTimePDEUser, computeTimeRecoveryUser, computeTimeMtxUser, computeTimeJsUser, computeTotalTimeUser, computeTimePDESys, computeTimeRecoverySys, computeTimeMtxSys, computeTimeJsSys, computeTotalTimeSys]).rename({0: 'PDE_WC', 1: 'Recovery_WC', 2: 'Matrix_WC', 3: 'J_WC', 4: 'Total_WC', 5: 'PDE_User', 6: 'Recovery_User', 7: 'Matrix_User', 8: 'J_User', 9: 'Total_User', 10: 'PDE_Sys', 11: 'Recovery_Sys', 12: 'Matrix_Sys', 13: 'J_Sys', 14: 'Total_Sys'}).transpose()
 
 
 colours = plt.cm.rainbow(np.linspace(0, 1, len(Js_to_display)))
@@ -240,12 +192,12 @@ plt.figure()
 cmapForScatter = plt.cm.get_cmap('hsv', len(linferror))
 scatter = []
 for idx, oneJ in enumerate(Js_to_display): 
-	scatter.append(plt.scatter(np.log10(computeTotalTime[oneJ]), np.log10(linferror[oneJ]), c = colours[idx], marker=markers[idx] ))
-	#scatter.append(plt.scatter(np.log10(computeTimePDE[oneJ]+computeTimeRecovery[oneJ]), np.log10(linferror[oneJ]), c = np.random.rand(3,) ))
-	# scatter.append(plt.scatter(np.log10(computeTimePDE[idx]+computeTimeRecovery[idx]), np.log10(linferror[idx]), c = cmapForScatter(idx) ))
-# scatter=plt.scatter(np.log10(computeTimePDE+computeTimeRecovery), np.log10(linferror), c = [] )
+	scatter.append(plt.scatter(np.log10(computeTotalTimeWC[oneJ]), np.log10(linferror[oneJ]), c = colours[idx], marker=markers[idx] ))
+	#scatter.append(plt.scatter(np.log10(computeTimePDEWC[oneJ]+computeTimeRecoveryWC[oneJ]), np.log10(linferror[oneJ]), c = np.random.rand(3,) ))
+	# scatter.append(plt.scatter(np.log10(computeTimePDEWC[idx]+computeTimeRecoveryWC[idx]), np.log10(linferror[idx]), c = cmapForScatter(idx) ))
+# scatter=plt.scatter(np.log10(computeTimePDEWC+computeTimeRecoveryWC), np.log10(linferror), c = [] )
 plt.ylabel('$\ell_\infty$ norm of the error (via $\log_{10}$)')
-plt.xlabel('Computing time ($log_{10}$ scale)')
+plt.xlabel('Wall Clock Computing time ($log_{10}$ scale)')
 classes = ["L = " + str(oneJ) for oneJ in Js_to_display]
 plt.legend(handles=scatter, labels=classes)
 #plt.legend((str(oneJ) for oneJ in Js_to_display), loc='upper right', fontsize=8)
@@ -273,9 +225,9 @@ fig, ax1 = plt.subplots()
 
 ax1.set_xlabel('L')
 ax1.set_ylabel('time (h)') #, color=color)
-ax1.plot(Js_to_display, [computeTotalTime[d]/3600 for d in Js_to_display], color=colours[0], marker=markers[0], label='Total time')
-ax1.plot(Js_to_display, [computeTotalTime[d]*computeTimePDE[d]/3600 for d in Js_to_display], color=colours[1], marker=markers[1], label='Total PDE solve time')
-ax1.plot(Js_to_display, [computeTotalTime[d]*computeTimeRecovery[d]/3600 for d in Js_to_display], color=colours[2], marker=markers[2], label='Total sparse recovery time')
+ax1.plot(Js_to_display, [computeTotalTimeWC[d]/3600 for d in Js_to_display], color=colours[0], marker=markers[0], label='Total time')
+ax1.plot(Js_to_display, [computeTotalTimeWC[d]*computeTimePDEWC[d]/3600 for d in Js_to_display], color=colours[1], marker=markers[1], label='Total Wall Clock PDE solve time (hours)')
+ax1.plot(Js_to_display, [computeTotalTimeWC[d]*computeTimeRecoveryWC[d]/3600 for d in Js_to_display], color=colours[2], marker=markers[2], label='Total Wall Clock sparse recovery time (hours)')
 ax1.set_xticks(range(0,max(Js_to_display)+1, 1))
 ax1.legend()
 # ax1.tick_params(axis='y', labelcolor=color)

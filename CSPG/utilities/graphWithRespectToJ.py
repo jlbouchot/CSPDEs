@@ -19,106 +19,44 @@ import pathlib # This allows to avoid the if path.exists -> mkdir thing. Hurray!
 
 from collections import namedtuple
 
-from progressbar import Bar, ETA, Percentage, ProgressBar
+## Add utilities to the path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+import Check_ML
+from utilities.utils import getComputeTimes, getGroundTruthFromModel
 
-
-#################################
-#### This function should be externalised for reusability purposes
-#################################
-def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder = 'GTresults', GTfilenames = 'GT_'): 
-
-	pathlib.Path(GTfolder).mkdir(parents=True, exist_ok=True) # parents = True allow to generate subfolder recursively. exist_ok prevents raising exception if the folder already exists. 
-	# Folder exists for sure now!
-
-	# Now check if a file containing sampling points exists, it is called GTfilenames +"samples.npy"
-	sampleFName = GTfilenames +"samples.npy"
-	if os.path.exists(os.path.join(GTfolder, sampleFName)): 
-		# The file exists and we might load it!
-		Z = np.load(os.path.join(GTfolder, sampleFName))
-		nbExistingSamples = Z.shape[0] # [1] should be equal to the dimensionality d 
-		if nbExistingSamples < nbSamples: 
-			Z = np.vstack((Z,wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples-nbExistingSamples, d)))))
-	else : 
-		Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples, d) ) )
-	# Now we know there are sufficiently many sampling points. We can save the file
-	np.save(os.path.join(GTfolder,sampleFName), Z)
-
-	# Step 2: generate the y values!
-	y_GT = np.zeros(nbSamples)
-	# Check if some of them have already been computed!
-	yValuesFname = GTfilenames + "yGT.npy"
-	if os.path.exists(os.path.join(GTfolder,yValuesFname)): 
-		# A file exists, so let's go ahead and load it 
-		existingYs = np.load(os.path.join(GTfolder,yValuesFname))
-		nbExistingYs = len(existingYs)
-		if nbExistingYs <= nbSamples: 
-			y_GT[0:nbExistingYs] = existingYs
-	else: 
-		nbExistingYs = 0
-
-	if nbExistingYs >= nbSamples: 
-		return existingYs[0:nbSamples], Z[0:nbSamples]
-
-	# Show a progressbar
-	# spde_model.refine_mesh(2)
-	# print("Current FEM width is {}".format(spde_model.mesh_size[0]))
-	widgets = [Percentage(), ' ', Bar(), ' ', ETA()]
-	pbar    = ProgressBar(widgets=widgets)
-
-	for k in pbar(range(nbExistingYs, nbSamples)):
-		y_GT[k] = spde_model.sample(Z[k])
-		# Save only every so often to avoid going to the hard memory too often
-		if k+1 % 100 == 0: # k+1 because index k means we have computed k+1 data!
-			np.save(os.path.join(GTfolder,yValuesFname), y_GT[0:k])
-
-	np.save(os.path.join(GTfolder,yValuesFname), y_GT)
-
-	return y_GT, Z
-
-
-def getComputeTimes(cspdeResultsList):
-
-	pdeTimes = 0
-	recoveryTimes = 0
-	mtxTimes = 0
-	jsTimes = 0
-
-	if isinstance(cspdeResultsList, list): # Run through all level 
-		nbLvl = len(cspdeResultsList)
-		for oneLvl in range(0,nbLvl): 
-			pdeTimes = pdeTimes + cspdeResultsList[oneLvl].t_samples
-			recoveryTimes = recoveryTimes + cspdeResultsList[oneLvl].t_recovery
-			mtxTimes = mtxTimes + cspdeResultsList[oneLvl].t_matrix
-			jsTimes = jsTimes + cspdeResultsList[oneLvl].t_J
-
-			print(f"Level {oneLvl} has {cspdeResultsList[oneLvl].m} samples. Ansatz space has {cspdeResultsList[oneLvl].N} elements. PDE Time = {cspdeResultsList[oneLvl].t_samples}. Sparse recovery time = {cspdeResultsList[oneLvl].t_recovery}. Computing the Ansatz space took {cspdeResultsList[oneLvl].t_J}. Creating the matrix of tscheb coef took {cspdeResultsList[oneLvl].t_matrix}")
-	else: # This is a single CSPDEResult
-			pdeTimes =cspdeResultsList.t_samples
-			recoveryTimes = cspdeResultsList.t_recovery
-			mtxTimes = cspdeResultsList.t_matrix
-			jsTimes = cspdeResultsList.t_J
-
-	return pdeTimes, recoveryTimes, mtxTimes, jsTimes
-
-################################################3
-# Meat of the script
-
+__author__ = ["Jean-Luc Bouchot"]
+__copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
+__credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
+__license__ = "GPL"
+__version__ = "0.5.0-dev"
+__maintainer__ = "Jean-Luc Bouchot"
+__email__ = "jlbouchot@gmail.com"
+__status__ = "Development"
+__lastmodified__ = "2026/08/13"
 
 # Keep in mind the results' folders will all have the following form: 
-# Exp1Dim2WCosine20InfluenceJ0
+# TODO: Add proper naming conventions
 
 # Remember the things? Surely there is another way to do this!
 TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'epsilon', 'L', 'cspde_result'])
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
-
 nbDim = 2
 target_mesh_size = [3000]*nbDim
-Js_to_display = [1,2,3,4,5] # Note that J = 5 corresponds to the SL appraoch
+if "DEBUG_MODE" in os.environ:
+	Js_to_display = [1,2,3] # [1,2,3,4,5] # Note that J = 5 corresponds to the SL appraoch
+else:
+	Js_to_display = [1,2,3,4,5] # Note that J = 5 corresponds to the SL appraoch
 
-core_folder_name = 'Exp4H020Dim2WCosine10InfluenceTarget5J'
-# core_folder_name = 'Exp4H020Dim2WCosine10InfluenceJ'
-fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
+if "DEBUG_MODE" in os.environ:
+	core_folder_name = os.path.join('UMFPACKresults', 'Exp3_debug')
+else:
+	core_folder_name = os.path.join('results', 'Exp3_debug')
+base_fname = 'J_val_'
+# core_folder_name = 'Exp4H020Dim2WCosine10InfluenceTarget5J'
+# # core_folder_name = 'Exp4H020Dim2WCosine10InfluenceJ'
+# fname_to_read = 'WeightedCosine2D' # This is an unhappy mistake in my code which makes all file to have the same name. Luckily, They are all saved in separate folders. 
 cfg_fname = 'config_file.txt' # This contains all the details from the experiments. I don't think we need it for graphing, but who knows. 
 
 ## Placeholder macros
@@ -153,8 +91,9 @@ path_to_GT = 'groundTruth'
 
 # Load and plot results for all d's, one after the other 
 results_all = {}
-for oneJ in Js_to_display: 
-	cur_path_to_file = core_folder_name + str(oneJ)
+for idx, oneJ in enumerate(Js_to_display): 
+	cur_path_to_file = core_folder_name
+	fname_to_read = base_fname + str(Js_to_display[idx])
 	print("Loading {0} from folder {1} ...".format(fname_to_read, cur_path_to_file))
 	cur_results = sorted(shelve.open(os.path.join(cur_path_to_file,fname_to_read)).values(), key=lambda r: r.L)
 	if len(cur_results) > 0: 
@@ -164,35 +103,64 @@ for oneJ in Js_to_display:
 		# results_all.append(cur_results)
 		results_all[oneJ] = cur_results
 
+finest_result	= results_all[Js_to_display[0]]
+d 		= finest_result.cspde_result[0].d # number of parameters
+nb_tests 	= 1000 # This should be sufficient
+wr_model 	= finest_result.wr_model
+spde_model 	= finest_result.spde_model
 
-d 		= results_all[Js_to_display[0]].cspde_result[0].d # number of parameters
-nb_tests 	= 500 # This should be sufficient
-wr_model 	= results_all[Js_to_display[0]].wr_model
+spde_model.set_mesh_size(target_mesh_size)
+print("Getting ground truth from model with width {}".format(spde_model.mesh_size[0]))
+y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, d, nb_tests, GTfolder = 'GTresults_d' + str(d) + 'H' + str(target_mesh_size[0]), GTfilenames = 'GT_')
 
 
 l2error = {} 
 linferror = {} 
-computeTimePDE = {} 
-computeTimeRecovery = {} 
-computeTimeMtx = {} 
-computeTimeJs = {} 
-computeTotalTime = {} 
+computeTimePDEWC = {} 
+computeTimeRecoveryWC = {} 
+computeTimeMtxWC = {} 
+computeTimeJsWC = {} 
+computeTotalTimeWC = {} 
+
+computeTimePDEUser = {} 
+computeTimeRecoveryUser = {} 
+computeTimeMtxUser = {} 
+computeTimeJsUser = {} 
+computeTotalTimeUser = {} 
+
+computeTimePDESys = {} 
+computeTimeRecoverySys = {} 
+computeTimeMtxSys = {} 
+computeTimeJsSys = {} 
+computeTotalTimeSys = {}
 
 for oneJ in Js_to_display: 
 	print("Computing results for J = {}".format(oneJ))
-	spde_model = results_all[oneJ].spde_model 
-	spde_model.set_mesh_size(target_mesh_size)
-	y_GT, Z = getGroundTruthFromModel(spde_model, wr_model, 2*d, nb_tests, GTfolder = 'GTresults_d' + str(2*d) + 'H' + str(target_mesh_size[0]), GTfilenames = 'GT_')
+	# spde_model = results_all[oneJ].spde_model 
+	# spde_model.set_mesh_size(target_mesh_size)
 	# y_estimated = wr_model.estimate_ML_samples(first_result[0].cspde_result, Z)
+	print(f"Type of results_all is {type(results_all)} and current result's type is {type(results_all[oneJ])}")
 	y_estimated = results_all[oneJ].wr_model.estimate_ML_samples(results_all[oneJ].cspde_result, Z)
 	l2error[oneJ] = np.linalg.norm(y_estimated - y_GT)
 	linferror[oneJ] = np.linalg.norm(y_estimated - y_GT, ord=np.inf)
 	curPdeTimes, curRecoveryTimes, curMtxTimes, curJsTimes = getComputeTimes(results_all[oneJ].cspde_result)
-	computeTotalTime[oneJ] = curPdeTimes + curRecoveryTimes + curMtxTimes + curJsTimes
-	computeTimePDE[oneJ] = curPdeTimes / computeTotalTime[oneJ]
-	computeTimeRecovery[oneJ] = curRecoveryTimes / computeTotalTime[oneJ]
-	computeTimeMtx[oneJ] = curMtxTimes / computeTotalTime[oneJ]
-	computeTimeJs[oneJ] = curJsTimes / computeTotalTime[oneJ]
+	computeTotalTimeWC[oneJ] = curPdeTimes[0] + curRecoveryTimes[0] + curMtxTimes[0] + curJsTimes[0]
+	computeTimePDEWC[oneJ] = curPdeTimes[0] / computeTotalTimeWC[oneJ]
+	computeTimeRecoveryWC[oneJ] = curRecoveryTimes[0] / computeTotalTimeWC[oneJ]
+	computeTimeMtxWC[oneJ] = curMtxTimes[0] / computeTotalTimeWC[oneJ]
+	computeTimeJsWC[oneJ] = curJsTimes[0] / computeTotalTimeWC[oneJ]
+
+	computeTotalTimeUser[oneJ] = curPdeTimes[1] + curRecoveryTimes[1] + curMtxTimes[1] + curJsTimes[1]
+	computeTimePDEUser[oneJ] = curPdeTimes[1] / computeTotalTimeUser[oneJ]
+	computeTimeRecoveryUser[oneJ] = curRecoveryTimes[1] / computeTotalTimeUser[oneJ]
+	computeTimeMtxUser[oneJ] = curMtxTimes[1] / computeTotalTimeUser[oneJ]
+	computeTimeJsUser[oneJ] = curJsTimes[1] / computeTotalTimeUser[oneJ]
+
+	computeTotalTimeSys[oneJ] = curPdeTimes[2] + curRecoveryTimes[2] + curMtxTimes[2] + curJsTimes[2]
+	computeTimePDESys[oneJ] = curPdeTimes[2] / computeTotalTimeSys[oneJ]
+	computeTimeRecoverySys[oneJ] = curRecoveryTimes[2] / computeTotalTimeSys[oneJ]
+	computeTimeMtxSys[oneJ] = curMtxTimes[2] / computeTotalTimeSys[oneJ]
+	computeTimeJsSys[oneJ] = curJsTimes[2] / computeTotalTimeSys[oneJ]
 
 
 colours = plt.cm.rainbow(np.linspace(0, 1, len(Js_to_display)))
