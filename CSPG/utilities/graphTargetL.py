@@ -198,7 +198,7 @@ for idx, oneJ in enumerate(Js_to_display):
 # scatter=plt.scatter(np.log10(computeTimePDEWC+computeTimeRecoveryWC), np.log10(linferror), c = [] )
 plt.ylabel('$\ell_\infty$ norm of the error (via $\log_{10}$)')
 plt.xlabel('Wall Clock Computing time ($log_{10}$ scale)')
-classes = ["L = " + str(oneJ) for oneJ in Js_to_display]
+classes = ["J = " + str(oneL) for oneL in Lmax]
 plt.legend(handles=scatter, labels=classes)
 #plt.legend((str(oneJ) for oneJ in Js_to_display), loc='upper right', fontsize=8)
 plt.show()
