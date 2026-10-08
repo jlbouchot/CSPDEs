@@ -1,0 +1,29 @@
+# Conda environment for CSPDEs / MLCSPG with legacy FEniCS 2019.1.0 and Python 3.8.
+# Pinned to the versions of the working env-fenics38 (2026-10), conda-forge only.
+#   conda env create -f env-fenics38.yml
+#   conda activate env-fenics38
+# Exact (build-level) reproduction on linux-64: see env-fenics38.lock.txt
+name: env-fenics38
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.8
+  # PDE solver (legacy dolfin) and its MPI / linear algebra stack
+  - fenics=2019.1.0
+  - superlu_dist=7.1.1
+  - petsc=3.16
+  - mpich
+  - mpi4py
+  # Numerics
+  - numpy=1.24
+  - scipy=1.10
+  - numba=0.58
+  # Convex recovery algorithms (bp, bpdn)
+  - cvxpy=1.1
+  # Outputs, graphs, progress
+  - matplotlib=3.3
+  - pandas=1.5
+  - progressbar2=4.2
+  # python-utils >= 3.6 is labelled noarch but needs Python >= 3.9 (breaks "import progressbar")
+  - python-utils=3.5
