@@ -3,6 +3,7 @@ import datetime
 import time
 import shelve
 import os
+import sys
 import json # helps keep the config file easily readable (and tunable)!
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
@@ -13,13 +14,33 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/07/20"
+__lastmodified__ = "2026/10/08"
 
 from collections import namedtuple
 
 from CSPDE_ML import CSPDE_ML
 
 TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'L', 'cspde_result'])
+
+def warn_if_results_exist(prefix_fname, filename, no_compute):
+    '''
+    Warns (on stderr, so that it is visible even when stdout is redirected to a log file) if a previous run
+    already wrote results under the same name. The shelve file may be stored as filename, filename.db or
+    filename.{dat,dir,bak} depending on the dbm backend available.
+    '''
+    shelve_files = [filename + ext for ext in ("", ".db", ".dat", ".dir", ".bak")]
+    config_file = filename + "_config_file.txt"
+    existing = [f for f in shelve_files + [config_file] if os.path.exists(os.path.join(prefix_fname, f))]
+    if not existing:
+        return
+
+    print("WARNING: Results named '{0}' already exist in {1}: {2}".format(filename, prefix_fname, ", ".join(existing)), file=sys.stderr)
+    if not no_compute and any(f in existing for f in shelve_files):
+        print("   ---> This run will ADD a new entry to the existing shelve file. Previous entries are kept "
+              "and will also be read by the graphing scripts!", file=sys.stderr)
+    print("   ---> {0} will be overwritten.".format(config_file), file=sys.stderr)
+    print("   ---> Remove these files or change --output_file if this is not what you want.", file=sys.stderr)
+
 def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = None, cspde_result = None):
 
     J = dict_config["l_start"] 
@@ -37,10 +58,12 @@ def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = 
 
 
     # Create target Directory if doesn't exist
-    if not os.path.exists(prefix_fname):
-        os.mkdir(prefix_fname)
-    else:    
-        print("WARNING: Directory " , prefix_fname ,  " already exists \n ---> You might overwrite important files!!")
+    # (it usually does: the batch scripts mkdir -p it and it also holds the cached samples, which is fine)
+    os.makedirs(prefix_fname, exist_ok=True)
+
+    # What matters is whether results with the same name already exist
+    if filename is not None:
+        warn_if_results_exist(prefix_fname, filename, no_compute)
 
     ### Execute CSPDE algorithm
     cspde_result = CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result)
