@@ -22,7 +22,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/01/22"
+__lastmodified__ = "2026/09/02"
 
 from time import sleep
 
@@ -262,7 +262,7 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname):
 
 
 def J_tot_degree(v, max_degree = 2, threshold = np.inf):
-    print("Generating an Ansatz space of multiindices what have total degree <= {}".format(max_degree))
+    print("Generating an Ansatz space of multiindices that have total degree <= {}".format(max_degree))
     # Remember v contains the weights associated to the operators in the expansion. 
     # We assume that above a certain weight, it can simply be discarded, the associated coefficient can be discarded. 
     t = u.time_things()
