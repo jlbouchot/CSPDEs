@@ -114,104 +114,104 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
     s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
 
 
-    # Approximate the Jth level with a single level CSPG 
-    # energy_constant = np.max((energy_constant, dat_constant**(p/p0*(1-p0)/(1-p)) * (L-L_first)**(p/p0*(1-p0)/(1-p)) * 2**((L-L_first-1)*p/p0*(1-p0)/(1-p)*(t+tprime)) * 2**(-L*(t+tprime))+1)) # This ensures that the Jth level has more samples than the J+1
-    s_J = np.ceil(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
-    s_J = np.max([np.ceil(s_L*2**((L-L_first)*(t+tprime)*p/(1-p))), s_J])
-    if log_freq:
-        print("Computing level {0} (this is a Single Level approximation) from a total of {1}. Current sparsity = {2}".format(L_first,L,s_J))
-        ## 1. Create index set and draw random samples
-        print("Generating J_s ...")
+    # # Approximate the Jth level with a single level CSPG 
+    # # energy_constant = np.max((energy_constant, dat_constant**(p/p0*(1-p0)/(1-p)) * (L-L_first)**(p/p0*(1-p0)/(1-p)) * 2**((L-L_first-1)*p/p0*(1-p0)/(1-p)*(t+tprime)) * 2**(-L*(t+tprime))+1)) # This ensures that the Jth level has more samples than the J+1
+    # s_J = np.ceil(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
+    # s_J = np.max([np.ceil(s_L*2**((L-L_first)*(t+tprime)*p/(1-p))), s_J])
+    # if log_freq:
+    #     print("Computing level {0} (this is a Single Level approximation) from a total of {1}. Current sparsity = {2}".format(L_first,L,s_J))
+    #     ## 1. Create index set and draw random samples
+    #     print("Generating J_s ...")
     
-    # Compute "active index set" J_s
-    J_s, t_J = index_set(s_J, wr_model, ansatz_space)
-    # Get total number of coefficients in tensorized chebyshev polynomial base
-    N = len(J_s)
+    # # Compute "active index set" J_s
+    # J_s, t_J = index_set(s_J, wr_model, ansatz_space)
+    # # Get total number of coefficients in tensorized chebyshev polynomial base
+    # N = len(J_s)
 
-    # Calculate number of samples
-    m = wr_model.get_m_from_s_N(s_J, N)
-    epsilon = np.sqrt(m)*sparse_config["tol_res"]#*2**(L-L_first) # This is the tolerance on the residual for the recovery algorithms. It is scaled with the number of samples and the level.
+    # # Calculate number of samples
+    # m = wr_model.get_m_from_s_N(s_J, N)
+    # epsilon = np.sqrt(m)*sparse_config["tol_res"]#*2**(L-L_first) # This is the tolerance on the residual for the recovery algorithms. It is scaled with the number of samples and the level.
         
-    # Get sample dimension
-    d = len(J_s[0])
+    # # Get sample dimension
+    # d = len(J_s[0])
 
-    # Check whether this even an interesting case
-    if log_freq:
-        print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
-        print("   Using epsilon = {0}, nb_iter = {1} ... ".format(epsilon, unscaledNbIter))
-    wr_model.check(N, m)
+    # # Check whether this even an interesting case
+    # if log_freq:
+    #     print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
+    #     print("   Using epsilon = {0}, nb_iter = {1} ... ".format(epsilon, unscaledNbIter))
+    # wr_model.check(N, m)
 
-    if (not no_compute):
-        y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname)
-        A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, datamtx_fname)
+    # if (not no_compute):
+    #     y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname)
+    #     A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, datamtx_fname)
 
-        if log_freq:
-            print("   Computing weights ...")
-        w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
+    #     if log_freq:
+    #         print("   Computing weights ...")
+    #     w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
 
-        if log_freq:
-            print("   Weighted minimization ...")
-        result = wr_model.method(A, y_new-y_old, w, s_J, epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-        t_recovery = [result.tWC, result.tUser, result.tSys]
-        lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
-        print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
+    #     if log_freq:
+    #         print("   Weighted minimization ...")
+    #     result = wr_model.method(A, y_new-y_old, w, s_J, epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+    #     t_recovery = [result.tWC, result.tUser, result.tSys]
+    #     lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
+    #     print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
     
 
 
 
-    # Deal with the approximation of the details
-    for oneLvl in range(L_first+1,L+1):
-        # sl = 10+np.max([2**(L-oneLvl),1])
+    # # Deal with the approximation of the details
+    # for oneLvl in range(L_first+1,L+1):
+    #     # sl = 10+np.max([2**(L-oneLvl),1])
 
-        # sl = np.floor(dat_constant*2**(L-oneLvl))
-        sl = np.ceil(s_L*2**((L-oneLvl)*(t+tprime)*p/(1-p)))
-        if log_freq:
-            print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl,L,sl))
-        ## 1. Create index set and draw random samples
-        if log_freq:
-            print("Generating J_s ...")
+    #     # sl = np.floor(dat_constant*2**(L-oneLvl))
+    #     sl = np.ceil(s_L*2**((L-oneLvl)*(t+tprime)*p/(1-p)))
+    #     if log_freq:
+    #         print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl,L,sl))
+    #     ## 1. Create index set and draw random samples
+    #     if log_freq:
+    #         print("Generating J_s ...")
         
-        # Compute "active index set" J_s
-        J_s, t_J = index_set(sl, wr_model, ansatz_space)
-        # Get total number of coefficients in tensorized chebyshev polynomial base
-        N = len(J_s)
+    #     # Compute "active index set" J_s
+    #     J_s, t_J = index_set(sl, wr_model, ansatz_space)
+    #     # Get total number of coefficients in tensorized chebyshev polynomial base
+    #     N = len(J_s)
 
-        # Calculate number of samples
-        m = wr_model.get_m_from_s_N(sl, N)
+    #     # Calculate number of samples
+    #     m = wr_model.get_m_from_s_N(sl, N)
         
-        # Get sample dimension
-        d = len(J_s[0])
-        # print(f"d is currently {d} and J_s is {J_s}")
+    #     # Get sample dimension
+    #     d = len(J_s[0])
+    #     # print(f"d is currently {d} and J_s is {J_s}")
 
-        # if not cspde_result is None:
-        #     assert d == cspde_result.d, "New sample space dimension is different from old sample space dimension."
+    #     # if not cspde_result is None:
+    #     #     assert d == cspde_result.d, "New sample space dimension is different from old sample space dimension."
 
-        # Check whether this even an interesting case
-        epsilon = sparse_config["tol_res"]*np.sqrt(m)#*2**(L-oneLvl)
-        if log_freq:
-            print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
-            print("   Using epsilon = {0}, nb_iter = {1} ... ".format(epsilon, unscaledNbIter))
-        wr_model.check(N, m)
+    #     # Check whether this even an interesting case
+    #     epsilon = sparse_config["tol_res"]*np.sqrt(m)#*2**(L-oneLvl)
+    #     if log_freq:
+    #         print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
+    #         print("   Using epsilon = {0}, nb_iter = {1} ... ".format(epsilon, unscaledNbIter))
+    #     wr_model.check(N, m)
 
 
-        if not no_compute:
-            y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname)
-            A, t_matrix = get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, datamtx_fname)
+    #     if not no_compute:
+    #         y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname)
+    #         A, t_matrix = get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, datamtx_fname)
 
-            if log_freq:
-                print("   Computing weights ...")
-            w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)    
-            # print(" Weights are {}".format(w) )
+    #         if log_freq:
+    #             print("   Computing weights ...")
+    #         w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)    
+    #         # print(" Weights are {}".format(w) )
 
-            if log_freq:
-                print("   Weighted minimization ...")
-            result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-            t_recovery = [result.tWC, result.tUser, result.tSys]
-            # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-            lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
-            print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
+    #         if log_freq:
+    #             print("   Weighted minimization ...")
+    #         result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+    #         t_recovery = [result.tWC, result.tUser, result.tSys]
+    #         # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+    #         lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
+    #         print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
         
-    log_freq = sparse_config.get("log", None)
+    log_freq = sparse_config.get("log", None) # TODO: Eventually add other logging tools, in which case this parameter name will no longer be acceptable
     seed = dict_config.get("seed", None)
     ctx = dict(
         spde=spde_model, wr=wr_model, rng=np.random.default_rng(None if seed is None else int(seed)), seed=seed,
@@ -224,6 +224,42 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
     if ctx["no_compute"]:
         return []
     _validate_plan(plan)
+
+    for p in plan: 
+
+        epsilon = sparse_config["tol_res"]*np.sqrt(p["m"])#*2**(L-oneLvl)
+
+        if not no_compute:
+
+            if p["is_first"]:
+                y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, p["m"], p["d"], L_first, L_first, L, p["s"], sampling_fname)
+                A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], L_first, L_first, L, p["s"], datamtx_fname)
+
+                if log_freq:
+                    print("   Computing weights ...")
+                w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])
+                if log_freq:
+                    print("   Weighted minimization ...")
+                result = wr_model.method(A, y_new-y_old, w, p["s"], epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+                t_recovery = [result.tWC, result.tUser, result.tSys]
+                lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
+                print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
+            else:
+                y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, p["m"], p["d"], p["level"], J, L, p["s"], sampling_fname)
+                A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], J, L, p["s"], datamtx_fname)
+
+                if log_freq:
+                    print("   Computing weights ...")
+                w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])    
+                # print(" Weights are {}".format(w) )
+
+                if log_freq:
+                    print("   Weighted minimization ...")
+                result = wr_model.method(A, y_new-y_old, w, p["s"], epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+                t_recovery = [result.tWC, result.tUser, result.tSys]
+                # result = wr_model.method(A, y_new-y_old, w, p["s"], np.sqrt(p["m"]) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+                lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
+                print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
     
     return lvl_by_lvl_result
 
