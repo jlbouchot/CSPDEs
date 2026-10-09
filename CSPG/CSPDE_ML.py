@@ -28,6 +28,42 @@ from time import sleep
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
+def level_plan(cfg):
+    """Return [(level, s_level, is_first_level)] exactly as in CSPDE_ML."""
+    L_first, L = cfg["l_start"], cfg["nb_level"]
+    p, p0 = cfg["p_t"], cfg["p_0"]
+    rate = cfg["t_0"] + cfg["t_prime"]
+
+    s_L = np.ceil((cfg["dat_constant"] * (L - L_first)) ** (p / (1 - p)))
+    s_J = np.ceil(cfg["const_sj"] ** (p0 / (1 - p0)) * 2 ** (L * p0 * rate / (1 - p0)))
+    s_J = max(np.ceil(s_L * 2 ** ((L - L_first) * rate * p / (1 - p))), s_J)
+
+    plan = [(L_first, s_J, True)]
+    plan += [(l, np.ceil(s_L * 2 ** ((L - l) * rate * p / (1 - p))), False) for l in range(L_first + 1, L + 1)]
+    return plan
+
+def _plan_level(level, s, is_first, ctx):
+    """Index set and sample size of a level: cheap, done for all levels before any PDE solve."""
+    wr_model = ctx["wr"]
+    ctx["log"]("Generating an Ansatz space of multiindices " +  ("that have total degree <= {}".format(max_degree) if ctx["ansatz_space"] else "of weigthed sparsity {}".format(s) ) )
+    J_s, t_J = index_set(s, wr_model, ctx["ansatz_space"]) ## TODO: Check function call
+    N, d = len(J_s), len(J_s[0])
+    m = wr_model.get_m_from_s_N(s, N)
+    ctx["log"]("Level {0} ({1}): s = {2}, N = {3}, m = {4}, d = {5}, epsilon = {6}".format(
+        level, "single level approximation" if is_first else "detail", s, N, m, d, ctx["tol_res"] * np.sqrt(m)))
+    wr_model.check(N, m)
+    return dict(level=level, s=s, is_first=is_first, J_s=J_s, t_J=t_J, N=N, d=d, m=m)
+
+
+def _validate_plan(plan):
+    # s <= 4 gives J_s = {0}: N = 1 and m = ceil(2 s log 1) = 0. The legacy code then divides by
+    # sqrt(m) = 0 in the operator and crashes, possibly after hours spent on the coarser levels.
+    bad = [p for p in plan if p["m"] < 1]
+    if bad:
+        raise ValueError("No samples would be drawn at level(s) {0} (s = {1}, N = {2}). Increase dat_constant / const_sj "
+                         "or reduce nb_level - l_start.".format([p["level"] for p in bad], [p["s"] for p in bad], [p["N"] for p in bad]))
+
+
 def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = None): 
     """
     Parameters
@@ -88,10 +124,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
         print("Generating J_s ...")
     
     # Compute "active index set" J_s
-    if ansatz_space == 0: 
-        J_s, t_J = J(s_J, wr_model.operator.theta, wr_model.weights)
-    else:
-        J_s, t_J = J_tot_degree(wr_model.weights, ansatz_space)
+    J_s, t_J = index_set(s_J, wr_model, ansatz_space)
     # Get total number of coefficients in tensorized chebyshev polynomial base
     N = len(J_s)
 
@@ -139,10 +172,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
             print("Generating J_s ...")
         
         # Compute "active index set" J_s
-        if ansatz_space == 0: 
-            J_s, t_J = J(sl, wr_model.operator.theta, wr_model.weights)
-        else:
-            J_s, t_J = J_tot_degree(wr_model.weights, ansatz_space)
+        J_s, t_J = index_set(sl, wr_model, ansatz_space)
         # Get total number of coefficients in tensorized chebyshev polynomial base
         N = len(J_s)
 
@@ -181,6 +211,19 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = No
             lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
             print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
         
+    log_freq = sparse_config.get("log", None)
+    seed = dict_config.get("seed", None)
+    ctx = dict(
+        spde=spde_model, wr=wr_model, rng=np.random.default_rng(None if seed is None else int(seed)), seed=seed,
+        L=dict_config["nb_level"], L_first=dict_config["l_start"], ansatz_space=dict_config["ansatz_space"],
+        no_compute=dict_config["no_compute"], tol_res=sparse_config["tol_res"], nb_iter=sparse_config["nb_iter"],
+        log_freq=log_freq, log=(lambda msg: print(msg))
+    )
+
+    plan = [_plan_level(level, s, is_first, ctx) for level, s, is_first in level_plan(dict_config)]
+    if ctx["no_compute"]:
+        return []
+    _validate_plan(plan)
     
     return lvl_by_lvl_result
 
@@ -259,17 +302,32 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname):
 
 
 
-
+def index_set(s, wr_model, ansatz_space):
+    t = u.time_things()
+    if ansatz_space == 0:
+        J_s = J(s, wr_model.operator.theta, wr_model.weights)
+    else:
+        dim = int(np.sum(np.isfinite(wr_model.weights)))
+        J_s = J_tot_degree(dim, ansatz_space)
+    t = u.time_things(t)
+    return J_s, t
 
 def J_tot_degree(v, max_degree = 2, threshold = np.inf):
-    print("Generating an Ansatz space of multiindices that have total degree <= {}".format(max_degree))
-    # Remember v contains the weights associated to the operators in the expansion. 
-    # We assume that above a certain weight, it can simply be discarded, the associated coefficient can be discarded. 
-    t = u.time_things()
-    aux = np.array([list(x) for x in itertools.product(range(max_degree+1), repeat=len([v_i for v_i in v if v_i < threshold]))]) # This creates a set of multi-indices with max norm max_degree
-    t = u.time_things(t)
-    J = [one_multi_index for one_multi_index in aux if one_multi_index.sum() <= max_degree]
-    return J, t
+    """All multi-indices nu in N^dim with |nu|_1 <= max_degree, without the (deg+1)^dim grid."""
+    out = []
+    nu = np.zeros(dim, dtype=int)
+
+    def rec(k, budget):
+        if k == dim:
+            out.append(nu.copy())
+            return
+        for a in range(budget + 1):
+            nu[k] = a
+            rec(k + 1, budget - a)
+        nu[k] = 0
+
+    rec(0, max_degree)
+    return out
 
 
 def J(s, theta, v):
@@ -330,7 +388,6 @@ def J(s, theta, v):
     L = [np.zeros(M, dtype='int')]
 
     # Iterate through support sets of cardinality k = 1 ... M
-    t = u.time_things()
     for k in range(1, M + 1):
         new_indices = []
     
@@ -341,12 +398,13 @@ def J(s, theta, v):
             break
 
         L += new_indices
-
-    t = u.time_things(t)
     
-    return L, t
+    return L
 
 
 def calculate_weights(theta, v, J_s):
-    return np.array([theta**np.count_nonzero(nu) * np.product(v[np.where(nu > 0)]**nu[np.where(nu > 0)]) for nu in J_s])
-    # return np.array([theta**np.count_nonzero(nu) * np.product(v[nu > 0]**nu[nu > 0]) for nu in J_s]) old version for earlier python distributions
+    """omega_nu = theta^{|supp nu|} prod_j v_j^{nu_j}."""
+    Ja = np.asarray(J_s)
+    v = np.asarray(v, dtype=float)[:Ja.shape[1]]
+    factors = np.where(Ja > 0, v[None, :] ** Ja, 1.0)
+    return theta ** np.count_nonzero(Ja, axis=1) * np.prod(factors, axis=1)
