@@ -29,6 +29,15 @@ def get_sampling_type(sampling_name):
     }
     return switcher.get(sampling_name, WR.cs_pragmatic_m)
 
+def get_operator_type(operator_name):
+    switcher = {
+        "Chebyshev": WR.Chebyshev,
+        "Cheb_Alt": WR.Cheb_Alt,
+        "Cheb_Sparse": WR.Cheb_Sparse,
+        "Cheb_AltPP": WR.Cheb_AltPP,
+    }
+    return switcher.get(operator_name, WR.Cheb_Sparse)
+
 def is_tensor_based_possible(method):
     """ 
     Returns True if the method is compatible with tensor-based operators, False otherwise. 

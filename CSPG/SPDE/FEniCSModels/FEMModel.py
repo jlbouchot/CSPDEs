@@ -51,7 +51,7 @@ class FEMModel(SPDEModel):
         TODO: Add more parameters to be parsed as needed.
         TODO: Propagate the use of pde config dict to other FEMModels.
         """
-        self.solver.parameters["linear_solver"] = self.pde_cfg.get("linear_solver", "gmres")
+        self.solver.parameters["linear_solver"] = self.pde_cfg.get("linear_solver", "umfpack")
         self.solver.parameters["preconditioner"] = self.pde_cfg.get("preconditioner", "amg")
         self.solver.parameters["krylov_solver"]["relative_tolerance"] = self.pde_cfg.get("relative_tolerance", 1e-6)
         self.solver.parameters["krylov_solver"]["absolute_tolerance"] = self.pde_cfg.get("absolute_tolerance", 1e-10)
