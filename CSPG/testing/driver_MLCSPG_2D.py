@@ -45,23 +45,21 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
     spde_model = DiffusionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
                                        Average(), grid_points, pde_cfg) 
                                        
-    test_result = None
     ### Reconstruction Model
     # TODO: Rename things correctly and pass them as parameters
     v = np.hstack((main_cfg["gamma"]*np.power([val+1 for val in range(main_cfg["nb_cosines"]) for dummy_variable in (0,1)], main_cfg["exponent"]), [np.inf]))
 
+    operator = u.get_operator_type(main_cfg["operator"])
+    
     if not u.is_tensor_based_possible(sparse_cfg["recovery_algo"]):
-       main_cfg["do_tensor"] = False 
+       main_cfg["operator"] = "Chebyshev"
+       operator =  WR.Operators.Chebyshev
     # TODO: Remove the 'if' from this test file towards the more "mechanical" parts of the code.
-    if main_cfg["do_tensor"]: 
-        wr_model   = WR.WRModel(sparse_cfg["recovery_algo"], WR.Operators.Cheb_Alt, v, 
-                            u.get_sampling_type(main_cfg["sampling"]), WR.check_cs)
-    else: # The basic way.
-        wr_model   = WR.WRModel(sparse_cfg["recovery_algo"], WR.Operators.Chebyshev, v,
-                            u.get_sampling_type(main_cfg["sampling"]), WR.check_cs)
+    wr_model = WR.WRModel(sparse_cfg["recovery_algo"], operator, v, 
+                        u.get_sampling_type(main_cfg["sampling"]), WR.check_cs)
 
 	### Execute test
-    test_result = test(spde_model, wr_model, main_cfg, sparse_cfg, pde_cfg, CrossCheck(main_cfg["nb_tests"]), test_result)
+    test_result = test(spde_model, wr_model, main_cfg, sparse_cfg, pde_cfg, CrossCheck(main_cfg["nb_tests"]))
 
 ### Main
 if __name__ == "__main__":

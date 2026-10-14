@@ -22,7 +22,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/10/09"
+__lastmodified__ = "2026/10/14"
 
 from time import sleep
 
@@ -135,7 +135,53 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config):
     if ctx["no_compute"]:
         return []
 
+    return run_plan(plan, ctx, sampling_fname, datamtx_fname)
+
+    # for p in plan: 
+    #     epsilon = ctx["tol_res"]*np.sqrt(p["m"])#*2**(L-oneLvl)
+
+    #     if p["is_first"]:
+    #         y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname)
+    #         A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], p["s"], datamtx_fname)
+    #         if log_freq:
+    #             print("   Computing weights ...")
+    #         w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])
+    #         if log_freq:
+    #             print("   Weighted minimization ...")
+    #         result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+    #         t_recovery = [result.tWC, result.tUser, result.tSys]
+    #         lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
+    #         print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
+    #     else:
+    #         y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname)
+    #         A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], p["s"], datamtx_fname)
+    #         if log_freq:
+    #             print("   Computing weights ...")
+    #         w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])    
+    #         # print(" Weights are {}".format(w) )
+    #         if log_freq:
+    #             print("   Weighted minimization ...")
+    #         result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+    #         t_recovery = [result.tWC, result.tUser, result.tSys]
+    #         # result = wr_model.method(A, y_new-y_old, w, p["s"], np.sqrt(p["m"]) *epsilon, ctx["nb_iter"]) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+    #         lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
+    #         print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
+
+    # # results = [_run_level(p, ctx) for p in plan]
+    
+    # return lvl_by_lvl_result
+
+def run_plan(plan, ctx, sampling_fname, datamtx_fname):
+
+    lvl_by_lvl_result = []
+    
     for p in plan: 
+        spde_model, wr_model, log_freq = ctx["spde"], ctx["wr"], ctx["log_freq"]
+        # spde_model, wr_model, cache, rng, log = ctx["spde"], ctx["wr"], ctx["cache"], ctx["rng"], ctx["log"]
+        level, s, is_first = p["level"], p["s"], p["is_first"]
+        J_s, t_J, N, d, m = p["J_s"], p["t_J"], p["N"], p["d"], p["m"]
+        epsilon = ctx["tol_res"] * np.sqrt(m)
+        print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(level, ctx["L"], s))
         epsilon = ctx["tol_res"]*np.sqrt(p["m"])#*2**(L-oneLvl)
 
         if p["is_first"]:
@@ -165,10 +211,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config):
             lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
             print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
 
-    # results = [_run_level(p, ctx) for p in plan]
-    
     return lvl_by_lvl_result
-
 
 def get_mtx(wr_model, J_s, Z, d, oneLvl, sl, datamtx_fname): 
     if (datamtx_fname is None):  
