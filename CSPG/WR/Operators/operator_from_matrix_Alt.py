@@ -1,6 +1,7 @@
 import numpy as np
 import os.path
 from numba import njit,prange
+
 __author__ = ["Falk Pulsmeyer", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2019, Chair C for Mathematics (Analysis), RWTH Aachen and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
 __credits__ = ["Jean-Luc Bouchot", "Benjamin, Bykowski", "Falk Pulsmeyer", "Holger Rauhut", "Christoph Schwab"]
@@ -9,7 +10,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2019/02/22"
+__lastmodified__ = "2026/10/14"
 
 class operator_from_matrix_Alt:
     def __init__(self, model, A, univariate_A,J):
@@ -100,7 +101,17 @@ def univ_tensor_from_tensor_indices(J, Z, base, normalization=None):
         univariate_A.append(tmp)
     return univariate_A
 
-@njit
+def univ_tensor_from_table_indices(J, Z, precomputed_table, normalization=None):
+    """ Same output as operator_from_matrix_Alt.univ_tensor_from_tensor_indices with the Chebyshev basis. """
+    Za, Ja = np.asarray(Z, dtype=float), np.asarray(J)
+    numax = np.amax(Ja, 0)
+
+    if normalization is None:
+        normalization = np.sqrt(len(Za))
+    normalization = normalization**(1/len(numax))
+    return [precomputed_table(Za[:, i], numax[i]) / normalization for i in range(len(numax))]  
+
+@njit(parallel=True, cache=True)
 def apply_alt_numba(wert, res, x,J):
     for i in prange(wert[0].shape[0]):
         my_sum = 0
@@ -113,7 +124,7 @@ def apply_alt_numba(wert, res, x,J):
     # return res/(np.sqrt(wert[0].shape[0]))
     return res
 
-@njit
+@njit(parallel=True, cache=True)
 def apply_adj_alt_numba(wert, res, y, J):
     for i in range(0, len(J)):
         my_sum = 0
@@ -126,7 +137,7 @@ def apply_adj_alt_numba(wert, res, y, J):
     # return res/(np.sqrt(wert[0].shape[0]))
     return res
 
-@njit
+@njit(parallel=True, cache=True)
 def genSubMatrix_Alt_Numba(wert,res,U,J):
     for i in range(0,res.shape[0]):
         for j in range(0,len(U)):

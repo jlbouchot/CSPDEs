@@ -22,7 +22,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/09/02"
+__lastmodified__ = "2026/10/09"
 
 from time import sleep
 
@@ -64,207 +64,113 @@ def _validate_plan(plan):
                          "or reduce nb_level - l_start.".format([p["level"] for p in bad], [p["s"] for p in bad], [p["N"] for p in bad]))
 
 
-def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result = None): 
-    """
+def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config): 
+    """Multi-level compressed sensing solver for SPDE approximation.
+
+    This routine coordinates a multi-level compressed-sensing workflow for
+    approximating a parametric SPDE. For each level determined by
+    :func:`level_plan`, it builds an index set, draws samples of the PDE
+    solution, assembles (or loads) the sampling matrix, computes recovery
+    weights, and performs a weighted sparse recovery using the provided
+    weighted recovery model (`wr_model`). Results for each level are
+    returned as a list of ``CSPDEResult`` namedtuples.
+
     Parameters
     ----------
-    spde_model : SPDEModel 
-        an SPDEModel containing all the FEniCS models required for the computation
-    wr_model : WRModel 
-        an algorithm used for the recovery and containing the sampling matrix 
-    unscaledNbIter : int / float
-        an (absolute) number of iterations for the iterative recovrery algo 
-    epsilon : float 
-        a tolerance on the residual for the recovery algorithms 
-    L : int 
-        number of levels being studied -- Default = 1
-    dat_constant : int 
-        a very poorly chosen name to describe the proportionality constant in the number of samples -- Default = 10 
-    ansatz_space : int, >= 0 
-        Describes how the Ansatz space of polynomial is chosen. 0 is the one describe in the papers, while anything > 0 defines the total degree Ansatz space -- Default = 0 
-    cspde_result = None --- This is reminiscent from an old version and should be deleted /!\ /!\ /!\
-    sampling_fname : string 
-        a string containing the filename to which the samples will be saved -- Default = None
-    datamtx_fname : string 
-        a file containing the precomputed sensing matrix -- Default = None
+    spde_model : object
+        SPDE model object exposing at least the methods ``samples(Z)`` and
+        ``refine_mesh()``. ``samples(Z)`` should return a vector of
+        evaluations of the quantity of interest at the sample points ``Z``.
+    wr_model : object
+        Weighted-recovery model that provides the sampling operator
+        interface through ``wr_model.operator`` and a recovery method
+        ``wr_model.method(A, y, w, s, epsilon, nb_iter, print_every)``. It
+        must also provide ``get_m_from_s_N(s, N)`` and ``check(N, m)``.
+    dict_config : dict
+        Global configuration dictionary. Expected keys include
+        ``nb_level``, ``l_start``, ``ansatz_space``, ``experiment_name``,
+        ``do_tensor`` and optional ``seed`` and ``no_compute``.
+    sparse_config : dict
+        Sparse-recovery configuration. Expected keys include ``tol_res``,
+        ``nb_iter`` and optional ``log`` (logging frequency / verbosity).
+
+    Returns
+    -------
+    list of CSPDEResult
+        A list containing one ``CSPDEResult`` namedtuple per processed
+        level. Each entry contains fields
+        (``J_s, N, s, m, d, Z, y, A, w, result, t_samples, t_matrix,
+        t_recovery, t_J``) describing the polynomial index set, problem
+        sizes, sampling points, measurements, sampling operator (or 0 if
+        not stored), weights, recovery result object, and timing
+        information.
+
+    Notes
+    -----
+    - The function may read/write cached sampling points and sampling
+      matrices under the directory given by ``dict_config['experiment_name']``.
+    - If ``dict_config['no_compute']`` is True, an empty list is returned.
+    - Randomness is controlled by ``dict_config['seed']`` when present.
+    - Side effects: prints progress messages and may call
+      ``spde_model.refine_mesh()`` when advancing levels.
     """
     # First set up some basic things needed for the rest of the computations
     lvl_by_lvl_result = [] # This will keep the results
 
-    # Load all the important things from the dictionary 
-    unscaledNbIter = sparse_config["nb_iter"] 
-    L_first = dict_config["l_start"] 
-    L = dict_config["nb_level"] 
-    dat_constant = dict_config["dat_constant"] 
-    p = dict_config["p_t"]
-    p0 = dict_config["p_0"] 
-    t = dict_config["t_0"]
-    tprime = dict_config["t_prime"]
-    energy_constant = dict_config["const_sj"]
-    ansatz_space = dict_config["ansatz_space"]
-    no_compute = dict_config["no_compute"]
-    prefix_fname = dict_config["experiment_name"]
-    filename = dict_config["output_file"]
-    log_freq = sparse_config.get("log", None)
-
-    # sampling_fname = os.path.join(prefix_fname, 'sampling_points' + ('_tensor' if dict_config["do_tensor"] else '_no_tensor') + '_Lmax' + str(L))
-    sampling_fname = os.path.join(prefix_fname, 'sampling_points_Lmax' + str(L))
-    datamtx_fname = os.path.join(prefix_fname, 'datamtx' + ('_tensor' if dict_config["do_tensor"] else '_no_tensor') + '_Lmax' + str(L))
-
-    s_L = np.ceil((dat_constant*(L-L_first))**(p/(1-p))) # This is basically the multiplicative constant in front of the sparsity at the finest level
-
-
-    # # Approximate the Jth level with a single level CSPG 
-    # # energy_constant = np.max((energy_constant, dat_constant**(p/p0*(1-p0)/(1-p)) * (L-L_first)**(p/p0*(1-p0)/(1-p)) * 2**((L-L_first-1)*p/p0*(1-p0)/(1-p)*(t+tprime)) * 2**(-L*(t+tprime))+1)) # This ensures that the Jth level has more samples than the J+1
-    # s_J = np.ceil(energy_constant**(p0/(1-p0))*2**(L*p0*(t+tprime)/(1-p0)))
-    # s_J = np.max([np.ceil(s_L*2**((L-L_first)*(t+tprime)*p/(1-p))), s_J])
-    # if log_freq:
-    #     print("Computing level {0} (this is a Single Level approximation) from a total of {1}. Current sparsity = {2}".format(L_first,L,s_J))
-    #     ## 1. Create index set and draw random samples
-    #     print("Generating J_s ...")
-    
-    # # Compute "active index set" J_s
-    # J_s, t_J = index_set(s_J, wr_model, ansatz_space)
-    # # Get total number of coefficients in tensorized chebyshev polynomial base
-    # N = len(J_s)
-
-    # # Calculate number of samples
-    # m = wr_model.get_m_from_s_N(s_J, N)
-    # epsilon = np.sqrt(m)*sparse_config["tol_res"]#*2**(L-L_first) # This is the tolerance on the residual for the recovery algorithms. It is scaled with the number of samples and the level.
-        
-    # # Get sample dimension
-    # d = len(J_s[0])
-
-    # # Check whether this even an interesting case
-    # if log_freq:
-    #     print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
-    #     print("   Using epsilon = {0}, nb_iter = {1} ... ".format(epsilon, unscaledNbIter))
-    # wr_model.check(N, m)
-
-    # if (not no_compute):
-    #     y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, L_first, L_first, L, s_J, sampling_fname)
-    #     A, t_matrix = get_mtx(wr_model, J_s, Z, d, L_first, L_first, L, s_J, datamtx_fname)
-
-    #     if log_freq:
-    #         print("   Computing weights ...")
-    #     w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)
-
-    #     if log_freq:
-    #         print("   Weighted minimization ...")
-    #     result = wr_model.method(A, y_new-y_old, w, s_J, epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-    #     t_recovery = [result.tWC, result.tUser, result.tSys]
-    #     lvl_by_lvl_result.append(CSPDEResult(J_s, N, s_J, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
-    #     print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
-    
-
-
-
-    # # Deal with the approximation of the details
-    # for oneLvl in range(L_first+1,L+1):
-    #     # sl = 10+np.max([2**(L-oneLvl),1])
-
-    #     # sl = np.floor(dat_constant*2**(L-oneLvl))
-    #     sl = np.ceil(s_L*2**((L-oneLvl)*(t+tprime)*p/(1-p)))
-    #     if log_freq:
-    #         print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(oneLvl,L,sl))
-    #     ## 1. Create index set and draw random samples
-    #     if log_freq:
-    #         print("Generating J_s ...")
-        
-    #     # Compute "active index set" J_s
-    #     J_s, t_J = index_set(sl, wr_model, ansatz_space)
-    #     # Get total number of coefficients in tensorized chebyshev polynomial base
-    #     N = len(J_s)
-
-    #     # Calculate number of samples
-    #     m = wr_model.get_m_from_s_N(sl, N)
-        
-    #     # Get sample dimension
-    #     d = len(J_s[0])
-    #     # print(f"d is currently {d} and J_s is {J_s}")
-
-    #     # if not cspde_result is None:
-    #     #     assert d == cspde_result.d, "New sample space dimension is different from old sample space dimension."
-
-    #     # Check whether this even an interesting case
-    #     epsilon = sparse_config["tol_res"]*np.sqrt(m)#*2**(L-oneLvl)
-    #     if log_freq:
-    #         print("   It is N={0}, m={1} and d={2} ... ".format(N, m, d))
-    #         print("   Using epsilon = {0}, nb_iter = {1} ... ".format(epsilon, unscaledNbIter))
-    #     wr_model.check(N, m)
-
-
-    #     if not no_compute:
-    #         y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname)
-    #         A, t_matrix = get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, datamtx_fname)
-
-    #         if log_freq:
-    #             print("   Computing weights ...")
-    #         w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), J_s)    
-    #         # print(" Weights are {}".format(w) )
-
-    #         if log_freq:
-    #             print("   Weighted minimization ...")
-    #         result = wr_model.method(A, y_new-y_old, w, sl, epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-    #         t_recovery = [result.tWC, result.tUser, result.tSys]
-    #         # result = wr_model.method(A, y_new-y_old, w, sl, np.sqrt(m) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-    #         lvl_by_lvl_result.append(CSPDEResult(J_s, N, sl, m, d, Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, t_J))
-    #         print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, t_J))
-        
     log_freq = sparse_config.get("log", None) # TODO: Eventually add other logging tools, in which case this parameter name will no longer be acceptable
     seed = dict_config.get("seed", None)
     ctx = dict(
         spde=spde_model, wr=wr_model, rng=np.random.default_rng(None if seed is None else int(seed)), seed=seed,
         L=dict_config["nb_level"], L_first=dict_config["l_start"], ansatz_space=dict_config["ansatz_space"],
         no_compute=dict_config["no_compute"], tol_res=sparse_config["tol_res"], nb_iter=sparse_config["nb_iter"],
-        log_freq=log_freq, log=(lambda msg: print(msg))
+        log_freq=log_freq, log=(lambda msg: print(msg)),
     )
 
+    sampling_fname = os.path.join(dict_config["experiment_name"], 'sampling_points_Lmax' + str(ctx["L"]))
+    # datamtx_fname = os.path.join(dict_config["experiment_name"], 'datamtx' + ('_tensor' if dict_config["do_tensor"] else '_no_tensor') + '_Lmax' + str(ctx["L"]))
+    datamtx_fname = os.path.join(dict_config["experiment_name"], 'datamtx' + '_' +dict_config["operator"] + '_Lmax' + str(ctx["L"]))
+
     plan = [_plan_level(level, s, is_first, ctx) for level, s, is_first in level_plan(dict_config)]
+    _validate_plan(plan)
     if ctx["no_compute"]:
         return []
-    _validate_plan(plan)
 
     for p in plan: 
+        epsilon = ctx["tol_res"]*np.sqrt(p["m"])#*2**(L-oneLvl)
 
-        epsilon = sparse_config["tol_res"]*np.sqrt(p["m"])#*2**(L-oneLvl)
+        if p["is_first"]:
+            y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname)
+            A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], p["s"], datamtx_fname)
+            if log_freq:
+                print("   Computing weights ...")
+            w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])
+            if log_freq:
+                print("   Weighted minimization ...")
+            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            t_recovery = [result.tWC, result.tUser, result.tSys]
+            lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
+            print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
+        else:
+            y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname)
+            A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], p["s"], datamtx_fname)
+            if log_freq:
+                print("   Computing weights ...")
+            w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])    
+            # print(" Weights are {}".format(w) )
+            if log_freq:
+                print("   Weighted minimization ...")
+            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            t_recovery = [result.tWC, result.tUser, result.tSys]
+            # result = wr_model.method(A, y_new-y_old, w, p["s"], np.sqrt(p["m"]) *epsilon, ctx["nb_iter"]) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
+            print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
 
-        if not no_compute:
-
-            if p["is_first"]:
-                y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, p["m"], p["d"], L_first, L_first, L, p["s"], sampling_fname)
-                A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], L_first, L_first, L, p["s"], datamtx_fname)
-
-                if log_freq:
-                    print("   Computing weights ...")
-                w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])
-                if log_freq:
-                    print("   Weighted minimization ...")
-                result = wr_model.method(A, y_new-y_old, w, p["s"], epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-                t_recovery = [result.tWC, result.tUser, result.tSys]
-                lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
-                print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
-            else:
-                y_new, y_old, Z, t_samples = get_samples(spde_model, wr_model, p["m"], p["d"], p["level"], J, L, p["s"], sampling_fname)
-                A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], J, L, p["s"], datamtx_fname)
-
-                if log_freq:
-                    print("   Computing weights ...")
-                w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])    
-                # print(" Weights are {}".format(w) )
-
-                if log_freq:
-                    print("   Weighted minimization ...")
-                result = wr_model.method(A, y_new-y_old, w, p["s"], epsilon, unscaledNbIter, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-                t_recovery = [result.tWC, result.tUser, result.tSys]
-                # result = wr_model.method(A, y_new-y_old, w, p["s"], np.sqrt(p["m"]) *epsilon, unscaledNbIter) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
-                lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y_new-y_old, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
-                print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
+    # results = [_run_level(p, ctx) for p in plan]
     
     return lvl_by_lvl_result
 
 
-def get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, datamtx_fname): 
+def get_mtx(wr_model, J_s, Z, d, oneLvl, sl, datamtx_fname): 
     if (datamtx_fname is None):  
         # Create sampling matrix and weights
         print("   Creating sample operator ...")
@@ -290,7 +196,7 @@ def get_mtx(wr_model, J_s, Z, d, oneLvl, J, L, sl, datamtx_fname):
 
 
 
-def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname):
+def get_sample_details(spde_model, wr_model, m, d, oneLvl, J, sl, sampling_fname):
     if (sampling_fname is None):  
         Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
         print("\nComputing {0} SPDE sample approximations ...".format(m))
@@ -319,6 +225,7 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname):
             loaded = np.load(y_file)
             y_new = loaded['y_new']
             y_old = loaded['y_old']
+            spde_model.refine_mesh()
             t_samples = [float(t) for t in loaded['t_samples']] if 't_samples' in loaded else [0.0, 0.0, 0.0]
         else:
             print("\nComputing {0} SPDE sample approximations ...".format(m))
@@ -333,7 +240,7 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname):
             t_samples = u.time_things(t_start)
             np.savez(y_file, y_new=y_new, y_old=y_old, t_samples=t_samples)
 
-    return y_new, y_old, Z, t_samples
+    return y_new - y_old, Z, t_samples
 
 
 
@@ -341,14 +248,14 @@ def get_samples(spde_model, wr_model, m, d, oneLvl, J, L, sl, sampling_fname):
 def index_set(s, wr_model, ansatz_space):
     t = u.time_things()
     if ansatz_space == 0:
-        J_s = J(s, wr_model.operator.theta, wr_model.weights)
+        J_s = weighted_sparse_indices(s, wr_model.operator.theta, wr_model.weights)
     else:
         dim = int(np.sum(np.isfinite(wr_model.weights)))
-        J_s = J_tot_degree(dim, ansatz_space)
+        J_s = total_deg_indices(dim, ansatz_space)
     t = u.time_things(t)
     return J_s, t
 
-def J_tot_degree(v, max_degree = 2, threshold = np.inf):
+def total_deg_indices(v, max_degree = 2, threshold = np.inf):
     """All multi-indices nu in N^dim with |nu|_1 <= max_degree, without the (deg+1)^dim grid."""
     out = []
     nu = np.zeros(dim, dtype=int)
@@ -366,7 +273,7 @@ def J_tot_degree(v, max_degree = 2, threshold = np.inf):
     return out
 
 
-def J(s, theta, v):
+def weighted_sparse_indices(s, theta, v):
     print("s = {0}, theta = {1}, v = {2}".format(s,theta,v))
     # Function for generating all admissible indices over given index set S
     def iterate(M, a, B, S):

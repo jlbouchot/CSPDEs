@@ -41,7 +41,7 @@ def warn_if_results_exist(prefix_fname, filename, no_compute):
     print("   ---> {0} will be overwritten.".format(config_file), file=sys.stderr)
     print("   ---> Remove these files or change --output_file if this is not what you want.", file=sys.stderr)
 
-def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = None, cspde_result = None):
+def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = None):
 
     J = dict_config["l_start"] 
     L = dict_config["nb_level"] 
@@ -66,7 +66,7 @@ def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = 
         warn_if_results_exist(prefix_fname, filename, no_compute)
 
     ### Execute CSPDE algorithm
-    cspde_result = CSPDE_ML(spde_model, wr_model, dict_config, sparse_config, cspde_result)
+    cspde_result = CSPDE_ML(spde_model, wr_model, dict_config, sparse_config)
 
     ### Output results and check
     print("\nPostprocessing and outputting solution ...")
