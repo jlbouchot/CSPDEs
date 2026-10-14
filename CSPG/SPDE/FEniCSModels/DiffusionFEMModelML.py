@@ -20,7 +20,6 @@ class DiffusionFEMModelML(FEMModel):
 
         self.mesh_size = mesh_size
         self.init_simple_mesh()
-        # self.parse_pde_cfg(pde_cfg)
 
     def solve(self, z):
         # TODO: Make this a bit more elegant, likely letting the log level being specified on the fly, and moving the various values to another file.
@@ -51,14 +50,7 @@ class DiffusionFEMModelML(FEMModel):
         # Create solver
         problem     = LinearVariationalProblem(A, L, u, self.bc)
         self.solver = LinearVariationalSolver(problem)
-        # self.solver = LinearVariationalSolver(problem, solver_parameters={
-        #   "linear_solver": "gmres", 
-        #   "preconditioner": "amg"})
         self.set_solver_parameters()
-        # self.solver.parameters["linear_solver"] = self.linear_solver
-        # self.solver.parameters["preconditioner"] = self.preconditioner
-        # self.solver.parameters.add("relative_tolerance", self.relative_tolerance)
-        # self.solver.parameters.add("absolute_tolerance", self.absolute_tolerance)
 
         # Compute solution
         self.solver.solve()

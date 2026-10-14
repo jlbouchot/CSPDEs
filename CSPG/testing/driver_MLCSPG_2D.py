@@ -66,5 +66,7 @@ if __name__ == "__main__":
     parser = MLCSPGParse.define_MLCSPG_cli_parser()
     args = parser.parse_args(sys.argv[1:])
     main_cfg, pde_cfg, sparse_cfg = MLCSPGParse.parse_cfg_file_and_args(args)
+    os.environ.setdefault("OMP_NUM_THREADS", pde_cfg.get("omp_threads", "1") )
+    os.environ.setdefault("OPEN_BLAS_NUM_THREADS", pde_cfg.get("blas_threads", "1") )
 	
     Main(main_cfg, pde_cfg, sparse_cfg)
