@@ -14,29 +14,29 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/07/09"
-__lastmodified__ = "2026/08/03"
+__lastmodified__ = "2026/10/09"
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 
 
-int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "l_start", "ansatz_space", "n", "degree", "log"]
+int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "mesh_z", "l_start", "ansatz_space", "n", "degree", "log"]
 float_arg_list = ["const_sj", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
-        "dat_constant", "t_0", "t_prime", "p_0", "p_t"]
-bool_arg_list = ["do_tensor", "no_compute"]
+        "dat_constant", "t_0", "t_prime", "p_0", "p_t", "const_sj"]
+bool_arg_list = ["no_compute"]
 # args_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "recovery_algo", "gamma", "l_start", 
 #         "sampling", "nb_iter", "tol_res", "nb_tests", "power", "abar", "fluctuation_importance", "weight_cosine", 
 #         "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", "t_0", "t_prime", "p_0", "p_t", 
 #         "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n", "degree", "experiment_name", "elements"]
 pde_arg_list = ["preconditioner", "linear_solver", "elements", "degree", "log"]
 sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res", "log"]
-main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "l_start", "sampling", "power", "abar", 
-        "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", 
-        "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name"]
+main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "mesh_z", "nb_level", "l_start", "sampling", "power", "abar", 
+        "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "operator", "ansatz_space", 
+        "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name", "gamma", "nb_tests"]
 
 
-# def parse_config_file(path_to_file = None: str, exp = None: str) -> Tuple[Dict[str,Any], Dict[str,Any]]:
 def parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file = None):
+    parser = None
     if path_to_file:
         parser = configparser.ConfigParser()
         config_path = Path(path_to_file)
@@ -73,7 +73,7 @@ def define_MLCSPG_cli_parser():
     parser.add_argument("-n", "--nb_tests", help="Number of tests 'on the fly'", default=None, required=False)
     parser.add_argument("-p", "--power", help="Power of the decay of the trigonometric expansion (~ mu)", default=None, required=False)
     parser.add_argument("-a", "--abar", help="Value of the mean field", default=None, required=False)
-    parser.add_argument("-b", "--do_tensor", help="Should the computations be done on the fly, using tensor representation (Default is TRUE)", default=None, required=False)
+    parser.add_argument("--operator", help="Operator to use (among Chebyshev, Cheb_AltPP, Cheb_Alt)", default=None, required=False)
     parser.add_argument("-c", "--dat_constant", help="Multiplicative constant for expression of s_L", default=None, required=False)
     parser.add_argument("-d", "--nb_cosines", help="Number of random cosine and sine parameters", default=None, required=False)
     parser.add_argument("-e", "--tol_res", help="Tolerance on the residual for the recovery algorithms (called epsilon everywhere)", default=None, required=False)
@@ -88,13 +88,13 @@ def define_MLCSPG_cli_parser():
     parser.add_argument("--t_prime", help="What is the smoothness of the functional (Default is 1)", default=None, required=False)
     parser.add_argument("--p_0", help="What kind of smoothness in the original space can be expected (Default is 1/2)", default=None, required=False)
     parser.add_argument("--p_t", help="What kind of smoothness in the smooth space can be expected (Default is 1/2)", default=None, required=False)
-    parser.add_argument("--const_sJ", help="What is the expected constant in the expression of s_J (Default is 15)", default=None, required=False)
+    parser.add_argument("--const_sj", help="What is the expected constant in the expression of s_J (Default is 15)", default=None, required=False)
     parser.add_argument("--preconditioner", help="Preconditioner chosen among those available from FEniCS", default=None, required=False) 
     parser.add_argument("--linear_solver", help="Type of solver used for the PDE solves", default=None, required=False)
     parser.add_argument("--cfg", help="Specific config file for the current experiment", default=None,required=False)
-    parser.add_argument("--degree", help="Degree of the finite elements used in the FEM discretization", default=1, required=False)
-    parser.add_argument("--elements", help="Type of finite elements used in the FEM discretization", default="Lagrange", required=False)
-    parser.add_argument("-l, --log", help="Frequency of logging the results to the output file (Default is 10)", default=10, required=False)
+    parser.add_argument("--degree", help="Degree of the finite elements used in the FEM discretization", default=None, required=False)
+    parser.add_argument("--elements", help="Type of finite elements used in the FEM discretization", default=None, required=False)
+    parser.add_argument("-l", "--log", help="Frequency of logging the results to the output file (Default is 10)", default=False, required=False)
     # Add config file parameter
     return parser
 
