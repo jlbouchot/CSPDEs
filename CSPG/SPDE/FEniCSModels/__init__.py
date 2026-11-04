@@ -19,6 +19,7 @@ __all__ = [
 #    'ConvectionDiffusionFEMModel',
     'DiffusionFEMModel',
     'DiffusionFEMModelML',
+    'AffineExpansionFEMModelML',
 #     'UncertainBoundariesDiffusionFEMML',
 #    'PiecewiseConstantDiffusionFEMModelML',
 #    'SmallPiecewiseConstantDiffusionFEMModelML',
@@ -43,6 +44,7 @@ __all__ = [
     'CosineCoef3D', 
     'WeightedCosine1D',
     'WeightedCosine2D',
+    'WeightedCosSin2D',
     'WeightedCosine3D'
 ]
 
@@ -62,6 +64,7 @@ from .DiffusionFEMModel import *
 
 # ML Models
 from .DiffusionFEMModelML import *
+from .AffineExpansionFEMModelML import *
 # from UncertainBoundariesDiffusionFEMML import *
 #from .PiecewiseConstantDiffusionFEMModelML import *
 #from .SmallPiecewiseConstantDiffusionFEMModelML import *
@@ -85,4 +88,5 @@ from .CosineCoef3D import *
 #from .PartitionUnityConstantCoefficient import *
 from .WeightedCosine1D import *
 from .WeightedCosine2D import *
+from .WeightedCosSin2D import *
 from .WeightedCosine3D import *

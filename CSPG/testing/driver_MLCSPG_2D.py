@@ -14,7 +14,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/07/22"
-__lastmodified__ = "2026/07/23"
+__lastmodified__ = "2026/10/15"
 
 import os.path
 import sys
@@ -23,17 +23,26 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
+# --- Configuration first: thread counts must be in the environment before numpy / numba / dolfin are loaded ---
 import utilities.MLCSPG_param_parser as MLCSPGParse
 
+if __name__ == "__main__":
+    _args = MLCSPGParse.define_MLCSPG_cli_parser().parse_args(sys.argv[1:])
+    MAIN_CFG, PDE_CFG, SPARSE_CFG = MLCSPGParse.parse_cfg_file_and_args(_args)
+    for var, key in (("OMP_NUM_THREADS", "omp_threads"),
+                     ("OPENBLAS_NUM_THREADS", "blas_threads"),
+                     ("MKL_NUM_THREADS", "blas_threads"),
+                     ("NUMBA_NUM_THREADS", "numba_threads")):
+        os.environ[var] = str(PDE_CFG.get(key, 1))     # str: environ only takes strings; plain assignment: the ini wins
+    # optional, if you add a "numba_threads" key to the ini (Cheb_Sparse operator):
+    # os.environ["NUMBA_NUM_THREADS"] = str(PDE_CFG.get("numba_threads", 1))
+
+# --- Only now the heavy imports ---
 import WR
-
 import utilities.utils as u
-
 from SPDE              import FEniCSModels
-from SPDE.FEniCSModels import DiffusionFEMModelML, WeightedCosine2D, ConstantCoefficient, Average
-
+from SPDE.FEniCSModels import DiffusionFEMModelML, WeightedCosine2D, ConstantCoefficient, Average, AffineExpansionFEMModelML
 from Check_ML import test, CrossCheck
-
 import numpy as np
 
 def Main(main_cfg, pde_cfg, sparse_cfg): 
@@ -42,7 +51,9 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     coef_expansion = WeightedCosine2D(main_cfg["nb_cosines"], main_cfg["power"], main_cfg["fluctuation_importance"], main_cfg["abar"], main_cfg["weight_cosine"])
-    spde_model = DiffusionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
+    #spde_model = DiffusionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
+    #                                   Average(), grid_points, pde_cfg) 
+    spde_model = AffineExpansionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
                                        Average(), grid_points, pde_cfg) 
                                        
     ### Reconstruction Model
@@ -63,10 +74,4 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
 
 ### Main
 if __name__ == "__main__":
-    parser = MLCSPGParse.define_MLCSPG_cli_parser()
-    args = parser.parse_args(sys.argv[1:])
-    main_cfg, pde_cfg, sparse_cfg = MLCSPGParse.parse_cfg_file_and_args(args)
-    os.environ.setdefault("OMP_NUM_THREADS", pde_cfg.get("omp_threads", "1") )
-    os.environ.setdefault("OPEN_BLAS_NUM_THREADS", pde_cfg.get("blas_threads", "1") )
-	
-    Main(main_cfg, pde_cfg, sparse_cfg)
+    Main(MAIN_CFG, PDE_CFG, SPARSE_CFG)

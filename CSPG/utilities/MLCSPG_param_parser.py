@@ -24,13 +24,13 @@ int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "me
         "blas_threads", "omp_threads"]
 float_arg_list = ["const_sj", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
         "dat_constant", "t_0", "t_prime", "p_0", "p_t", "const_sj"]
-bool_arg_list = ["no_compute"]
+bool_arg_list = ["no_compute", "nb_iter_min"]
 # args_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "nb_level", "recovery_algo", "gamma", "l_start", 
 #         "sampling", "nb_iter", "tol_res", "nb_tests", "power", "abar", "fluctuation_importance", "weight_cosine", 
 #         "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", "t_0", "t_prime", "p_0", "p_t", 
 #         "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n", "degree", "experiment_name", "elements"]
 pde_arg_list = ["preconditioner", "linear_solver", "elements", "degree", "log", "blas_threads", "omp_threads"]
-sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res", "log"]
+sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res", "log", "nb_iter_min"]
 main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "mesh_z", "nb_level", "l_start", "sampling", "power", "abar", 
         "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "operator", "ansatz_space", 
         "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name", "gamma", "nb_tests"]
@@ -95,9 +95,10 @@ def define_MLCSPG_cli_parser():
     parser.add_argument("--cfg", help="Specific config file for the current experiment", default=None,required=False)
     parser.add_argument("--degree", help="Degree of the finite elements used in the FEM discretization", default=None, required=False)
     parser.add_argument("--elements", help="Type of finite elements used in the FEM discretization", default=None, required=False)
-    parser.add_argument("-l", "--log", help="Frequency of logging the results to the output file (Default is 10)", default=False, required=False)
+    parser.add_argument("-l", "--log", help="Frequency of logging the results of the iterative solver to the output file", default=None, required=False)
     parser.add_argument("--blas_threads", help="Number of threads to use for BLAS operations", default=None, required=False)
     parser.add_argument("--omp_threads", help="Number of threads to use for OpenMP operations", default=None, required=False)
+    parser.add_argument("--nb_iter_min", help="Minimum number of iterations for the sparse recovery. If True, the minimum number is taken as suggested in the theory paper.", default=None, required=False)
     # Add config file parameter
     return parser
 

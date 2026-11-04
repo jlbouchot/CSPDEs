@@ -36,7 +36,6 @@ else
     outdir="${outdir}_nocompute"
 fi
 
-
 logdir="$outdir/logs"
 # Execute the python command.
 mkdir -p "$outdir" ### TODO: Review this once agreed upon some naming conventions

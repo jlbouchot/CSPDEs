@@ -39,3 +39,29 @@ def weighted_quasi_abslargest(x, s, w):
     r[i] = x[i]
 
     return r, i
+
+def weighted_quasi_abslargest_fast(x, s, w):
+    '''
+    Vectorised weighted thresholding, drop-in replacement for weighted_quasi_abslargest
+
+    only the candidates that can possibly be selected are sorted: since the weights
+    satisfy w_j >= w_min, at most floor(s / w_min^2) entries fit in the budget, so an
+    O(N) argpartition followed by a sort of those few entries replaces the O(N log N)
+    full argsort on vectors of length N ~ 1e5-1e6;
+    '''
+    score = np.abs(x) / w
+    n = score.size
+    kmax = int(min(n, np.floor(s / np.min(w) ** 2) + 1))
+
+    if kmax < n:
+        cand = np.argpartition(-score, kmax - 1)[:kmax]
+        order = cand[np.argsort(score[cand])[::-1]]
+    else:
+        order = np.argsort(score)[::-1]
+
+    k = int(np.searchsorted(np.cumsum(w[order] ** 2), s, side="right"))
+    i = order[:k]
+
+    r = np.zeros_like(x)
+    r[i] = x[i]
+    return r, i
