@@ -9,6 +9,7 @@ import utils as u
 from WR import eps
 from .Result import *
 from .weighted_quasi_abslargest import *
+from .ls_solver import wls_cgls
 
 __author__ = ["Benjamin, Bykowski", "Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2015-2026, INRIA, RWTH Aachen, ETH Zurich, and Beijing Institute of Technology"
@@ -19,22 +20,23 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2015/09/21"
-__lastmodified__ = "2026/08/03"
+__lastmodified__ = "2026/10/28"
 
-def wiht(Operator, y, w, s, eta, maxiter, print_every=False):
-    x         = np.zeros(Operator.n)
+def wiht(Operator, y, w, s, eta, maxiter, miniter, cs_ok=True, print_every=False):
+    if not cs_ok:
+        return wls_cgls(Operator, y, w, eta=1e-10, maxiter=maxiter, print_every=print_every)
+
+    x = np.zeros(Operator.n)
     last_norm = 0
-    k         = 0
+    k = 0
 
     t = u.time_things()
     residuum = y - Operator.apply(x)
     cur_norm = np.linalg.norm(Operator.apply(x) - y)
 
-    while cur_norm > eta:
-        
-        x, dummy  = weighted_quasi_abslargest(x + Operator.apply_adj(residuum), 3 * s, w)
-        last_norm = cur_norm
-        k         = k + 1
+    while k < miniter or (k < maxiter and cur_norm > eta):
+        x, dummy = weighted_quasi_abslargest_fast(x + Operator.apply_adj(residuum), 3 * s, w)
+        k = k + 1
         residuum = y - Operator.apply(x)
         cur_norm = np.linalg.norm(residuum)
 
@@ -44,9 +46,9 @@ def wiht(Operator, y, w, s, eta, maxiter, print_every=False):
         if k > maxiter:
             print('WIHT did not converge after {0} iterations.'.format(k))
             break
-    
+
     t = u.time_things(t)
     if print_every:
         print('WIHT finished after {0} iterations with norm of residuum = {1}'.format(k, cur_norm))
 
-    return Result(x, k, 'Weighted Iterative Hard Thresholding', k <= maxiter, t[0], t[1], t[2])
+    return Result(x, k, 'Weighted Iterative Hard Thresholding', k < maxiter, t[0], t[1], t[2])

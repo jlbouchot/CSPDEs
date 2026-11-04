@@ -43,7 +43,9 @@ class WRModel(object):
 
 def check_cs(N, m):
     if N < m: 
-        print("!!! WARNING !!! It holds N < m ({0} < {1}). You might want to use other L2 minimization procedures instead of weighted l1".format(N, m))
+        print("!!! WARNING !!! It holds N < m ({0} < {1}). Using L2 minimization procedures instead of weighted l1".format(N, m))
+        return False
+    return True
     # assert N >= m, "It is N < m ({0} < {1}). Aborting ...".format(N, m)
 
 def cs_theoretic_m(s, N):
