@@ -38,6 +38,7 @@ CSPG/RESULTS/
 CSPG/FIGS/
 TESTMLCSPG/
 LOGS/
+CSPG/testing/sandbox
 
 # Numerical data and caches, wherever they end up
 *.npy
