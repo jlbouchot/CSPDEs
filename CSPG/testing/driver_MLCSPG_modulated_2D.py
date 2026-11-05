@@ -20,7 +20,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/10/29"
-__lastmodified__ = "2026/10/29"
+__lastmodified__ = "2026/11/04"
 
 import os.path
 import sys
@@ -29,19 +29,21 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir) 
 
+PDE_PRESET_VALUES = (("OMP_NUM_THREADS", "omp_threads"),
+                     ("OPENBLAS_NUM_THREADS", "blas_threads"),
+                     ("MKL_NUM_THREADS", "blas_threads"))
+SPARSE_PRESET_VALUES = (("NUMBA_NUM_THREADS", "numba_threads"),)
+
 # --- Configuration first: thread counts must be in the environment before numpy / numba / dolfin are loaded ---
 import utilities.MLCSPG_param_parser as MLCSPGParse
 
 if __name__ == "__main__":
     _args = MLCSPGParse.define_MLCSPG_cli_parser().parse_args(sys.argv[1:])
     MAIN_CFG, PDE_CFG, SPARSE_CFG = MLCSPGParse.parse_cfg_file_and_args(_args)
-    for var, key in (("OMP_NUM_THREADS", "omp_threads"),
-                     ("OPENBLAS_NUM_THREADS", "blas_threads"),
-                     ("MKL_NUM_THREADS", "blas_threads"),
-                     ("NUMBA_NUM_THREADS", "numba_threads")):
+    for var, key in PDE_PRESET_VALUES:
         os.environ[var] = str(PDE_CFG.get(key, 1))     # str: environ only takes strings; plain assignment: the ini wins
-    # optional, if you add a "numba_threads" key to the ini (Cheb_Sparse operator):
-    # os.environ["NUMBA_NUM_THREADS"] = str(PDE_CFG.get("numba_threads", 1))
+    for var, key in SPARSE_PRESET_VALUES:
+        os.environ[var] = str(SPARSE_CFG.get(key, 1))
 
 # --- Only now the heavy imports ---
 import WR
@@ -79,7 +81,7 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
     phys = Diffusion(coef_expansion)
     # TODO: 'cholmod' should be replaced with some informations gathered from the ini files via the pde_cfg.
     # TODO: somehow, we should be careful with handling parameters of the numerical solver. Some iterative solvers may have parameters needed later on. Should we initialise a solver here? Or should we pass the parameters downwards and initialise at first call?
-    spde_model = [phys, AffineLinearSampler, UnitDiscretisation, AverageQOI(), 'cholmod', mesh_size]
+    spde_model = [phys, AffineLinearSampler, UnitDiscretisation, AverageQOI(), pde_cfg["linear_solver"], mesh_size]
                                        
     ### Reconstruction Model
     # TODO: Rename things correctly and pass them as parameters

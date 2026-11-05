@@ -21,7 +21,7 @@ parentdir = os.path.dirname(currentdir)
 
 
 int_arg_list = ["nb_level", "nb_iter", "nb_tests", "sJ", "sL", "nb_cosines", "mesh_x", "mesh_y", "mesh_z", "l_start", "ansatz_space", "n", "degree", "log", 
-        "blas_threads", "omp_threads"]
+        "blas_threads", "omp_threads", "numba_threads"]
 float_arg_list = ["const_sj", "exponent", "abar", "fluctuation_importance", "gamma", "tol_res", "power", "weight_cosine", 
         "dat_constant", "t_0", "t_prime", "p_0", "p_t", "const_sj"]
 bool_arg_list = ["no_compute", "nb_iter_min"]
@@ -30,7 +30,7 @@ bool_arg_list = ["no_compute", "nb_iter_min"]
 #         "dat_constant", "prefix_precompute", "do_tensor", "ansatz_space", "t_0", "t_prime", "p_0", "p_t", 
 #         "const_sj", "no_compute", "exponent", "preconditioner", "linear_solver", "n", "degree", "experiment_name", "elements"]
 pde_arg_list = ["preconditioner", "linear_solver", "elements", "degree", "log", "blas_threads", "omp_threads"]
-sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res", "log", "nb_iter_min"]
+sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res", "log", "nb_iter_min", "numba_threads"]
 main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "mesh_z", "nb_level", "l_start", "sampling", "power", "abar", 
         "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "operator", "ansatz_space", 
         "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name", "gamma", "nb_tests"]
