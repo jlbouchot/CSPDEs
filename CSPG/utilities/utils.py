@@ -150,3 +150,13 @@ def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder 
     np.save(os.path.join(GTfolder,yValuesFname), y_GT)
 
     return y_GT, Z
+
+def default_tolerance_sparse_recovery(targetL, nb_recoveries, h0, t=1, tprime=1, constant=0.125):
+    """
+    Returns the default tolerance for sparse recovery algorithms. 
+    This is a function to avoid hardcoding the value in multiple places.
+    #TODO: 
+    Add explanation about the parameters and the formula. This is a function of the target level, the number of recoveries, the initial mesh size, and some parameters t, tprime and constant.
+
+    """
+    return 1/(h0*h0*4**targetL)/(2**(t+tprime)-1)/nb_recoveries*constant
