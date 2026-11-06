@@ -51,14 +51,14 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
     		
     # Create FEMModel with given diffusion coefficient, goal functional and initial mesh size
     coef_expansion = WeightedCosine2D(main_cfg["nb_cosines"], main_cfg["power"], main_cfg["fluctuation_importance"], main_cfg["abar"], main_cfg["weight_cosine"])
-    #spde_model = DiffusionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
-    #                                   Average(), grid_points, pde_cfg) 
-    spde_model = AffineExpansionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
-                                       Average(), grid_points, pde_cfg) 
+    spde_model = DiffusionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
+                                      Average(), grid_points, pde_cfg) 
+    # spde_model = AffineExpansionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
+    #                                    Average(), grid_points, pde_cfg) 
                                        
     ### Reconstruction Model
     # TODO: Rename things correctly and pass them as parameters
-    v = np.hstack((main_cfg["gamma"]*np.power([val+1 for val in range(main_cfg["nb_cosines"]) for dummy_variable in (0,1)], main_cfg["exponent"]), [np.inf]))
+    v = np.hstack((main_cfg["gamma"]*np.power([val+1 for val in range(main_cfg["nb_cosines"])], main_cfg["exponent"]), [np.inf]))
 
     operator = u.get_operator_type(main_cfg["operator"])
     

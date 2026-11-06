@@ -24,17 +24,15 @@
 # 1. Call the small driver_MLCSPG_2D.py script with its specific config file and redirecting logs
 # 2. Call the small driver_MLCSPG_2D.py script with more options making sure everything works fine.
 
-outdir="results/Exp1"
+outdir="results/h0_nbDisc_Fixed"
 if [[ -z "$DEBUG_MODE" ]]; then
     # Default execution.
     J_values=(0 1 2 3 4 5 6)
     L_values=(2 3 4 5 6 7 8)
-    tol_res_values=(0.0005 0.00025 0.000125 0.0000625 0.00003125 0.000015625 0.0000078125)
 else
     # Debug execution.
     J_values=(0 1 2)
     L_values=(2 3 4)
-    tol_res_values=(0.0005 0.00025 0.000125)
     outdir="${outdir}_debug"
 fi
 
@@ -47,5 +45,6 @@ else
 fi
 
 # Execute the python command.
+PYTHON="conda run --no-capture-output -n env-fenics38 python"
 mkdir -p "$outdir" 
-mpirun python driver_MLCSPG_2D.py --cfg ../data/Exp1_hfvaries.ini --experiment_name "$outdir" --no_compute $no_compute --nb_level ${L_values[$SLURM_ARRAY_TASK_ID]} --l_start ${J_values[$SLURM_ARRAY_TASK_ID]} --output_file "L_val_${L_values[$SLURM_ARRAY_TASK_ID]}" -e ${tol_res_values[$SLURM_ARRAY_TASK_ID]}
+mpirun ${PYTHON} driver_MLCSPG_modulated_2D.py --cfg ../data/Exp1_hfvaries.ini --experiment_name "$outdir" --no_compute $no_compute --nb_level ${L_values[$SLURM_ARRAY_TASK_ID]} --l_start ${J_values[$SLURM_ARRAY_TASK_ID]} --output_file "L_val_${L_values[$SLURM_ARRAY_TASK_ID]}" --nb_tests 0

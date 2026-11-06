@@ -20,7 +20,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/10/29"
-__lastmodified__ = "2026/11/04"
+__lastmodified__ = "2026/11/06"
 
 import os.path
 import sys
@@ -49,7 +49,7 @@ if __name__ == "__main__":
 import WR
 import utilities.utils as u
 from SPDE              import FEniCSModels
-from SPDE.FEniCSModels import DiffusionFEMModelML, WeightedCosine2D, ConstantCoefficient, Average, AffineExpansionFEMModelML, WeightedCosSin2D
+from SPDE.FEniCSModels import WeightedCosine2D, ConstantCoefficient, WeightedCosSin2D
 from Check_ML import test, CrossCheck
 import numpy as np
 from SPDESampler import Physics
@@ -59,7 +59,7 @@ from SPDESampler import Functionals
 from SPDESampler.Physics import Diffusion
 from SPDESampler.Samplers import AffineLinearSampler
 from SPDESampler.Discretisation import UnitDiscretisation
-from SPDESampler.Functionals import AverageQOI
+from SPDESampler.Functionals import *
 
 def Main(main_cfg, pde_cfg, sparse_cfg): 
 
@@ -74,14 +74,13 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
         coef_expansion = WeightedCosSin2D(main_cfg["nb_cosines"]*2, main_cfg["power"], main_cfg["fluctuation_importance"], main_cfg["abar"], main_cfg["weight_cosine"])
     else:
         coef_expansion = WeightedCosine2D(main_cfg["nb_cosines"], main_cfg["power"], main_cfg["fluctuation_importance"], main_cfg["abar"], main_cfg["weight_cosine"])
-    #spde_model = DiffusionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
-    #                                   Average(), grid_points, pde_cfg) 
-    # spde_model = AffineExpansionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
-    #                                    Average(), grid_points, pde_cfg) 
-    phys = Diffusion(coef_expansion)
+    # TODO: Add an option to pass a proper right hand side
+    phys = Diffusion(coef_expansion) # Needs RHS if we want further usability.
     # TODO: 'cholmod' should be replaced with some informations gathered from the ini files via the pde_cfg.
     # TODO: somehow, we should be careful with handling parameters of the numerical solver. Some iterative solvers may have parameters needed later on. Should we initialise a solver here? Or should we pass the parameters downwards and initialise at first call?
-    spde_model = [phys, AffineLinearSampler, UnitDiscretisation, AverageQOI(), pde_cfg["linear_solver"], mesh_size]
+    # TODO: Handle potential parameters to the functional.
+    main_cfg["qoi"] = main_cfg.get("qoi", "avg")
+    spde_model = [phys, AffineLinearSampler, UnitDiscretisation, u.get_functional_type(main_cfg["qoi"]), pde_cfg["linear_solver"], mesh_size]
                                        
     ### Reconstruction Model
     # TODO: Rename things correctly and pass them as parameters

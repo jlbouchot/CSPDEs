@@ -18,7 +18,10 @@ __lastmodified__ = "2026/10/08"
 
 from collections import namedtuple
 
+import utilities.utils as u
+
 from CSPDE_ML import CSPDE_ML
+from CSPDE_v2 import CSPDE_ML as CSPDE_v2
 
 TestResult = namedtuple('TestResult', ['spde_model', 'wr_model', 'L', 'cspde_result'])
 
@@ -41,22 +44,21 @@ def warn_if_results_exist(prefix_fname, filename, no_compute):
     print("   ---> {0} will be overwritten.".format(config_file), file=sys.stderr)
     print("   ---> Remove these files or change --output_file if this is not what you want.", file=sys.stderr)
 
-def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = None):
-
-    J = dict_config["l_start"] 
+def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = None, doV2 = False):
+    # TODO: Once everything works, remove the "dov2 flag"
+    # J = dict_config["l_start"] 
     L = dict_config["nb_level"] 
-    dat_constant = dict_config["dat_constant"]  # TODO: Eventually change this name! This is ugly. --> const_sL
-    p = dict_config["p_t"]
-    p0 = dict_config["p_0"] 
-    t = dict_config["t_0"]
-    tprime = dict_config["t_prime"]
-    energy_constant = dict_config["const_sj"]
-    ansatz_space = dict_config["ansatz_space"] 
+    # dat_constant = dict_config["dat_constant"]  # TODO: Eventually change this name! This is ugly. --> const_sL
+    # p = dict_config["p_t"]
+    # p0 = dict_config["p_0"] 
+    # t = dict_config["t_0"]
+    # tprime = dict_config["t_prime"]
+    # energy_constant = dict_config["const_sj"]
+    # ansatz_space = dict_config["ansatz_space"] 
     no_compute = dict_config["no_compute"]
     prefix_fname = dict_config["experiment_name"]
     filename = dict_config["output_file"]
-
-
+    
     # Create target Directory if doesn't exist
     # (it usually does: the batch scripts mkdir -p it and it also holds the cached samples, which is fine)
     os.makedirs(prefix_fname, exist_ok=True)
@@ -66,20 +68,23 @@ def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = 
         warn_if_results_exist(prefix_fname, filename, no_compute)
 
     ### Execute CSPDE algorithm
-    cspde_result = CSPDE_ML(spde_model, wr_model, dict_config, sparse_config)
+    if doV2:
+        cspde_result = CSPDE_v2(spde_model, wr_model, dict_config, sparse_config)
+    else:
+        cspde_result = CSPDE_ML(spde_model, wr_model, dict_config, sparse_config)
 
     ### Output results and check
     print("\nPostprocessing and outputting solution ...")
 
     ## Save results
-    dt = datetime.datetime.fromtimestamp(time.process_time()).isoformat()
+    dt = datetime.datetime.now().isoformat()
     if filename is None:
         filename = 'results_{0}'.format(dt)
 
     if not no_compute:
         print("   Writing results to {0} ...".format(filename))
         d     = shelve.open(os.path.join(prefix_fname,filename))
-        d[dt] = TestResult(spde_model, wr_model, L, cspde_result)
+        d[dt] = TestResult(spde_model, wr_model, L, cspde_result) # Keeping dt allows to store multiple runs in the same shelve file, and to track the time of the run. 
         d.close()
 
     with open(os.path.join(prefix_fname, filename + "_config_file.txt"),'w') as f_handler:
@@ -96,7 +101,7 @@ def test(spde_model, wr_model, dict_config, sparse_config, pde_config, checks = 
     ## Execute checks
     if checks and (not no_compute):
         print("   Executing checks ... ")
-        checks(spde_model, wr_model, cspde_result)
+        checks(spde_model, wr_model, cspde_result, L=L, doV2=doV2) # TODO: Eventually pass the ground truth as well, if it is available. This will be useful for the 1D and 2D diffusion problems, where we can compute the ground truth with a very fine mesh.
         # list(map(lambda C: C(spde_model, wr_model, nb_iter, epsilon, cspde_result), checks)) # the "list(...)" is required due to the new Python 3.x updates
 
 
@@ -106,7 +111,7 @@ class CrossCheck:
     def __init__(self, num_tests):
         self.num_tests = num_tests
 
-    def __call__(self, spde_model, wr_model, cspde_result, y_truth=None):
+    def __call__(self, spde_model, wr_model, cspde_result, L=6, y_truth=None, doV2=False):
         # Compute truth values
         if self.num_tests == [] or self.num_tests is None or self.num_tests == 0: 
             return None
@@ -116,14 +121,21 @@ class CrossCheck:
             if y_truth is None:
                 # Compute truth values of functional at new samples
                 print("Computing true solutions")
-                y_truth = spde_model.samples(Z_cross, 3) # consider a three times finer grid 
+                t = u.time_things()
+                if not doV2:
+                    y_truth = spde_model.samples(Z_cross, 3) # consider a three times finer grid -- TODO: This might not be ideal and can be improved
+                else:
+                    phys, sampler, disc, qoi, solver, mesh_size = spde_model
+                    s = sampler(disc([m*2**L*3 for m in mesh_size]) , phys, qoi, solver)
+                    y_truth = s.samples(Z_cross)
+                t = u.time_things(t)
 
             # Compute reconstructed values
             y_recon = wr_model.estimate_ML_samples(cspde_result, Z_cross)
-            spde_model.refine_mesh(0.3334)
-
+            if not doV2:
+                spde_model.refine_mesh(0.3334)
             # Compare
             difference = np.abs(y_truth - y_recon)
-            print("Maximum error: {0}; Average error: {1}".format(difference.max(), difference.sum()/self.num_tests))
+            print("Maximum error: {0}; Average error: {1} --- GT computed in {2} seconds".format(difference.max(), difference.sum()/self.num_tests, t))
 
             return y_truth
