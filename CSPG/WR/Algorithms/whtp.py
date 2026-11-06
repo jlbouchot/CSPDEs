@@ -20,7 +20,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2015/09/21"
-__lastmodified__ = "2026/10/28"
+__lastmodified__ = "2026/11/06"
 
 
 def whtp(Operator, y, w, s, eta, maxiter, miniter, cs_ok=True, print_every=False):
@@ -31,7 +31,13 @@ def whtp(Operator, y, w, s, eta, maxiter, miniter, cs_ok=True, print_every=False
     support selection followed by a least-squares solve on that support.
     """
     if not cs_ok:
-        return wls_cgls(Operator, y, w, eta=eta, maxiter=maxiter, print_every=print_every)
+        ## TODO: ordinary least squares, not weighted. `wls_cgls` expects ROW
+        ## weights (one per sample, length m), whereas `w` here is the
+        ## length-N coefficient weight vector, which only steers the sparsity
+        ## selection the N<m branch skips. No per-sample weights exist in this
+        ## problem, so we pass ones. Revisit if heteroscedastic sample noise
+        ## (e.g. level-dependent FE error) ever gives us genuine row weights.
+        return wls_cgls(Operator, y, np.ones(np.size(y)), eta=eta, maxiter=maxiter, print_every=print_every)
 
     x     = np.zeros(Operator.n)
     S_old = np.array([], dtype=int)

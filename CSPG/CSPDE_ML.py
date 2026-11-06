@@ -45,15 +45,15 @@ def level_plan(cfg):
 def _plan_level(level, s, is_first, p, ctx):
     """Index set and sample size of a level: cheap, done for all levels before any PDE solve."""
     wr_model = ctx["wr"]
-    ctx["log"]("Generating an Ansatz space of multiindices " +  ("that have total degree <= {}".format(max_degree) if ctx["ansatz_space"] else "of weigthed sparsity {}".format(s) ) )
+    ctx["log"]("Generating an Ansatz space of multiindices " +  ("that have total degree <= {}".format(ctx["ansatz_space"]) if ctx["ansatz_space"] else "of weigthed sparsity {}".format(s) ) )
     J_s, t_J = index_set(s, wr_model, ctx["ansatz_space"]) ## TODO: Check function call
     N, d = len(J_s), len(J_s[0])
     m = wr_model.get_m_from_s_N(s, N)
     k_l = max(1, np.floor(CONST_KL*np.log(s)*(1/p - 1/2) ) )
     ctx["log"]("Level {0} ({1}): s = {2}, N = {3}, m = {4}, d = {5}, epsilon = {6}, min iter for wiht = {7}".format(
         level, "single level approximation" if is_first else "detail", s, N, m, d, ctx["tol_res"] * np.sqrt(m), k_l))
-    wr_model.check(N, m)
-    return dict(level=level, s=s, is_first=is_first, J_s=J_s, t_J=t_J, N=N, d=d, m=m, k_l=k_l if ctx.get("nb_iter_min", False) else 0, p=p)
+    cs_ok = wr_model.check(N, m)
+    return dict(level=level, s=s, is_first=is_first, J_s=J_s, t_J=t_J, N=N, d=d, m=m, k_l=k_l if ctx.get("nb_iter_min", False) else 0, p=p, cs_ok=cs_ok)
 
 
 def _validate_plan(plan):
@@ -128,6 +128,10 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config):
         L=dict_config["nb_level"], L_first=dict_config["l_start"], ansatz_space=dict_config["ansatz_space"],
         no_compute=dict_config["no_compute"], tol_res=sparse_config["tol_res"], nb_iter=sparse_config["nb_iter"],
         log_freq=log_freq, log=(lambda msg: print(msg)), nb_iter_min=sparse_config.get("nb_iter_min", True),
+        # base_mesh=tuple(spde_model.mesh_size), fingerprint=model_fingerprint(spde_model),
+        # cache=Cache(os.path.join(dict_config["experiment_name"], "cache")
+        #             if str(dict_config.get("prefix_precompute", True)).lower() != "false" else None),
+        # cache_operator=str(dict_config.get("cache_operator", "false")).lower() == "true",
     )
 
     sampling_fname = os.path.join(dict_config["experiment_name"], 'sampling_points_Lmax' + str(ctx["L"]))
@@ -180,7 +184,7 @@ def run_plan(plan, ctx, sampling_fname, datamtx_fname):
     lvl_by_lvl_result = []
     
     for p in plan: 
-        spde_model, wr_model, log_freq = ctx["spde"], ctx["wr"], ctx["log_freq"]
+        spde_model, wr_model, log_freq, seed, cs_ok = ctx["spde"], ctx["wr"], ctx["log_freq"], ctx["seed"], p["cs_ok"]
         # spde_model, wr_model, cache, rng, log = ctx["spde"], ctx["wr"], ctx["cache"], ctx["rng"], ctx["log"]
         level, s, is_first = p["level"], p["s"], p["is_first"]
         J_s, t_J, N, d, m = p["J_s"], p["t_J"], p["N"], p["d"], p["m"]
@@ -188,19 +192,19 @@ def run_plan(plan, ctx, sampling_fname, datamtx_fname):
         print("Computing level {0} from a total of {1}. Current sparsity = {2}".format(level, ctx["L"], s))
 
         if p["is_first"]:
-            y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname)
+            y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname, seed=seed)
             A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], p["s"], datamtx_fname)
             if log_freq:
                 print("   Computing weights ...")
             w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])
             if log_freq:
                 print("   Weighted minimization ...")
-            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], p["k_l"], print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], p["k_l"], cs_ok=cs_ok, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
             t_recovery = [result.tWC, result.tUser, result.tSys]
             lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
             print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
         else:
-            y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname)
+            y, Z, t_samples = get_sample_details(spde_model, wr_model, p["m"], p["d"], p["level"], ctx["L_first"], p["s"], sampling_fname, seed=seed)
             A, t_matrix = get_mtx(wr_model, p["J_s"], Z, p["d"], p["level"], p["s"], datamtx_fname)
             if log_freq:
                 print("   Computing weights ...")
@@ -242,9 +246,13 @@ def get_mtx(wr_model, J_s, Z, d, oneLvl, sl, datamtx_fname):
 
 
 
-def get_sample_details(spde_model, wr_model, m, d, oneLvl, J, sl, sampling_fname):
+def get_sample_details(spde_model, wr_model, m, d, oneLvl, J, sl, sampling_fname, seed=None):
+    if seed:
+        rng = np.random.default_rng([int(seed), oneLvl])
+    else:
+        rng = np.random.default_rng(None)
     if (sampling_fname is None):  
-        Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+        Z = wr_model.operator.apply_precondition_measure(rng.uniform(-1, 1, (m, d)))
         print("\nComputing {0} SPDE sample approximations ...".format(m))
         # Get samples
         t_start = u.time_things()
@@ -263,7 +271,7 @@ def get_sample_details(spde_model, wr_model, m, d, oneLvl, J, sl, sampling_fname
         if os.path.isfile(sampling_file):
             Z = np.load(sampling_file)
         else: 
-            Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (m, d)))
+            Z = wr_model.operator.apply_precondition_measure(rng.uniform(-1, 1, (m, d)))
             np.save(sampling_file, Z)
 
         if os.path.isfile(y_file):
@@ -271,7 +279,8 @@ def get_sample_details(spde_model, wr_model, m, d, oneLvl, J, sl, sampling_fname
             loaded = np.load(y_file)
             y_new = loaded['y_new']
             y_old = loaded['y_old']
-            spde_model.refine_mesh()
+            if oneLvl != J:
+                spde_model.refine_mesh()
             t_samples = [float(t) for t in loaded['t_samples']] if 't_samples' in loaded else [0.0, 0.0, 0.0]
         else:
             print("\nComputing {0} SPDE sample approximations ...".format(m))
@@ -293,7 +302,7 @@ def get_sample_details(spde_model, wr_model, m, d, oneLvl, J, sl, sampling_fname
 
 def index_set(s, wr_model, ansatz_space):
     t = u.time_things()
-    if ansatz_space == 0:
+    if not ansatz_space or ansatz_space == 0:
         J_s = weighted_sparse_indices(s, wr_model.operator.theta, wr_model.weights)
     else:
         dim = int(np.sum(np.isfinite(wr_model.weights)))
