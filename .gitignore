@@ -137,3 +137,7 @@ env/
 install_miniconda.sh
 Miniconda3-*.sh
 Miniforge3-*.sh
+
+# FEniCS JIT cache and cluster diagnostic output
+CSPG/testing/.dijitso/
+CSPG/testing/diag/
