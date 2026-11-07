@@ -9,9 +9,13 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __create__ = "2026/01/22"
-__lastmodified__ = "2026/08/07"
+__lastmodified__ = "2026/11/07"
 
 import WR
+import SPDESampler.Functionals as F
+import numpy as np
+
+from utilities import gt_meta
 import resource as res
 import time
 import numpy as np
@@ -37,6 +41,27 @@ def get_operator_type(operator_name):
         "Cheb_AltPP": WR.Cheb_AltPP,
     }
     return switcher.get(operator_name, WR.Cheb_Sparse)
+
+def get_functional_type(functional_name):
+    '''
+    Select the appropriate functional based on the experiment in progress.
+    WARNING: This function needs to be updated if new functionals are added to the SPDE module. It is a bit of a hack, but it works for now.
+    TODO: Eventually, we should find a better way to handle this, maybe by using a dictionary or a class that maps functional names to their corresponding classes.
+    TODO: Make sure that parametric functionals are handled correctly. 
+    TODO: Question for future: Could the functional be part of the parametric PDE too? 
+    '''
+    switcher = {
+        "average": F.AverageQOI,
+        "avg": F.AverageQOI,
+        "box": F.BoxAverage,
+    }
+    ## The entries are CLASSES, not instances: a dict literal of instances would
+    ## build every functional on each call, and an unknown name must fail loudly
+    ## rather than silently fall back to a different quantity of interest.
+    if functional_name not in switcher:
+        raise ValueError("Unknown quantity of interest '{0}'. Available: {1}".format(
+            functional_name, sorted(switcher)))
+    return switcher[functional_name]()
 
 def is_tensor_based_possible(method):
     """ 
@@ -95,61 +120,88 @@ def getComputeTimes(cspdeResultsList):
 
     return pdeTimes, recoveryTimes, mtxTimes, jsTimes
 
-def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder = 'TargetL_GTresults', GTfilenames = 'GT_'): 
+def loadGroundTruth(d, nbSamples = 1000, GTidentity = None, GTfolder = None, GTfilenames = 'GT_'):
+    """
+    Load the ground truth that belongs to GTidentity, or say exactly how to compute it.
 
-    pathlib.Path(GTfolder).mkdir(parents=True, exist_ok=True) # parents = True allow to generate subfolder recursively. exist_ok prevents raising exception if the folder already exists. 
-    # Folder exists for sure now!
+    If too few samples are available it tells how to compute more.
 
-    # Now check if a file containing sampling points exists, it is called GTfilenames +"samples.npy"
-    sampleFName = GTfilenames +"samples.npy"
-    print(f"Checking if {os.path.join(GTfolder, sampleFName)} exists before relaunching computations...")
-    if os.path.exists(os.path.join(GTfolder, sampleFName)): 
-        print(f"Found {os.path.join(GTfolder, sampleFName)}. Loading it...")
-        # The file exists and we might load it!
-        Z = np.load(os.path.join(GTfolder, sampleFName))
-        nbExistingSamples = Z.shape[0] # [1] should be equal to the dimensionality d 
-        if nbExistingSamples < nbSamples: 
-            Z = np.vstack((Z,wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples-nbExistingSamples, d)))))
-    else : 
-        print(f"File {os.path.join(GTfolder, sampleFName)} does not exist. Computing samples...")
-        Z = wr_model.operator.apply_precondition_measure(np.random.uniform(-1, 1, (nbSamples, d) ) )
-    # Now we know there are sufficiently many sampling points. We can save the file
-    np.save(os.path.join(GTfolder,sampleFName), Z)
+    Generating the reference is the job of one of
 
-    # Step 2: generate the y values!
-    y_GT = np.zeros(nbSamples)
-    # Check if some of them have already been computed!
-    yValuesFname = GTfilenames + "yGT.npy"
-    if os.path.exists(os.path.join(GTfolder,yValuesFname)): 
-        # A file exists, so let's go ahead and load it 
-        existingYs = np.load(os.path.join(GTfolder,yValuesFname))
-        nbExistingYs = len(existingYs)
-        if nbExistingYs <= nbSamples: 
-            y_GT[0:nbExistingYs] = existingYs
-    else: 
-        nbExistingYs = 0
+        testing/compute_ground_truth.py     (one mesh)
+        testing/richardson_extrapolation.py (extrapolated in h)
 
-    print(f"Found {nbExistingYs} existing samples out of the expected {nbSamples}")
-    if nbExistingYs >= nbSamples: 
-        return existingYs[0:nbSamples], Z[0:nbSamples]
+    which record their solver and their convergence in GT_meta.json. This
+    function only reads, and refuses to read a set that was computed for a
+    different problem. Build GTidentity with gt_meta.identity_from_cfg.
+    """
+    if GTidentity is None:
+        raise ValueError(
+            "loadGroundTruth needs GTidentity: the folder name alone does not "
+            "say which coefficient, QoI or seed the reference belongs to. Use "
+            "gt_meta.identity_from_cfg(<experiment .ini>, mesh, seed) and set its 'd' if the "
+            "experiment sweeps d.")
 
-    # Show a progressbar
-    # spde_model.refine_mesh(2)
-    print("Current FEM width is {}".format(spde_model.mesh_size[0]))
-    widgets = [Percentage(), ' ', Bar(), ' ', ETA()]
-    pbar    = ProgressBar(widgets=widgets)
-    
-    gt_params = {"linear_solver": "gmres", "preconditioner": "amg", "relative_tolerance": 1e-7, "absolute_tolerance": 1e-12}
+    folder = GTfolder or gt_meta.folder(GTidentity)
+    sampleFName = os.path.join(folder, GTfilenames + "samples.npy")
+    yValuesFname = os.path.join(folder, GTfilenames + "yGT.npy")
 
-    for k in pbar(range(nbExistingYs, nbSamples)):
-        y_GT[k] = spde_model.sample(Z[k], gt_params)
-        # Save only every so often to avoid going to the hard memory too often
-        if ((k+1) % 100) == 0: # k+1 because index k means we have computed k+1 data!
-            np.save(os.path.join(GTfolder,yValuesFname), y_GT[0:k])
+    ## One place says what to run, so the message is the same wherever the
+    ## reference turns out to be missing or short.
+    howto = ("Run the ground truth computations with the same .ini, e.g.\n"
+             "    python compute_ground_truth.py --cfg <experiment .ini> "
+             "--mesh {0} --nb_samples {1} --seed {2}".format(
+                 GTidentity["mesh"], nbSamples, GTidentity["seed"]))
 
-    np.save(os.path.join(GTfolder,yValuesFname), y_GT)
+    if not os.path.exists(yValuesFname):
+        raise SystemExit("no ground truth in {0}\n  identity: {1}\n{2}".format(
+            folder, gt_meta.canonical(GTidentity), howto))
+    gt_meta.check(folder, GTidentity)       # exits if that folder holds another problem
 
-    return y_GT, Z
+    ## The file is nb_samples long with NaN where a sample is still missing,
+    ## so completeness is checked, not inferred from the length.
+    y_GT = np.load(yValuesFname)
+    if len(y_GT) < nbSamples:
+        raise SystemExit(
+            "{0} holds {1} values but {2} were asked for.\n{3}".format(
+                yValuesFname, len(y_GT), nbSamples, howto))
+    hole = np.flatnonzero(~np.isfinite(y_GT[:nbSamples]))
+    if hole.size:
+        raise SystemExit(
+            "{0} is missing {1} of the first {2} values (samples {3}{4}).\n{5}".format(
+                yValuesFname, hole.size, nbSamples, hole[:20].tolist(),
+                " ..." if hole.size > 20 else "", howto))
+
+    ## The points are regenerated rather than trusted: gt_meta.draw is the one
+    ## definition of the sampling measure, and the stored file is only a
+    ## cross-check that the reference really used it.
+    Z = gt_meta.draw(nbSamples, d, GTidentity["seed"])
+    if os.path.exists(sampleFName):
+        stored = np.load(sampleFName)
+        k = min(stored.shape[0], nbSamples)
+        if stored.shape[1] != d or not np.allclose(stored[:k], Z[:k]):
+            raise SystemExit(
+                "{0} does not hold the points gt_meta.draw(seed={1}) produces: the "
+                "reference was generated with a different measure or a different d. "
+                "Move it aside and regenerate.".format(sampleFName, GTidentity["seed"]))
+
+    print("ground truth: {0} values from {1}".format(nbSamples, folder))
+    meta = gt_meta.read(folder) or {}
+    q = meta.get("quality", {})
+    if q:
+        print("  solver {0}, rtol {1}, all_converged {2}".format(
+            q.get("solver"), q.get("rtol"), q.get("all_converged")))
+        if q.get("all_converged") is False:
+            print("  WARNING: that set has non-converged samples: {0}".format(
+                q.get("failed_samples")))
+    return y_GT[0:nbSamples], Z[0:nbSamples]
+
+
+def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder = None, GTfilenames = 'GT_', GTidentity = None):
+    """Deprecated: the model arguments are no longer used, because nothing is
+    computed here any more. Kept so an older script still runs; call
+    loadGroundTruth directly."""
+    return loadGroundTruth(d, nbSamples, GTidentity, GTfolder, GTfilenames)
 
 def default_tolerance_sparse_recovery(targetL, nb_recoveries, h0, t=1, tprime=1, constant=0.125):
     """
