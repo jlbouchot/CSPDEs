@@ -14,7 +14,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/07/09"
-__lastmodified__ = "2026/10/09"
+__lastmodified__ = "2026/11/06"
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -33,7 +33,7 @@ pde_arg_list = ["preconditioner", "linear_solver", "elements", "degree", "log", 
 sparse_arg_list = ["recovery_algo", "nb_iter", "tol_res", "log", "nb_iter_min", "numba_threads"]
 main_arg_list = ["output_file", "nb_cosines", "mesh_x", "mesh_y", "mesh_z", "nb_level", "l_start", "sampling", "power", "abar", 
         "fluctuation_importance", "weight_cosine", "dat_constant", "prefix_precompute", "operator", "ansatz_space", 
-        "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name", "gamma", "nb_tests"]
+        "t_0", "t_prime", "p_0", "p_t", "const_sj", "no_compute", "exponent", "n", "experiment_name", "gamma", "nb_tests", "qoi"]
 
 
 def parse_config_file(main_cfg, pde_solver_cfg, sparse_solver_cfg, path_to_file = None):
@@ -99,6 +99,8 @@ def define_MLCSPG_cli_parser():
     parser.add_argument("--blas_threads", help="Number of threads to use for BLAS operations", default=None, required=False)
     parser.add_argument("--omp_threads", help="Number of threads to use for OpenMP operations", default=None, required=False)
     parser.add_argument("--nb_iter_min", help="Minimum number of iterations for the sparse recovery. If True, the minimum number is taken as suggested in the theory paper.", default=None, required=False)
+    parser.add_argument("--numba_threads", help="Number of threads to use for Numba operations", default=None, required=False)
+    parser.add_argument("--qoi", help="Quantity of interest for the simulation (will eventually default to 'avg', choices are 'box' and 'avg')", default=None, required=False)
     # Add config file parameter
     return parser
 
