@@ -141,3 +141,10 @@ Miniforge3-*.sh
 # FEniCS JIT cache and cluster diagnostic output
 CSPG/testing/.dijitso/
 CSPG/testing/diag/
+
+# Python bytecode (tests/ and the packages they import)
+__pycache__/
+*.pyc
+
+# Calibration reports (advisory output of launchGT.sh stage 1)
+CSPG/testing/calibration/

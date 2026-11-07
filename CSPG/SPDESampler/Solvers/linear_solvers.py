@@ -12,7 +12,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/10/29"
-__lastmodified__ = "2026/11/04"
+__lastmodified__ = "2026/11/07"
 
 REGISTRY = {}
 # dolfin "linear_solver" names used in the .ini files -> registry names
@@ -181,6 +181,19 @@ class CGAMG(LinearSolver):
     def _analyze(self):
         from petsc4py import PETSc
         self._PETSc, self._mat = PETSc, None
+        ## How often the AMG hierarchy is rebuilt, counted in factorize() calls:
+        ##   1 (default) every sample -- what PETSc does if left alone
+        ##   k > 1       every k-th sample, reusing it in between
+        ##   0           once, then never again
+        ## The hierarchy setup dominates an AMG solve, and here the sparsity
+        ## pattern never changes between samples, only the coefficient values,
+        ## so reusing it is the main speed lever. The price is a preconditioner
+        ## that is only approximate for the new matrix, i.e. more CG iterations
+        ## and, if pushed too far, a solve that no longer reaches rtol. Do not
+        ## trust it without measuring: compute_ground_truth.py --calibrate
+        ## reports the iteration count AND the QoI error against a direct solve.
+        self._rebuild_every = int(self.options.get("pc_rebuild_every", 1))
+        self._nfac = 0
 
     def _factorize(self, data):
         PETSc = self._PETSc
@@ -199,6 +212,13 @@ class CGAMG(LinearSolver):
         else:
             self._mat.setValuesCSR(self.indptr, self.indices, data)
         self._mat.assemble()
+        ## Left completely alone when _rebuild_every == 1, so the default path
+        ## through this solver is byte for byte what it was.
+        if self._rebuild_every != 1:
+            fresh = self._nfac == 0 or (self._rebuild_every > 0
+                                        and self._nfac % self._rebuild_every == 0)
+            self._ksp.getPC().setReusePreconditioner(not fresh)
+        self._nfac += 1
 
     def _solve(self, rhs):
         self._b.setArray(rhs)
