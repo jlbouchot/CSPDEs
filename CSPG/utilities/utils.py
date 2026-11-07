@@ -8,7 +8,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__create__ = "2026/01/22"
+__created__ = "2026/01/22"
 __lastmodified__ = "2026/11/07"
 
 import WR

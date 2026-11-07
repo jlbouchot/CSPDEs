@@ -30,6 +30,8 @@ meshes are used with many samples and finer meshes with fewer samples, only to r
 Repository layout
 =================
 
+**Soon to be deprecated** Original version of the repo layout -- changes are in progress, see next paragraph
+
 ```
 CSPDEs/
 ├── README.md, TODO.md
@@ -58,8 +60,68 @@ CSPDEs/
     │   ├── driver_MLCSPG_2D.py             # main entry point (2D diffusion problem)
     │   ├── Exp*NoBatch.sh                  # run an experiment locally
     │   └── Exp*Batch.sh                    # same, as a SLURM array job
+    ├── tests/                              # unit and regression tests (see tests/README.md)
     └── utilities/                          # parameter parsing, timing, ground truth, graphs
 ```
+
+**New version** of the computations, with drastically increased speeds 
+```
+CSPDEs/
+├── README.md, TODO.md
+├── env-fenics38.yml                        # conda environment, Python 3.8 (recommended, see Installation)
+├── env-fenics38.lock.txt                   # exact verified environment (linux-64)
+├── prep_env_fenics38.sh                    # creates and tests env-fenics38
+├── check_env_fenics38.py                   # environment check (imports, FEniCS solvers, cvxpy)
+├── env-fenics.yml, working_conda_env.yml   # older Python 3.6 environments
+├── prep_install_miniconda.sh               # Miniforge install (e.g. on a cluster, in $SCRATCH)
+├── prep_env_fenics.sh                      # older Python 3.6 environment
+├── notes_fenics-user                       # detailed installation notes and pitfalls
+├── Papers/                                 # accompanying documents
+└── CSPG/
+    ├── CSPDE.py, Check.py                  # single-level algorithm and test harness
+    ├── CSPDE_ML.py, Check_ML.py            # multi-level algorithm and test harness (writes results)
+    ├── SPDE/                               # PDE side -- MAINLY DEPRECATED, changes in progress
+    │   └── FEniCSModels/
+    │       ├── *FEMModel*.py               # mesh + weak form + solver + QoI in ONE class
+    │       └── WeightedCosSin2D.py, ...    # coefficient expansions -- still used below
+    ├── SPDESampler/                        # replaces SPDE/: the same job split in four, which
+    │                                       # is what buys the 20-40x (see the note below)
+    │   ├── Discretisation/                 # mesh, function space, boundary conditions
+    │   ├── Functionals/                    # goal functionals: AverageQOI, BoxAverage (--qoi)
+    │   ├── Physics/                        # the PDE in weak form: Diffusion, NonlinearDiffusion
+    │   ├── Samplers/                       # u(z) for one z; caches whatever does not depend on z
+    │   └── Solvers/                        # one interface over umfpack / mumps / cholmod /
+    │                                       # superlu / petsc-lu / cg-amg (iterative) / scipy
+    ├── WR/                                 # weighted recovery side
+    │   ├── Algorithms/                     # wiht, whtp, womp, weighted BP / BPDN (cvxpy), ...
+    │   ├── Operators/                      # Chebyshev (dense and tensor-based), Legendre, ...
+    │   └── Weights/
+    ├── data/                               # configuration files (*.ini)
+    │   ├── mlcspg-default-cfg.ini          # defaults, always read first
+    │   └── Exp*_*.ini                      # one file per experiment of the MLCSPG paper
+    ├── testing/                            # drivers and launch scripts
+    │   ├── driver_MLCSPG_2D.py             # main entry point (2D diffusion problem)
+    │   ├── Exp*NoBatch.sh                  # run an experiment locally
+    │   └── Exp*Batch.sh                    # same, as a SLURM array job
+    ├── tests/                              # unit and regression tests (see tests/README.md)
+    └── utilities/                          # parameter parsing, timing, ground truth, graphs
+```
+
+Why the split in `SPDESampler/` is faster: nothing but the coefficient values depends on the parameter `z`.
+The mesh, the function space, the sparsity pattern and the goal functional do not. Separating them lets each
+be built **once** instead of once per sample:
+
+* `Discretisation` is constructed once, so the mesh and the dof map are never rebuilt;
+* `Solvers` keep their symbolic factorisation across samples (the pattern is fixed), so a sample pays only a
+  numeric factorisation -- or, with `cg-amg`, only an AMG setup, which `--pc_rebuild_every` can reuse too;
+* `AffineLinearSampler` caches the `d+1` matrices of the affine expansion, so assembling `A(z)` is a weighted
+  sum of arrays rather than a FEniCS assembly. That cache is the memory driver at a fine mesh
+  (`8*(d+1)*nnz` bytes, hence `--max_cache_gb`); `AssembledLinearSampler` reassembles instead when it does
+  not fit.
+
+The old `SPDE/FEniCSModels/` classes did all four jobs in one object and therefore redid all of it per
+sample. Only the coefficient expansions (`WeightedCosSin2D`, `WeightedCosine2D`, ...) are shared between the
+two layers, which is why `SPDE/` is still here.
 
 
 Installation
@@ -115,7 +177,7 @@ All drivers and launch scripts are meant to be run **from `CSPG/testing/`** (pat
 Smallest end-to-end check, using the debug sizes of experiment 3:
 ```bash
 cd CSPG/testing
-conda activate env-fenics38
+conda activate env-fenics38                # Or whatever environment works for you
 DEBUG_MODE=true bash Exp3NoBatch.sh        # results and logs go to results/Exp3_debug/
 ```
 
@@ -198,6 +260,8 @@ Results, caches, logs and archives are excluded from git (see `.gitignore`).
 Experiments (MLCSPG paper)
 ==========================
 
+WARNING: This section is being reviewed. More updates coming soon.
+
 | Experiment | Config | Varies | Local / SLURM scripts |
 |------------|--------|--------|-----------------------|
 | 1 | `Exp1_hfvaries.ini` | target accuracy (finest level), h_0 and number of levels fixed | `Exp1NoBatch.sh` / `Exp1Batch.sh` |
@@ -215,7 +279,148 @@ is one task of the array job. Make sure `#SBATCH --array` matches the number of 
 
 Graphs are produced by the scripts in `CSPG/utilities/` (`graphWithRespectToJ.py`, `graphWithRespectToH0.py`,
 `graphTargetL.py`, `graphMLvsSL.py`, `graphCheckingDim.py`). They compare against a ground truth computed on
-a finer mesh, cached in `GTresults_d<2*nb_cosines>H<grid>/`.
+a finer mesh — see the next section.
+
+
+Ground truth
+============
+
+Every error curve is measured against reference values `y = QoI(u(z))` computed on a mesh far finer than any
+level of the experiment. Two scripts produce them, both run from `CSPG/testing/`:
+
+| Script | Strategy |
+|--------|----------|
+| `compute_ground_truth.py` | one fine mesh (default 3000x3000) |
+| `richardson_extrapolation.py` | extrapolate in h from a ladder of coarser meshes (e.g. 640/1280/2560), which reaches O(h^3) with meshes a direct solver can still handle |
+
+Both take the coefficient, the QoI and the element degree from the experiment's `.ini`:
+
+```bash
+cd CSPG/testing
+python compute_ground_truth.py --cfg ../data/Exp1_hfvaries.ini --mesh 3000 --nb_samples 2000
+bash launchGT.sh --calibrate-only     # on SLURM: measure s/solve and memory first
+bash launchGT.sh                      # then calibrate -> sharded array -> merge
+```
+
+### Calibrating before the big run
+
+Two settings cannot be chosen from theory, so stage 1 of `launchGT.sh` measures them against a **direct**
+solve on the same sample points, on a mesh where that is still affordable (`CAL_MESH`, default 1280 — never
+on `MESH` itself when that is 3000²):
+
+1. `RTOL` — the QoI error is bounded by `||w|| ||r||`, not by `rtol` alone. With condition number growing
+   like `h^-2`, `rtol=1e-12` at 3000² admits a worst-case QoI error around `1e-5`, which is *larger* than the
+   errors being plotted. The table gives the actual `max |dG|` per tolerance.
+2. `PC_REBUILD` (`--pc_rebuild_every`) — `cg-amg` rebuilds the BoomerAMG hierarchy on every sample, although
+   the sparsity pattern never changes between samples, only the coefficient values. Reusing it is the main
+   speed lever at a fine mesh; the cost is CG iterations, and past some point the tolerance itself. `1` =
+   rebuild every sample (default), `k` = every k-th, `0` = build once.
+
+```bash
+cd CSPG/testing
+bash launchGT.sh --calibrate-only        # one job, CAL_SAMPLES solves x 12 configurations
+# read calibration/launchGT_<cfg>_h<mesh>/, set RTOL and PC_REBUILD in launchGT.sh
+bash launchGT.sh                         # then the full chain
+```
+
+Stage 1 writes **only** to its own folder, well away from any `GTresults_*`:
+
+```
+CSPG/testing/calibration/launchGT_Exp1_hfvaries_h1280/
+├── calibration_<hash>.txt    # the two tables, under a banner saying what this is
+└── GTcal_<jobid>.out/.err    # the SLURM logs
+```
+
+The report opens with "CALIBRATION OUTPUT — there are NO reference values in this folder … safe to delete at
+any time", followed by the identity it was calibrated *for*, so a folder left lying around needs no
+remembering. The hash is in the file name only so two coefficient sets cannot overwrite each other. The whole
+`calibration/` tree is gitignored.
+
+Pick the loosest `rtol` whose `max |dG|` is two orders of magnitude below the smallest error you report, and
+the largest `k` whose `max |dG|` still matches the `k=1` row at that tolerance and that never prints
+`DIVERGED`. If no reuse row is both faster and as accurate, leave `PC_REBUILD=1`.
+
+
+### A reference belongs to exactly one problem
+
+`y` depends on far more than `d` and the mesh: `nb_cosines` (hence d), `power`, `weight_cosine`,
+`fluctuation_importance`, `abar`, the right-hand side, the QoI, the mesh, the element degree and the sample
+seed. Change any one of them and every stored value is meaningless — with no shape mismatch and no exception,
+just wrong numbers. So the folder name carries an 8-character hash of all ten (`utilities/gt_meta.py`):
+
+```
+CSPG/testing/
+└── GTresults_d20H3000_5cf055c9/          # d, mesh, hash of the full identity
+    ├── GT_meta.json                      # the ten fields in full, + the convergence claim
+    ├── GT_samples.npy                    # (nb_samples, d) the points, cos(pi U), seeded
+    ├── GT_yGT.npy                        # (nb_samples,) the reference values  <- what the graphs read
+    └── GT_yGT.shard<k>of<n>.npy          # scratch, one per shard; --merge folds them into GT_yGT.npy
+```
+
+`GT_yGT.npy` is always `nb_samples` long, with `NaN` where a sample is still missing, and it is the only
+authoritative file: it is never shrunk, and the shard files are disposable scratch (each value is stored next
+to the sample *index* it belongs to).
+
+`--merge` **deletes the shard files** once it has folded them in (`--keep_shards` opts out). They are
+redundant at that point whether or not the set is complete, and a shard that reruns afterwards derives its
+work from `GT_yGT.npy`, so nothing is re-solved. Keeping them would also let a value computed at a looser
+`--rtol` be re-injected after a deliberate recompute with a direct solver, since the solver is deliberately
+*not* part of the identity.
+
+`richardson_extrapolation.py` writes the same folder shape, with the ladder in place of the single width, plus
+the per-mesh values so the extrapolation can be redone without re-solving:
+
+```
+└── GTresults_d20Hrich640-1280-2560_a1b2c3d4/
+    ├── GT_meta.json                      # also records the MEASURED order (should be ~2)
+    ├── GT_samples.npy
+    ├── GT_levels.npz                     # (nb_meshes, nb_samples) the QoI on each mesh
+    └── GT_yGT.npy                        # the extrapolated reference
+```
+
+A run into a folder whose `GT_meta.json` describes a different problem **aborts** and names the folder it
+should have used.
+
+### Extending a set
+
+`nb_samples` is deliberately *not* part of the identity, and the draw is prefix-stable, so a set may simply
+grow. Raise
+`NB_SAMPLES` and rerun: each run reads `GT_yGT.npy`, works out what is missing (the new tail, plus any `NaN`
+left by a failed solve), shares **only the missing samples** over the shards, and leaves everything else
+alone. Going from 2000 to 3000 costs 1000 solves whether or not the shard files from the first round are
+still there. Keep `MESH`, `SEED` and the `.ini` identical or the identity changes and you get a different
+folder — which is the point.
+
+A shard takes its slice from `GT_yGT.npy` *before* looking at any shard file, so all the tasks of one round
+agree on the same partition even though SLURM starts them minutes apart. (An earlier version sliced the
+missing set as each task saw it, which left samples that no shard owned.)
+
+
+### Failures and restarts
+
+A sample that does not converge is stored as `NaN` and the run **continues** — one bad solve must not throw
+away the hours already spent on the others. At the end the script lists the offending indices and exits 1
+(unless `--allow_failures`), so the `afterok` merge does not run on a set with holes.
+
+There is **no automatic retry**: rerunning the same command is the retry. A restart recomputes exactly the
+`NaN`s and nothing else, so after loosening `--rtol` or switching to a direct `--solver` a rerun fixes just
+the bad samples. The same mechanism covers a shard that hits its SLURM time limit, and `--merge` is
+idempotent — it can be rerun as more shards finish, and will never remove a value it already has.
+
+### Reading it back
+
+The graph scripts do not spell a folder name out. Each declares, near the top,
+
+```python
+GT_CFG  = .../data/Exp2_h0varies.ini      # which experiment, hence which reference
+GT_SEED = 20261106
+```
+
+and `utilities/utils.loadGroundTruth` resolves the folder from that identity, verifies the hash, regenerates
+the points from the seed and prints the stored solver/tolerance. It **only reads**: if the reference is
+missing or too short it stops and prints the command to generate it. (It used to compute whatever was
+missing on the spot with gmres at `rtol=1e-7`, three orders of magnitude looser than the errors being
+plotted — silently, inside a plotting script.)
 
 
 Accompanying papers - Theory
