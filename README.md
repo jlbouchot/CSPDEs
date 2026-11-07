@@ -178,22 +178,20 @@ Smallest end-to-end check, using the debug sizes of experiment 3:
 ```bash
 cd CSPG/testing
 conda activate env-fenics38                # Or whatever environment works for you
-DEBUG_MODE=true bash Exp3NoBatch.sh        # results and logs go to results/Exp3_debug/
+DEBUG_MODE=true bash Exp1NoBatch.sh        # results and logs go to results/Exp3_debug/
 ```
 
 Only check the sizes involved (sparsity per level, number of samples, size of the Ansatz space), without any PDE solve:
 ```bash
-DEBUG_MODE=true NO_COMPUTE=true bash Exp3NoBatch.sh   # -> results/Exp3_debug_nocompute/
+DEBUG_MODE=true NO_COMPUTE=true bash Exp1NoBatch.sh   # -> results/Exp3_debug_nocompute/
 ```
 
 Run the driver directly:
 ```bash
-python driver_MLCSPG_2D.py --cfg ../data/Exp3_Jvaries.ini \
+python driver_MLCSPG_modulated_2D.py --cfg ../data/Exp1_Jvaries.ini \
     --experiment_name results/my_test --output_file my_run \
     --nb_level 4 --l_start 2 -e 0.000125
 ```
-
-`bash launchAll.sh` runs the debug version of experiments 1 to 3 in sequence.
 
 When running the conda environment non-interactively, prefer `conda run --no-capture-output -n env-fenics38 ...`
 so that the progress output is not buffered.
@@ -298,13 +296,16 @@ Both take the coefficient, the QoI and the element degree from the experiment's 
 ```bash
 cd CSPG/testing
 python compute_ground_truth.py --cfg ../data/Exp1_hfvaries.ini --mesh 3000 --nb_samples 2000
-bash launchGT.sh --calibrate-only     # on SLURM: measure s/solve and memory first
-bash launchGT.sh                      # then calibrate -> sharded array -> merge
+bash launchGT_DRAFT.sh --calibrate-only   # on SLURM: measure s/solve and memory first
+bash launchGT_DRAFT.sh                    # then calibrate -> sharded array -> merge
 ```
+
+`launchGT_DRAFT.sh` needs a few values filled in for your cluster the first time -- see
+*Running on a SLURM cluster* below.
 
 ### Calibrating before the big run
 
-Two settings cannot be chosen from theory, so stage 1 of `launchGT.sh` measures them against a **direct**
+Two settings cannot be chosen from theory, so stage 1 of `launchGT_DRAFT.sh` measures them against a **direct**
 solve on the same sample points, on a mesh where that is still affordable (`CAL_MESH`, default 1280 — never
 on `MESH` itself when that is 3000²):
 
@@ -312,15 +313,16 @@ on `MESH` itself when that is 3000²):
    like `h^-2`, `rtol=1e-12` at 3000² admits a worst-case QoI error around `1e-5`, which is *larger* than the
    errors being plotted. The table gives the actual `max |dG|` per tolerance.
 2. `PC_REBUILD` (`--pc_rebuild_every`) — `cg-amg` rebuilds the BoomerAMG hierarchy on every sample, although
-   the sparsity pattern never changes between samples, only the coefficient values. Reusing it is the main
-   speed lever at a fine mesh; the cost is CG iterations, and past some point the tolerance itself. `1` =
-   rebuild every sample (default), `k` = every k-th, `0` = build once.
+   the sparsity pattern never changes between samples, only the coefficient values. Reusing it skips that
+   setup -- about 1.5 s of a 3.05 s solve in our 1280² calibration -- but costs a few extra CG iterations, so
+   the measured net gain was only **1.29x**; past some point the tolerance suffers too. `1` = rebuild every
+   sample (default), `k` = every k-th, `0` = build once.
 
 ```bash
 cd CSPG/testing
-bash launchGT.sh --calibrate-only        # one job, CAL_SAMPLES solves x 12 configurations
-# read calibration/launchGT_<cfg>_h<mesh>/, set RTOL and PC_REBUILD in launchGT.sh
-bash launchGT.sh                         # then the full chain
+bash launchGT_DRAFT.sh --calibrate-only  # one job, CAL_SAMPLES solves x 12 configurations
+# read calibration/launchGT_<cfg>_h<mesh>/, then set RTOL and PC_REBUILD at the top of the script
+bash launchGT_DRAFT.sh                   # then the full chain
 ```
 
 Stage 1 writes **only** to its own folder, well away from any `GTresults_*`:
@@ -422,6 +424,100 @@ missing or too short it stops and prints the command to generate it. (It used to
 missing on the spot with gmres at `rtol=1e-7`, three orders of magnitude looser than the errors being
 plotted — silently, inside a plotting script.)
 
+
+Running on a SLURM cluster
+==========================
+
+Two scripts in `CSPG/testing/` submit the long runs. Both are kept in *site-neutral* form -- hence the
+`_DRAFT` suffix: everything that belongs to one particular cluster is a `<<<SET-ME>>>` placeholder rather
+than a value, so nobody else's partition names or home directories end up in the repository. Fill them in
+for your machine, or copy the file first and keep your copy out of git.
+
+| Script | What it submits |
+|--------|-----------------|
+| `launchGT_DRAFT.sh` | the reference values (see *Ground truth* above): calibrate -> sharded array -> merge, chained by `afterok` so a failure stops the chain |
+| `launchExp1_DRAFT.sh` | the experiment 1 sweep: a warm-up job, then one job per `(J,L)` pair, each `afterok` the warm-up |
+
+Each script is *both* the launcher (run it on the login node) and the job script: `sbatch` re-invokes the
+same file with `--job` / `--warm` / `--shard`, so there is only ever one file to keep in sync. Neither has
+been reviewed line by line yet -- use `--dry-run`, and `--debug` where it exists, before trusting them with
+a long queue.
+
+Filling in the placeholders
+---------------------------
+
+```bash
+cd CSPG/testing
+bash launchGT_DRAFT.sh --dry-run                 # prints the sbatch commands; works before anything is set
+sinfo -s                                         # -> PARTITION (and note its TIMELIMIT)
+conda info --base                                # -> CONDA_BASE
+sacctmgr show assoc user=$USER format=account    # -> ACCOUNT, or leave "" if the site has no accounting
+```
+
+| Placeholder | What it is | Why it cannot be guessed |
+|---|---|---|
+| `PARTITION` | partition(s) to submit to, comma-separated | the names differ on every cluster, and the longest walltime in the script must fit inside the partition's `TIMELIMIT` or the job is rejected at submission |
+| `CONDA_BASE` | the prefix that contains `etc/profile.d/conda.sh` | a batch job is non-interactive, so `~/.bashrc` normally returns before conda reaches `PATH`. Can be exported in the environment instead of edited into the file |
+| `ACCOUNT` | the accounting project to charge | optional; `""` on sites that do not use accounting |
+| `EXTRA_SBATCH` | any further site flags, as a bash array, e.g. `(--qos=long --constraint=cascadelake)` | there is nothing portable to put here |
+
+Nothing is submitted while a `<<<SET-ME>>>` remains: each script checks in the launcher *and* at the start of
+every job, and names every placeholder still unset. `--dry-run` is deliberately exempt, so the whole chain
+can be inspected before configuring anything.
+
+The resource settings are a second kind of placeholder: they carry deliberately generous starting values and
+a comment giving the measurement that should replace them.
+
+* `launchGT_DRAFT.sh` -- `RTOL`, `PC_REBUILD`, `TIME_SHARD`, `MEM_SHARD`: stage 1 is what replaces them, see
+  *Calibrating before the big run* above.
+* `launchExp1_DRAFT.sh` -- `CPUS`/`NUMBA`/`BLAS`/`OMPT`: only the sparse recovery threads (through numba), the
+  PDE sampling does not, and the knee is per-CPU. The file gives a four-job recipe for finding it, including
+  the two traps: a rank pinned to one core makes the whole sweep look flat, and more BLAS threads can be
+  *slower* through contention with numba.
+* `launchExp1_DRAFT.sh` -- `TIME_FOR_L` / `MEM_FOR_L`, one walltime and memory limit per `L`. Start from
+  `--debug`, then `sacct -X -o JobName%14,Elapsed,MaxRSS,State --units=G -S today`, extrapolate by the factor
+  you observe between two consecutive `L` (the finest level dominates; ours grew about 6x per level, so
+  projecting from small `L` underestimates badly) and multiply by 2-4.
+
+Order of operations
+-------------------
+
+```bash
+cd CSPG/testing
+
+### 1. the reference values -- once per coefficient set, before any experiment
+bash launchGT_DRAFT.sh --calibrate-only   # stage 1 alone: measures the tolerance and preconditioner reuse
+#    read calibration/launchGT_<cfg>_h<mesh>/, then set RTOL, PC_REBUILD, TIME_SHARD, MEM_SHARD
+bash launchGT_DRAFT.sh --dry-run          # check the three-stage chain
+bash launchGT_DRAFT.sh                    # calibrate -> array of NSHARDS tasks -> merge
+
+### 2. the experiment
+bash launchExp1_DRAFT.sh --debug          # 3 short jobs; this is what sizes TIME_FOR_L / MEM_FOR_L
+bash launchExp1_DRAFT.sh --dry-run
+bash launchExp1_DRAFT.sh                  # warm-up -> one job per (J,L)
+bash launchExp1_DRAFT.sh --only "6 7"     # resubmit just those L after raising a limit
+
+squeue -u $USER
+sacct -X -o JobID,JobName%14,Elapsed,MaxRSS,State --units=G -S today
+```
+
+Three things worth knowing before the first long submission:
+
+* **The JIT warm-up is not optional.** Stage 1 of `launchGT_DRAFT.sh`, and the `--warm` job of
+  `launchExp1_DRAFT.sh`, compile the UFL forms into a shared FFC/dijitso cache. Without a warmed cache,
+  concurrent jobs race in `dijitso.system._lockfree_move_file` ("Destination file should exist at this
+  point!"). Each real job then copies the warm cache into a private directory, so the jobs are independent
+  and none of them recompiles. The Exp1 warm-up uses `(J,L)=(2,3)` on purpose: that shape reaches a level
+  with `N<m`, which exercises the least-squares fallback the real jobs never hit.
+* **Be generous with the experiment walltimes.** The driver's cache is per *completed* level and there is no
+  per-sample checkpoint inside one, so a level killed halfway is redone from scratch -- and at the largest
+  `L` that single level is most of the job. A too-long limit only costs queue priority. Resubmitting is
+  otherwise safe: samples and matrices are cached per `(Lmax, level, s, d)` and a rerun resumes from the last
+  completed level, which is why `--only` exists -- two jobs for the same `L` would write the same cache files
+  at once, while different `L` never collide.
+* **A ground-truth shard hitting its time limit costs little**, by contrast: values are flushed every
+  `--checkpoint` samples (default 25), and rerunning the same command recomputes exactly the missing ones
+  (see *Failures and restarts* above).
 
 Accompanying papers - Theory
 ============================
