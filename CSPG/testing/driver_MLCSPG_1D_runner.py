@@ -45,7 +45,6 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
     spde_model = DiffusionFEMModelML(coef_expansion, ConstantCoefficient(10.0),
                                        Average(), grid_points, pde_cfg) 
                                        
-    test_result = None
     ### Reconstruction Model
     # TODO: Rename things correctly and pass them as parameters
     v = np.hstack((main_cfg["gamma"]*np.power([val+1 for val in range(main_cfg["nb_cosines"]) for dummy_variable in (0,1)], main_cfg["exponent"]), [np.inf]))
@@ -61,7 +60,7 @@ def Main(main_cfg, pde_cfg, sparse_cfg):
                             u.get_sampling_type(main_cfg["sampling"]), WR.check_cs)
 
 	### Execute test
-    test_result = test(spde_model, wr_model, main_cfg, sparse_cfg, pde_cfg, CrossCheck(main_cfg["nb_tests"]), test_result)
+    test_result = test(spde_model, wr_model, main_cfg, sparse_cfg, pde_cfg, CrossCheck(main_cfg["nb_tests"]))
 
 ### Main
 if __name__ == "__main__":
