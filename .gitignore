@@ -146,5 +146,5 @@ CSPG/testing/diag/
 __pycache__/
 *.pyc
 
-# Calibration reports (advisory output of launchGT.sh stage 1)
+# Calibration reports (advisory output of launchGT_DRAFT.sh stage 1)
 CSPG/testing/calibration/

@@ -11,8 +11,8 @@
 #==============================================================================
 
 # Test file to call all tests for the MLCSPG paper, experiment number 1: h final evolving, number of multi-levels increasing, h0 fixed. 
-# 1. Call the small driver_MLCSPG_2D.py script with its specific config file and redirecting logs
-# 2. Call the small driver_MLCSPG_2D.py script with more options making sure everything works fine.
+# 1. Call the small driver_MLCSPG_modulated_2D.py script with its specific config file and redirecting logs
+# 2. Call the small driver_MLCSPG_modulated_2D.py script with more options making sure everything works fine.
 
 outdir="results/h0_nbDisc_Fixed"
 if [[ -z "$DEBUG_MODE" ]]; then
