@@ -22,10 +22,30 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/10/29"
+__lastmodified__ = "2026/11/10"
 __created__ = "2026/10/29"
 
 CONST_KL = 0.5/np.log(2) # Empirically validated on a dozen examples. This can later be added as a main parameter
+
+## What to do at a level whose index set is exhausted (N < m, i.e. more samples
+## than basis functions, which happens whenever L - l_start = 1):
+##   "force"  (the DEFAULT) keep the weighted sparse recovery. Legitimate: the
+##            weighted RIP is a statement about the matrix restricted to
+##            weighted-sparse vectors, and adding rows only improves it, so an
+##            overdetermined level sits further inside the hypotheses than any
+##            other. Every level is then measured with the same estimator, under
+##            the same epsilon budget and the same cost model, which is what an
+##            experiment comparing cost across levels needs. The price is that
+##            thresholding keeps 3s of the N available coefficients, so the
+##            level is slightly less accurate than full least squares (measured
+##            at the s=9, N=256, m=482 shape: residual 7.21e-04 against the
+##            least-squares optimum 8.03e-06, both inside a budget of 1.14e-03).
+##   "ls"     hand the level to least squares instead. There is nothing left to
+##            do sparsely, so this is the most accurate estimator available on
+##            that index set -- but it is a DIFFERENT estimator from the one
+##            every other level uses, with its own cost profile, which is why it
+##            is no longer the default.
+CS_FALLBACK_CHOICES = ("force", "ls")   # the first entry is the default
 
 CSPDEResult = namedtuple('CSPDEResult', ['J_s', 'N', 's', 'm', 'd', 'Z', 'y', 'A', 'w', 'result', 't_samples', 't_matrix', 't_recovery', 't_J'])
 
@@ -53,8 +73,16 @@ def _plan_level(level, s, is_first, p, ctx):
     k_l = max(1, np.floor(CONST_KL*np.log(s)*(1/p - 1/2) ) )
     ctx["log"]("Level {0} ({1}): s = {2}, N = {3}, m = {4}, d = {5}, epsilon = {6}, min iter for wiht = {7}".format(
         level, "single level approximation" if is_first else "detail", s, N, m, d, ctx["tol_res"] * np.sqrt(m), k_l))
+    ## cs_ok records the MEASURED condition N >= m (and emits the warning);
+    ## use_cs is what the recovery algorithm is actually told. The two differ
+    ## only under cs_fallback = "force". Both are kept so a result file still
+    ## says which levels were overdetermined, whichever policy was in force.
     cs_ok = wr_model.check(N, m)
-    return dict(level=level, s=s, is_first=is_first, J_s=J_s, t_J=t_J, N=N, d=d, m=m, k_l=k_l if ctx.get("nb_iter_min", False) else 0, p=p, cs_ok=cs_ok)
+    use_cs = cs_ok or ctx["cs_fallback"] == "force"
+    if use_cs and not cs_ok:
+        ctx["log"]("   cs_fallback = force: keeping the weighted sparse recovery on this "
+                   "overdetermined level instead of solving it by least squares")
+    return dict(level=level, s=s, is_first=is_first, J_s=J_s, t_J=t_J, N=N, d=d, m=m, k_l=k_l if ctx.get("nb_iter_min", False) else 0, p=p, cs_ok=cs_ok, use_cs=use_cs)
 
 
 def _validate_plan(plan):
@@ -97,7 +125,9 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config):
         ``do_tensor`` and optional ``seed`` and ``no_compute``.
     sparse_config : dict
         Sparse-recovery configuration. Expected keys include ``tol_res``,
-        ``nb_iter`` and optional ``log`` (logging frequency / verbosity).
+        ``nb_iter`` and optional ``log`` (logging frequency / verbosity) and
+        ``cs_fallback`` (see ``CS_FALLBACK_CHOICES``: what to do at a level
+        where N < m; defaults to ``"force"``).
 
     Returns
     -------
@@ -125,6 +155,14 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config):
     log_freq = sparse_config.get("log", None) # TODO: Eventually add other logging tools, in which case this parameter name will no longer be acceptable
     seed = dict_config.get("seed", None)
     # TODO: tol_res = RMS(Delta G_L) / ((2^(t+t') - 1) (L - J + 1))
+    ## Validated here, before a single PDE solve: a typo in the .ini must not
+    ## surface hours into a run (and must never silently pick a policy).
+    ## CS_FALLBACK_CHOICES[0] rather than a literal, so the code default and
+    ## the documented one cannot drift apart.
+    cs_fallback = str(sparse_config.get("cs_fallback", CS_FALLBACK_CHOICES[0])).strip().lower()
+    if cs_fallback not in CS_FALLBACK_CHOICES:
+        raise ValueError("Unknown cs_fallback '{0}'. Available: {1}".format(
+            sparse_config.get("cs_fallback"), list(CS_FALLBACK_CHOICES)))
     tol_res = sparse_config.get("tol_res", u.default_tolerance_sparse_recovery(dict_config["nb_level"], dict_config["nb_level"]-dict_config["l_start"]+1, dict_config["mesh_x"], dict_config["t_0"], dict_config["t_prime"]))
     ctx = dict(
         #spde=spde_model, wr=wr_model, rng=np.random.default_rng(None if seed is None else int(seed)), seed=seed,
@@ -132,6 +170,7 @@ def CSPDE_ML(spde_model, wr_model, dict_config, sparse_config):
         L=dict_config["nb_level"], L_first=dict_config["l_start"], ansatz_space=dict_config["ansatz_space"],
         no_compute=dict_config["no_compute"], tol_res=tol_res, nb_iter=sparse_config["nb_iter"],
         log_freq=log_freq, log=(lambda msg: print(msg)), nb_iter_min=sparse_config.get("nb_iter_min", True),
+        cs_fallback=cs_fallback,
         # base_mesh=tuple(spde_model.mesh_size), fingerprint=model_fingerprint(spde_model),
         # cache=Cache(os.path.join(dict_config["experiment_name"], "cache")
         #             if str(dict_config.get("prefix_precompute", True)).lower() != "false" else None),
@@ -155,7 +194,7 @@ def run_plan(plan, ctx, sampling_fname, datamtx_fname):
     
     for p in plan: 
         # spde_model is now [phys, disc, qoi, solver] = ctx["spde"]
-        spde_model, wr_model, log_freq, seed, cs_ok = ctx["spde"], ctx["wr"], ctx["log_freq"], ctx["seed"], p["cs_ok"]
+        spde_model, wr_model, log_freq, seed, use_cs = ctx["spde"], ctx["wr"], ctx["log_freq"], ctx["seed"], p["use_cs"]
         # spde_model, wr_model, cache, rng, log = ctx["spde"], ctx["wr"], ctx["cache"], ctx["rng"], ctx["log"]
         level, s, is_first = p["level"], p["s"], p["is_first"]
         J_s, t_J, N, d, m = p["J_s"], p["t_J"], p["N"], p["d"], p["m"]
@@ -170,7 +209,7 @@ def run_plan(plan, ctx, sampling_fname, datamtx_fname):
             w = calculate_weights(wr_model.operator.theta, np.array(wr_model.weights), p["J_s"])
             if log_freq:
                 print("   Weighted minimization ...")
-            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], p["k_l"], cs_ok=cs_ok, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], p["k_l"], cs_ok=use_cs, print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
             t_recovery = [result.tWC, result.tUser, result.tSys]
             lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
             print("\n\tRecovery time: {0} \t Building the Matrix: {1} \t Computing the samples: {2} \t Constructing polynomial set: {3} \n".format(t_recovery, t_matrix, t_samples, p["t_J"]))
@@ -183,7 +222,7 @@ def run_plan(plan, ctx, sampling_fname, datamtx_fname):
             # print(" Weights are {}".format(w) )
             if log_freq:
                 print("   Weighted minimization ...")
-            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], p["k_l"], cs_ok=cs_ok,print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
+            result = wr_model.method(A, y, w, p["s"], epsilon, ctx["nb_iter"], p["k_l"], cs_ok=use_cs,print_every=log_freq) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
             t_recovery = [result.tWC, result.tUser, result.tSys]
             # result = wr_model.method(A, y_new-y_old, w, p["s"], np.sqrt(p["m"]) *epsilon, ctx["nb_iter"]) # note that if we decide to not have a general framework, but only a single recovery algo, we can deal with a much better scaling: i.e. 13s for omp, 3s for HTP, and so on...
             lvl_by_lvl_result.append(CSPDEResult(p["J_s"], p["N"], p["s"], p["m"], p["d"], Z, y, 0, w, result, t_samples, t_matrix, t_recovery, p["t_J"]))
