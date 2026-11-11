@@ -9,7 +9,7 @@ __version__ = "0.1.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/01/22"
+__lastmodified__ = "2026/11/10"
 
 class WRModel(object):
     def __init__(self, method, operator, weights, m_from_s_N, check):
@@ -42,8 +42,15 @@ class WRModel(object):
 
 
 def check_cs(N, m):
+    """Report whether the compressed-sensing regime holds, i.e. N >= m.
+
+    It states the condition and that a fallback regime is entered; WHICH
+    recovery then runs is the caller's policy (CSPDE_v2.CS_FALLBACK_CHOICES),
+    announced by the caller. Saying more here would put a claim in the log that
+    the engine may contradict two lines later.
+    """
     if N < m: 
-        print("!!! WARNING !!! It holds N < m ({0} < {1}). Using L2 minimization procedures instead of weighted l1".format(N, m))
+        print("!!! WARNING !!! It holds N < m ({0} < {1}). Using the fallback recovery".format(N, m))
         return False
     return True
     # assert N >= m, "It is N < m ({0} < {1}). Aborting ...".format(N, m)

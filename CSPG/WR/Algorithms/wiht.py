@@ -20,7 +20,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2015/09/21"
-__lastmodified__ = "2026/11/06"
+__lastmodified__ = "2026/11/10"
 
 def wiht(Operator, y, w, s, eta, maxiter, miniter, cs_ok=True, print_every=False, stag_tol=1e-3, stag_window=5):
     '''
@@ -29,13 +29,32 @@ def wiht(Operator, y, w, s, eta, maxiter, miniter, cs_ok=True, print_every=False
     The parameters `stag_tol` and `stag_window` are used to detect stagnation and stop the algorithm early, preventing it from running to maxIter.
     '''
     if not cs_ok:
-        ## TODO: ordinary least squares, not weighted. `wls_cgls` expects ROW
-        ## weights (one per sample, length m), whereas `w` here is the
-        ## length-N coefficient weight vector, which only steers the sparsity
-        ## selection the N<m branch skips. No per-sample weights exist in this
-        ## problem, so we pass ones. Revisit if heteroscedastic sample noise
-        ## (e.g. level-dependent FE error) ever gives us genuine row weights.
-        return wls_cgls(Operator, y, np.ones(np.size(y)), eta=1e-10, maxiter=maxiter, print_every=print_every)
+        ## N < m: the weighted index set is exhausted, there is nothing left to
+        ## do sparsely, and this is an ordinary OVERDETERMINED least-squares
+        ## solve.
+        ##
+        ## TWO tolerances, deliberately different, because wls_cgls's `eta` is
+        ## NOT this function's `eta`:
+        ##   eta=1e-10    relative convergence of the least-squares problem
+        ##                itself (||A* W r|| against its value at x = 0);
+        ##                dimensionless.
+        ##   tol_res=eta  THIS function's eta, i.e. the level's error budget
+        ##                epsilon = tol_res * sqrt(m) that CSPDE_v2.run_plan
+        ##                derives and that the thresholding branch below stops
+        ##                on. Passing it keeps the fallback on the same accuracy
+        ##                contract as every other level instead of grinding to
+        ##                round-off.
+        ##
+        ## `w` is the length-N COEFFICIENT weight vector; it only steers the
+        ## sparsity selection this branch skips. wls_cgls wants length-m ROW
+        ## weights and no per-sample weights exist in this problem, so we pass
+        ## ones. Revisit if heteroscedastic sample noise (e.g. level-dependent
+        ## FE error) ever gives us genuine row weights.
+        ##
+        ## `miniter` is NOT forwarded: it is the CS contraction count, which has
+        ## no meaning for CGLS.
+        return wls_cgls(Operator, y, np.ones(np.size(y)), eta=1e-10,
+                        maxiter=maxiter, tol_res=eta, print_every=print_every)
 
     x = np.zeros(Operator.n)
     last_norm = 0
