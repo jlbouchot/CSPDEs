@@ -9,7 +9,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/01/22"
-__lastmodified__ = "2026/11/07"
+__lastmodified__ = "2026/11/15"
 
 import WR
 import SPDESampler.Functionals as F
@@ -21,6 +21,7 @@ import time
 import numpy as np
 import pathlib
 import os.path
+import shelve
 from progressbar import Bar, ETA, Percentage, ProgressBar
 
 def get_sampling_type(sampling_name):
@@ -202,6 +203,135 @@ def getGroundTruthFromModel(spde_model, wr_model, d, nbSamples = 1000, GTfolder 
     computed here any more. Kept so an older script still runs; call
     loadGroundTruth directly."""
     return loadGroundTruth(d, nbSamples, GTidentity, GTfolder, GTfilenames)
+
+
+##############################################################################
+# Some helper functions for graphing
+# It pretty much prevents the wrong assumptions that the name or ini files 
+# indeed bear what the code implemented.
+
+def load_run(folder, stem):
+    """The newest run stored in ``<folder>/<stem>``.
+
+    A shelve is keyed by timestamp and a re-run APPENDS to it, so the newest
+    entry is the one that belongs in a figure; taking the first would silently
+    plot a superseded result.
+    """
+    path = os.path.join(folder, stem)
+    with shelve.open(path) as db:
+        runs = sorted(db.values(), key=lambda r: r.L)
+    if not runs:
+        raise SystemExit("%s holds no results" % path)
+    if len(runs) > 1:
+        print("  %s holds %d runs (L = %s); taking the last"
+              % (stem, len(runs), [r.L for r in runs]))
+    return runs[-1]
+
+
+def load_runs(folder, stems):
+    """``{label: run}`` for several shelves. ``stems`` maps label -> file stem."""
+    runs = {}
+    for label in stems:
+        print("Loading %s from %s ..." % (stems[label], folder))
+        runs[label] = load_run(folder, stems[label])
+    return runs
+
+
+def qoi_of(result):
+    # TODO: We check for qoi, but we could check for other things too.
+    """The identity string for the QoI a stored run ACTUALLY computed, or None.
+
+    The authority is the object kept in the shelve. Neither the .ini nor the
+    ``*_config_file.txt`` dump can be trusted here: the dump is written from
+    main_cfg at the end of a run and records what the configuration ASKED for,
+    not what the driver instantiated. 
+    
+    It is worth thinking about what we should be dumping if, indeed, there is 
+    a divergence between what was asked for and what ran.
+    """
+    model = result.spde_model
+    if isinstance(model, (list, tuple)) and len(model) > 3:
+        stored = model[3]                       # modulated driver: a plain list
+    else:
+        stored = getattr(model, 'qoi', None)    # legacy FEMModel
+    if stored is None:
+        return None
+    ## Resolved through get_functional_type, so this cannot drift from the
+    ## drivers' own notion of what "box" and "avg" name.
+    for name in ('box', 'avg'):
+        if type(stored) is type(get_functional_type(name)):
+            return name
+    return None
+
+
+## A d-sweep loads one reference per dimension, so the notice below would
+## otherwise repeat once per call. Say each distinct thing exactly once.
+_QOI_NOTICES = set()
+
+
+def resolve_qoi(runs, identity=None, cfg_name=None):
+    """The QoI the runs computed; points ``identity`` at it and says so.
+
+    With ``identity`` omitted this only returns the consensus, which is how a
+    sweep checks its whole run set once before loading a reference per value.
+
+    ``runs`` is ``{label: TestResult}``. Refuses to continue if a run's QoI
+    cannot be identified, or if the runs disagree among themselves: a directory
+    holding two different quantities under one naming scheme cannot share a
+    figure or a reference, and that has happened in this tree before.
+    """
+    found = {}
+    for label in runs:
+        found[label] = qoi_of(runs[label])
+
+    unknown = sorted([str(k) for k in found if found[k] is None])
+    if unknown:
+        raise SystemExit(
+            "cannot tell which QoI these runs computed: %s. The stored "
+            "spde_model carries no functional this module recognises. Refusing "
+            "to go on, because scoring against the wrong reference looks like a "
+            "clean curve rather than an error." % unknown)
+
+    distinct = set(found.values())
+    if len(distinct) > 1:
+        mixed = {}
+        for k in sorted(found, key=str):
+            mixed[str(k)] = found[k]
+        raise SystemExit(
+            "these runs mix QoIs: %s. Those are different quantities and cannot "
+            "share a figure or a reference." % mixed)
+
+    actual = distinct.pop()
+    if identity is not None:
+        if actual != identity['qoi']:
+            key = (actual, identity['qoi'], cfg_name)
+            if key not in _QOI_NOTICES:
+                _QOI_NOTICES.add(key)
+                print("NOTE: the runs computed '%s', while %s says '%s'.\n"
+                      "      Using the '%s' reference -- the runs decide, not the .ini."
+                      % (actual, cfg_name or 'the .ini', identity['qoi'], actual))
+        identity['qoi'] = actual
+    return actual
+
+
+def ground_truth_for(runs, cfg_path, mesh, seed, d, nbSamples=1000,
+                     base_dir=None, GTfilenames='GT_'):
+    """The reference that belongs to ``runs``: identity, QoI check, then load.
+
+    One call for the graph* scripts, so "which reference goes with which
+    experiment" is answered in one place instead of five. Returns
+    ``(y_GT, Z, identity)``.
+    """
+    identity = gt_meta.identity_from_cfg(cfg_path, mesh, seed)
+    identity['d'] = d                  # a d-sweep overrides what the .ini says
+    resolve_qoi(runs, identity, os.path.basename(cfg_path))
+    folder = gt_meta.folder(identity)
+    if base_dir:
+        folder = os.path.join(base_dir, folder)
+    y_GT, Z = loadGroundTruth(d, nbSamples, identity, GTfolder=folder,
+                              GTfilenames=GTfilenames)
+    return y_GT, Z, identity
+
 
 def default_tolerance_sparse_recovery(targetL, nb_recoveries, h0, t=1, tprime=1, constant=0.125):
     """

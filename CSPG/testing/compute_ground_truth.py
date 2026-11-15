@@ -1,6 +1,5 @@
 """Precompute the reference ("ground truth") QoI samples.
 
-Took the naming conventions from the utils.loadGroundTruth helper.
 Writes exactly the two files that ``utilities.utils.loadGroundTruth`` looks for,
 
     <out>/<prefix>samples.npy     Z, shape (nb_samples, d), float64
@@ -23,7 +22,15 @@ then run the real thing, optionally as an array job:
     python compute_ground_truth.py --mesh 3000 --nb_samples 1000 --shard $i --nshards 16
     python compute_ground_truth.py --mesh 3000 --nb_samples 1000 --merge
 
-Warning: This script was heavily vibe coded and not fully reviewed. It is a helper file, not a core part of the framework. It is not expected to be used outside of the experiments in the paper, and it is not expected to be maintained. Use at your own risk.
+One reference set per dimension, for an experiment that sweeps d (e.g. Exp2). Each set
+is a different parametric problem with its own identity:
+
+    python compute_ground_truth.py --nb_cosines_list              # launchExp2.sh's grid
+    python compute_ground_truth.py --nb_cosines_list 3 5 7        # or an explicit list
+    python compute_ground_truth.py --nb_cosines_list --shard $i --nshards 16
+    python compute_ground_truth.py --nb_cosines_list --nshards 16 --merge
+
+Warning: Parts of this script were heavily vibe coded and not fully reviewed. It is a helper file, not a core part of the framework. It is not expected to be used outside of the experiments in the paper, and it is not expected to be maintained. Use at your own risk.
 """
 
 __author__ = ["Jean-Luc Bouchot"]
@@ -35,7 +42,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/11/06"
-__lastmodified__ = "2026/11/07"
+__lastmodified__ = "2026/11/15"
 
 import argparse
 import os
@@ -47,6 +54,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 import numpy as np
 
 from utilities import gt_meta
+
+## Default nb of cosines sweep -- taken from the Exp2 for the paper.
+EXP2_NB_COSINES = (3, 5, 7, 10, 13, 16, 20, 24, 28)
 
 
 def add_common_options(p):
@@ -70,6 +80,12 @@ def add_common_options(p):
                         "(nb_cosines, power, weight_cosine, fluctuation_importance, "
                         "abar, qoi, degree). Explicit command-line options win.")
     g.add_argument("--nb_cosines", type=int, default=16, help="number of frequencies; d = 2*nb_cosines")
+    g.add_argument("--nb_cosines_list", type=int, nargs="*", default=None, metavar="K",
+                   help="compute ONE reference set per value, each in its own folder and "
+                        "each resumed independently (see sweep()). The flag with no values "
+                        "takes Exp2's grid, %s; the flag absent leaves a "
+                        "single set at --nb_cosines."
+                        % " ".join(str(k) for k in EXP2_NB_COSINES))
     g.add_argument("--power", type=float, default=5.0, help="mu, the decay exponent")
     g.add_argument("--weight_cosine", type=float, default=0.5, help="Upsilon, the knee position")
     g.add_argument("--fluctuation_importance", type=float, default=3.9604513858, help="varsigma")
@@ -465,16 +481,22 @@ def save_yGT(args, out, vals):
 
 
 def report_missing(args, vals, what):
+    """Say which samples are still missing; RETURN how many, and do not exit.
+
+    The caller decides what a hole means, because a sweep has to try every
+    nb_cosines before anything gives up: a non-convergence in the first set
+    would otherwise throw away the queue time of all the sets behind it. The
+    exit status is settled once, in sweep().
+    """
     miss = np.flatnonzero(~np.isfinite(vals))
     if miss.size == 0:
-        return
+        return 0
     print("%d of %d samples are still missing (%s): %s%s"
           % (miss.size, vals.size, what, miss[:20].tolist(),
              " ..." if miss.size > 20 else ""))
     print("Rerun to compute exactly these; loosen --rtol or use a direct "
           "--solver first if they are non-convergences.")
-    if not args.allow_failures:
-        sys.exit(1)
+    return int(miss.size)
 
 
 def merge(args, d, out):
@@ -486,26 +508,83 @@ def merge(args, d, out):
     print("folded in %d shard file(s)" % n)
     print("merged -> %s (%d of %d values)"
           % (yf, int(np.isfinite(vals).sum()), args.nb_samples))
-    ## Every value the shard files held is now in yGT.npy, and that file is
-    ## never shrunk, so they are redundant -- complete set or not. A shard that
-    ## reruns derives its work from yGT.npy, not from its own file, so nothing
-    ## is lost. Keeping them would also let a value computed at a looser --rtol
-    ## be re-injected after a deliberate recompute with a direct solver, since
-    ## the solver is (deliberately) not part of the identity.
     if n and not args.keep_shards:
         print("removed %d redundant shard file(s)"
               % drop_shards(out, args.prefix + "yGT.shard", ".npy"))
-    report_missing(args, vals, "no shard file holds them")
+    return report_missing(args, vals, "no shard file holds them")
 
 
-def main(argv=None):
-    args = apply_cfg(parse_args(argv), argv)
-    for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
-        os.environ.setdefault(v, "1")          # hypre and CHOLMOD are serial here; parallelise over samples
+def resolve_nb_cosines(args):
+    """The nb_cosines values this invocation covers, ascending and unique.
 
-    if args.calibrate:
-        return calibrate(args)
+      --nb_cosines_list absent     -> [args.nb_cosines], the single-set behaviour
+      --nb_cosines_list (no value) -> EXP2_NB_COSINES, launchExp2.sh's grid
+      --nb_cosines_list K1 K2 ...  -> those
+    """
+    if args.nb_cosines_list is None:
+        return [int(args.nb_cosines)]
+    ks = [int(k) for k in args.nb_cosines_list] or list(EXP2_NB_COSINES)
+    bad = [k for k in ks if k < 1]
+    if bad:
+        sys.exit("--nb_cosines_list takes positive frequency counts, got %s" % bad)
+    return sorted(set(ks))
 
+
+def sweep(args, run_one):
+    """Run ``run_one(args)`` once per nb_cosines of the sweep.
+
+    Every value is a DIFFERENT parametric problem: d = 2*nb_cosines sits in
+    gt_meta.IDENTITY, so each value gets its own GTresults_* folder, its own
+    sample points (gt_meta.draw depends on d), its own resume state and its own
+    sampler. Nothing is shared between them -- which is precisely why a sweep
+    stops and restarts exactly like a single run does, including under --shard:
+    task i takes slice i of every set.
+
+    ``run_one`` returns the number of samples still missing for its set. They
+    are collected and the exit status is decided once, at the end, so that one
+    bad solve cannot abandon the sets queued behind it.
+    """
+    ks = resolve_nb_cosines(args)
+    single = len(ks) == 1
+    if not single and args.out:
+        ## --out names ONE directory, and the second set would then land on the
+        ## first one's GT_meta.json and be refused by gt_meta.check -- after the
+        ## first set had already been computed. Fail now instead.
+        sys.exit("--out names a single folder, but this is a sweep over %d dimensions. "
+                 "Drop --out and let the identity hash name one folder per set." % len(ks))
+    if not single:
+        print("\nsweep over %d reference sets, one per nb_cosines: %s"
+              % (len(ks), ", ".join("%d (d=%d)" % (k, 2 * k) for k in ks)))
+        print("  each gets its own folder, resume state and sampler;"
+              " the value above overrides any nb_cosines from --cfg")
+    missing = {}
+    for i, k in enumerate(ks, 1):
+        if not single:
+            print("\n" + "=" * 78)
+            print("== [%d/%d] nb_cosines = %d  (d = %d)" % (i, len(ks), k, 2 * k))
+            print("=" * 78)
+        args.nb_cosines = k
+        missing[k] = run_one(args) or 0
+    if not single:
+        print("\n" + "=" * 78)
+        print("sweep summary: %d sets of %d samples" % (len(ks), args.nb_samples))
+        for k in ks:
+            print("  nb_cosines %-3d (d %-3d) %s"
+                  % (k, 2 * k, "complete" if not missing[k]
+                     else "%d sample(s) MISSING" % missing[k]))
+        print("=" * 78)
+    total = sum(missing.values())
+    if total and not args.allow_failures:
+        ## Non-zero so an afterok merge does not run on a set with holes.
+        sys.exit(1)
+    return 0
+
+
+def run_one(args):
+    """One reference set, for the single problem args.nb_cosines describes.
+
+    Returns the number of samples still missing, for sweep() to collect.
+    """
     d = 2 * args.nb_cosines
     ## The folder name carries a hash of the identity, so a set computed for a
     ## different coefficient (varsigma above all) cannot be resumed into or
@@ -574,7 +653,7 @@ def main(argv=None):
         yf = yGT_file(args, out)
     if mine.size == 0:
         print("nothing to do")
-        return
+        return 0
 
     assembly = choose_assembly(args, d)
     sampler, disc, d = build(args, make(args), assembly)
@@ -618,9 +697,22 @@ def main(argv=None):
 
     if args.shard is not None:
         print("run with --merge once every shard is done")
-        report_missing(args, vals[mine], "this shard could not solve them")
-        return
-    report_missing(args, vals, "they did not converge")
+        return report_missing(args, vals[mine], "this shard could not solve them")
+    return report_missing(args, vals, "they did not converge")
+
+
+def main(argv=None):
+    args = apply_cfg(parse_args(argv), argv)
+    for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        os.environ.setdefault(v, "1")          # hypre and CHOLMOD are serial here; parallelise over samples
+
+    if args.calibrate:
+        # Deliberately NOT at the largest nb_cosines. 
+        # Calibration measures the usable rtol, and how far the AMG hierarchy 
+        ## can be reused, both are properties of the conditioning (mesh) and not d.
+        return calibrate(args)
+
+    return sweep(args, run_one)
 
 
 if __name__ == "__main__":
