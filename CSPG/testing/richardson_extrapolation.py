@@ -42,7 +42,7 @@ __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
 __created__ = "2026/11/03"
-__lastmodified__ = "2026/11/07"
+__lastmodified__ = "2026/11/15"
 
 import argparse
 import copy
@@ -56,7 +56,7 @@ import numpy as np
 
 from compute_ground_truth import (add_common_options, apply_cfg, build, choose_assembly,
                                   converged, draw, drop_shards, make, report_missing,
-                                  report_size, save_yGT, yGT_file)
+                                  report_size, save_yGT, sweep, yGT_file)
 from utilities import gt_meta
 
 
@@ -192,19 +192,13 @@ def report(diag, meshes):
         print("  pass three meshes to get an error bar on the extrapolation itself.")
 
 
-def main(argv=None):
-    args = apply_cfg(parse_args(argv), argv)
-    for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
-        os.environ.setdefault(v, "1")
+def run_one(args, meshes):
+    """One extrapolated reference set, for the problem args.nb_cosines describes.
 
-    meshes = sorted(args.meshes)
-    if len(meshes) < 2:
-        sys.exit("--meshes needs at least two values")
-    for a, b in zip(meshes, meshes[1:]):
-        if b != 2 * a:
-            print("WARNING: %d -> %d is not a factor-2 refinement; the extrapolation assumes it is"
-                  % (a, b))
-
+    Returns the number of samples still missing, for
+    compute_ground_truth.sweep() to collect: --nb_cosines_list works here
+    exactly as it does for the single-mesh generator, one folder per dimension.
+    """
     d = 2 * args.nb_cosines
     ## Same identity, and therefore the same hash, as compute_ground_truth.py:
     ## an extrapolated reference is interchangeable with a single-mesh one only
@@ -244,7 +238,7 @@ def main(argv=None):
         yf = save_yGT(args, out, G_star)
         print("\nwrote %s (%d of %d values)"
               % (yf, int(np.isfinite(G_star).sum()), args.nb_samples))
-        report_missing(args, G_star, where)
+        return report_missing(args, G_star, where)
 
     if args.merge:
         G = load_levels(args, out, meshes, args.nb_samples)
@@ -256,13 +250,12 @@ def main(argv=None):
         if n and not args.keep_shards:
             print("removed %d redundant shard file(s)"
                   % drop_shards(out, args.prefix + "levels.shard", ".npz"))
-        finish(G[:, :args.nb_samples], [(int(i), 0) for i in bad],
-               "no shard file holds them")
-        return
+        return finish(G[:, :args.nb_samples], [(int(i), 0) for i in bad],
+                      "no shard file holds them")
 
-    ## The work set is whatever GT_levels.npz is missing: the tail, when
-    ## nb_samples has grown, plus any NaN a failed solve left behind. Nothing
-    ## depends on the shard files surviving.
+    # The work set is whatever GT_levels.npz is missing: the tail, when
+    # nb_samples has grown, plus any NaN a failed solve left behind. Nothing
+    # depends on the shard files surviving.
     G = load_levels(args, out, meshes, args.nb_samples)
     todo_all = np.flatnonzero(~np.isfinite(G).all(axis=0))
     print("found %d of %d samples in %s"
@@ -285,7 +278,7 @@ def main(argv=None):
         mine = np.flatnonzero(~np.isfinite(G).all(axis=0))
     if mine.size == 0:
         print("nothing to do")
-        return
+        return 0
 
     def checkpoint():
         if args.shard is not None:
@@ -310,10 +303,7 @@ def main(argv=None):
         report_size(disc, d, assembly)
         t0, its = time.time(), []
         for c, k in enumerate(todo):
-            ## A sample that fails stays NaN and the run goes on: one bad solve
-            ## must not throw away the hours already spent on the others, and
-            ## NaN is also what the work set above looks for, so a later run
-            ## retries exactly these.
+            ## Make sure a NaN doesn't throw away hours worth of work: the sample is stored in G as soon as it is computed, and checkpoint() writes it to disk every args.checkpoint samples.
             try:
                 G[mi, k] = sampler.sample(Z[k])
                 cv = converged(sampler)
@@ -338,10 +328,25 @@ def main(argv=None):
     if args.shard is not None:
         save_meta(G, failed)
         print("\nwrote %s; run with --merge once every shard is done" % lvl_out)
-        report_missing(args, np.where(np.isfinite(G[:, mine]).all(axis=0), 0.0, np.nan),
-                       "this shard could not solve them")
-        return
-    finish(G, failed, "they did not converge")
+        return report_missing(args, np.where(np.isfinite(G[:, mine]).all(axis=0), 0.0, np.nan),
+                              "this shard could not solve them")
+    return finish(G, failed, "they did not converge")
+
+
+def main(argv=None):
+    args = apply_cfg(parse_args(argv), argv)
+    for v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+        os.environ.setdefault(v, "1")
+
+    meshes = sorted(args.meshes)
+    if len(meshes) < 2:
+        sys.exit("--meshes needs at least two values")
+    for a, b in zip(meshes, meshes[1:]):
+        if b != 2 * a:
+            print("WARNING: %d -> %d is not a factor-2 refinement; the extrapolation assumes it is"
+                  % (a, b))
+
+    return sweep(args, lambda one: run_one(one, meshes))
 
 
 if __name__ == "__main__":
