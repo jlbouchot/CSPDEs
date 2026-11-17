@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Check_ML
-from utilities.utils import getComputeTimes, ground_truth_for, load_runs
+from utilities.utils import getComputeTimes, ground_truth_for, load_runs, savefig
 
 __author__ = ["Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -108,8 +108,7 @@ plt.xlabel('Wall clock computing time (s)')
 plt.ylabel(r'$\ell_\infty$ error')
 plt.legend()
 plt.tight_layout()
-plt.savefig("errorVsWorkMLvsSL.eps")
-plt.savefig("errorVsWorkMLvsSL.jpg")
+savefig("errorVsWorkMLvsSL")
 
 ## Cost at each target level, which is where the speed-up is read off.
 plt.figure()
@@ -123,7 +122,6 @@ plt.xlabel('L')
 plt.ylabel('Wall clock time (h)')
 plt.legend()
 plt.tight_layout()
-plt.savefig("timesMLvsSL.eps")
-plt.savefig("timesMLvsSL.jpg")
+savefig("timesMLvsSL")
 
 plt.show()

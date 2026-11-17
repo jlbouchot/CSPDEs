@@ -24,6 +24,56 @@ import os.path
 import shelve
 from progressbar import Bar, ETA, Percentage, ProgressBar
 
+## ============================= figure output ===============================
+## Where graph*.py writes its figures. RELATIVE paths are resolved against
+## CSPG/testing/, i.e. next to the experiments' results/, NOT against the
+## current working directory -- otherwise the files land wherever the script
+## happened to be launched from, which is the whole reason this exists.
+## An absolute path is used as given.
+DEFAULT_IMG_SAVE_FOLDER = 'results/imgs/'
+
+## Formats every figure is written in. The .eps goes into the paper, the .jpg
+## is for looking at it.
+DEFAULT_IMG_FORMATS = ('eps', 'jpg')
+
+_UTILITIES_DIR = os.path.dirname(os.path.abspath(__file__))
+_CSPG_DIR = os.path.normpath(os.path.join(_UTILITIES_DIR, os.pardir))
+
+
+def img_folder(folder=None):
+    """Absolute path of the figure directory, created if it does not exist."""
+    f = folder if folder is not None else DEFAULT_IMG_SAVE_FOLDER
+    if not os.path.isabs(f):
+        f = os.path.join(_CSPG_DIR, 'testing', f)
+    f = os.path.normpath(f)
+    pathlib.Path(f).mkdir(parents=True, exist_ok=True)
+    return f
+
+
+def savefig(name, formats=None, folder=None, fig=None, quiet=False):
+    """Write the current figure as <img_folder>/<name>.<ext> for each format.
+
+    ``name`` carries no extension: one file per entry of ``formats`` is
+    written, so the call sites stop repeating themselves once per format. The
+    saved paths are returned and, unless ``quiet``, printed -- a figure whose
+    location has to be guessed is a figure that gets overwritten by the next
+    run from a different directory.
+    """
+    import matplotlib.pyplot as plt          # local: utils is imported headless too
+
+    target = img_folder(folder)
+    written = []
+    for ext in (formats if formats is not None else DEFAULT_IMG_FORMATS):
+        path = os.path.join(target, '%s.%s' % (name, ext.lstrip('.')))
+        (fig if fig is not None else plt).savefig(path)
+        written.append(path)
+    if not quiet:
+        print("   figure -> %s  [%s]"
+              % (os.path.join(target, name),
+                 ", ".join(os.path.splitext(p)[1].lstrip('.') for p in written)))
+    return written
+
+
 def get_sampling_type(sampling_name):
     switcher = {
         "pragmatic": WR.cs_pragmatic_m,

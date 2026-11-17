@@ -1,4 +1,4 @@
-"""Exp4: compute time and error as the base mesh h0 = 1/mesh_x moves, at fixed L-J.
+"""Compute time and error as the base mesh h0 = 1/mesh_x moves, at fixed L-J.
 
 The sweep holds the TARGET mesh and the NUMBER OF LEVELS fixed, so every run
 discretises on the same grids and recovers to the same tolerance; the only thing
@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Check_ML
-from utilities.utils import getComputeTimes, ground_truth_for, load_runs
+from utilities.utils import getComputeTimes, ground_truth_for, load_runs, savefig
 
 __author__ = ["Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -30,7 +30,7 @@ __version__ = "0.5.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/11/15"
+__lastmodified__ = "2026/11/17"
 __created__ = "2026/08/14"
 
 
@@ -116,12 +116,9 @@ t_total, t_pde, t_recovery = {}, {}, {}
 cpu_total = {}
 s_first, m_first = {}, {}
 
-## Expected user/wall for a healthy run: numba at 4 threads measured 3.63x
-## (see testing/launchExp3.sh). A row that ran while the node was busy shows a
-## MUCH lower ratio -- the CPU work is unchanged but the wall clock absorbed the
-## waiting. That matters more here than in any other experiment: Exp4's whole
-## deliverable is a cost comparison ACROSS rows, so a row scheduled against a
-## loaded node does not just look slow, it corrupts the comparison.
+# Expected user/wall for a healthy run: numba at 4 threads measured 3.63x
+# (see testing/launchExp3.sh). A row that ran while the node was busy shows a
+# MUCH lower ratio
 CPU_PER_WALL_EXPECTED = 3.63
 CPU_PER_WALL_FLOOR = 2.5
 
@@ -132,19 +129,13 @@ for mx in MESH_X:
     rmserror[mx] = np.linalg.norm(err) / np.sqrt(err.size)
     relinf[mx] = linferror[mx] / np.abs(y_GT).max()
 
-    ## The first level is the whole story: the detail levels are identical on
-    ## every row by construction, so s and m here are the only inputs moving.
     s_first[mx] = run.cspde_result[0].s
     m_first[mx] = run.cspde_result[0].m
 
     pde, recovery, mtx, js = getComputeTimes(run.cspde_result)
-    ## Each is [wall clock, user, system]; seconds throughout.
     t_total[mx] = pde[0] + recovery[0] + mtx[0] + js[0]
     t_pde[mx] = pde[0]
     t_recovery[mx] = recovery[0]
-    ## user + system, i.e. CPU-seconds actually consumed. Unlike the wall
-    ## clock this does not move when the node is shared, so it is the cost
-    ## metric the comparison should rest on.
     cpu_total[mx] = (pde[1] + recovery[1] + mtx[1] + js[1]
                      + pde[2] + recovery[2] + mtx[2] + js[2])
 
@@ -174,10 +165,6 @@ if busy:
     print()
 
 # ------------------------------------------------------------- null test ---
-## Rows whose first-level plan is identical did identical work on identical
-## grids; only the level LABELS differ. They must agree. If they do not,
-## something outside level_plan depends on the labelling, and every other
-## number in this figure is suspect.
 by_plan = {}
 for mx in MESH_X:
     by_plan.setdefault(s_first[mx], []).append(mx)
@@ -185,9 +172,9 @@ for s_val, group in sorted(by_plan.items()):
     if len(group) < 2:
         continue
     errs = [linferror[mx] for mx in group]
-    ## CPU-seconds, not wall clock: two identical rows scheduled against
-    ## different node loads differ in wall clock for reasons that have nothing
-    ## to do with the method, which would make a sound null test look broken.
+    # CPU-seconds, not wall clock: two identical rows scheduled against
+    # different node loads differ in wall clock for reasons that have nothing
+    # to do with the method, which would make a sound null test look broken.
     cpus = [cpu_total[mx] for mx in group]
     spread_e = (max(errs) - min(errs)) / max(min(errs), 1e-300)
     spread_t = (max(cpus) - min(cpus)) / max(min(cpus), 1e-300)
@@ -231,8 +218,7 @@ h1, l1 = ax1.get_legend_handles_labels()
 h2, l2 = ax2.get_legend_handles_labels()
 ax1.legend(h1 + h2, l1 + l2)
 fig.tight_layout()
-plt.savefig("timesAndErrorWRTh0.eps")
-plt.savefig("timesAndErrorWRTh0.jpg")
+savefig("timesAndErrorWRTh0")
 
 ## 2. the same against what actually varies: the first-level sparsity. The
 ## x-axis here is the schedule's own ask, so a flat error curve is a direct
@@ -257,8 +243,7 @@ h1, l1 = ax1.get_legend_handles_labels()
 h2, l2 = ax2.get_legend_handles_labels()
 ax1.legend(h1 + h2, l1 + l2)
 fig.tight_layout()
-plt.savefig("errorAndTimeWRTsJ.eps")
-plt.savefig("errorAndTimeWRTsJ.jpg")
+savefig("errorAndTimeWRTsJ")
 
 ## 3. where the time goes. The recovery grows with s_J while the PDE work is
 ## nearly fixed (the grids never change), so this is the shape of the price.
@@ -276,8 +261,7 @@ plt.ylabel('share of the total wall clock')
 plt.ylim(0, 1)
 plt.legend()
 plt.tight_layout()
-plt.savefig("timeSharesWRTh0.eps")
-plt.savefig("timeSharesWRTh0.jpg")
+savefig("timeSharesWRTh0")
 
 ## 4. work-precision. Every point buys its accuracy on the SAME grids, so a
 ## horizontal spread here is pure schedule cost.
@@ -301,7 +285,6 @@ plt.ylabel(r'$\ell_\infty$ error')
 plt.legend(handles=handles,
            labels=[r'$h_0 = 1/%d$  ($s_J = %g$)' % (mx, s_first[mx]) for mx in MESH_X])
 plt.tight_layout()
-plt.savefig("errorVsWorkWRTh0.eps")
-plt.savefig("errorVsWorkWRTh0.jpg")
+savefig("errorVsWorkWRTh0")
 
 plt.show()

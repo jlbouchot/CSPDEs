@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Check_ML                 # noqa: F401 -- defines the namedtuples the shelves unpickle into
-from utilities.utils import getComputeTimes, ground_truth_for, load_runs
+from utilities.utils import getComputeTimes, ground_truth_for, load_runs, savefig
 
 __author__ = ["Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -29,25 +29,22 @@ __version__ = "0.5.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/11/14"
+__lastmodified__ = "2026/11/16"
 
 
 # ============================== settings ====================================
 HERE = os.path.dirname(os.path.abspath(__file__))
 TESTING = os.path.join(HERE, '..', 'testing')
 
-## The sweep. L is FIXED (testing/launchExp3.sh: L_VAL), so J = L_VAL is the
-## single-level reference and small J means more detail levels. Below J = 3 the
-## first-level sparsity stops being flat and the runs become infeasible, which
-## is why the grid stops there.
+# J's to verify
 JS = [2, 3, 4, 5, 6]
 L_VAL = 6
-## See this folder's README.QOI-MISHAP.md: these runs computed 'avg'.
+# Path to the runs' results
 RESULTS = os.path.join(TESTING, 'results', 'avgqoi_Exp3Jvaries_preQoIfix')
 
 NB_TESTS = 2000
 
-## Configuration for the ground truth.
+# Configuration for the ground truth.
 GT_CFG = os.path.join(HERE, '..', 'data', 'Exp3_Jvaries.ini')
 GT_SEED = 20261106
 # Mesh type used for computing the ground truth.
@@ -128,8 +125,7 @@ h1, l1 = ax1.get_legend_handles_labels()
 h2, l2 = ax2.get_legend_handles_labels()
 ax1.legend(h1 + h2, l1 + l2)
 fig.tight_layout()
-plt.savefig("timesAndErrorWRTjs.eps")
-plt.savefig("timesAndErrorWRTjs.jpg")
+savefig("timesAndErrorWRTjs")
 
 if base_mesh:
     coarse = [base_mesh * 2 ** J for J in JS]
@@ -160,8 +156,7 @@ if base_mesh:
     h2, l2 = ax2.get_legend_handles_labels()
     ax1.legend(h1 + h2, l1 + l2)
     fig.tight_layout()
-    plt.savefig("timesAndErrorWRTcoarsestMesh.eps")
-    plt.savefig("timesAndErrorWRTcoarsestMesh.jpg")
+    savefig("timesAndErrorWRTcoarsestMesh")
 
 plt.figure()
 handles = []
@@ -177,7 +172,6 @@ plt.legend(handles=handles,
            labels=["J = %d%s" % (J, " (single level)" if J == L_VAL else "")
                    for J in JS])
 plt.tight_layout()
-plt.savefig("errorVsWorkWRTjs.eps")
-plt.savefig("errorVsWorkWRTjs.jpg")
+savefig("errorVsWorkWRTjs")
 
 plt.show()

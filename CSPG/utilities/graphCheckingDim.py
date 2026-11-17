@@ -1,8 +1,7 @@
-"""Exp2: approximation error and compute time as the dimension d grows.
+"""Approximation error and compute time as the dimension d grows.
 
 Reads one experiment directory of ``d_<nb_cosines>`` shelves and plots them
-against the ground truth. Unlike the other figures this needs ONE reference per
-dimension -- d is part of the identity, so every point has its own folder.
+against the ground truth. 
 
 The QoI the runs actually computed is read back from the shelves and checked
 against the reference before anything is plotted: scoring against the wrong
@@ -16,8 +15,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-import Check_ML                 # noqa: F401 -- defines the namedtuples the shelves unpickle into
-from utilities.utils import getComputeTimes, ground_truth_for, load_runs, resolve_qoi
+import Check_ML
+from utilities.utils import getComputeTimes, ground_truth_for, load_runs, resolve_qoi, savefig
 
 __author__ = ["Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -27,7 +26,7 @@ __version__ = "0.5.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/11/14"
+__lastmodified__ = "2026/11/17"
 
 
 # ============================== settings ====================================
@@ -43,7 +42,7 @@ NB_TESTS = 2000
 # Configuration for the ground truth.
 GT_CFG = os.path.join(HERE, '..', 'data', 'Exp2_dvaries.ini')
 GT_SEED = 20261106
-#Mesh type used for computing the ground truth.
+# Mesh type used for computing the ground truth.
 GT_MESH = 'rich640-1280-2560'
 # ============================================================================
 
@@ -62,8 +61,6 @@ t_user, t_sys = {}, {}
 for k in NB_COSINES:
     run = runs[k]
     d = 2 * k
-    ## One reference per dimension: d is part of the identity hash, so each of
-    ## these resolves to its own GTresults_d<d>H<mesh>_<hash> folder.
     y_GT, Z, identity = ground_truth_for({k: run}, GT_CFG, GT_MESH, GT_SEED, d,
                                          NB_TESTS, base_dir=TESTING)
     err = np.asarray(run.wr_model.estimate_ML_samples(run.cspde_result, Z)).ravel() - y_GT
@@ -72,7 +69,6 @@ for k in NB_COSINES:
     relinf[k] = linferror[k] / np.abs(y_GT).max()
 
     pde, recovery, mtx, js = getComputeTimes(run.cspde_result)
-    ## Each is [wall clock, user, system]; seconds throughout.
     t_total[k] = pde[0] + recovery[0] + mtx[0] + js[0]
     t_pde[k] = pde[0]
     t_recovery[k] = recovery[0]
@@ -113,8 +109,7 @@ h1, l1 = ax1.get_legend_handles_labels()
 h2, l2 = ax2.get_legend_handles_labels()
 ax1.legend(h1 + h2, l1 + l2)
 fig.tight_layout()
-plt.savefig("timesAndErrorWRTDs.eps")
-plt.savefig("timesAndErrorWRTDs.jpg")
+savefig("timesAndErrorWRTDs")
 
 # Where the time goes, as a share of each run -- the shape of the growth.
 plt.figure()
@@ -132,7 +127,6 @@ plt.xticks(ds)
 plt.ylim(0, 1)
 plt.legend()
 plt.tight_layout()
-plt.savefig("timeSharesWRTDs.eps")
-plt.savefig("timeSharesWRTDs.jpg")
+savefig("timeSharesWRTDs")
 
 plt.show()
