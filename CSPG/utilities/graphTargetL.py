@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import Check_ML
-from utilities.utils import getComputeTimes, ground_truth_for, load_run, load_runs
+from utilities.utils import getComputeTimes, ground_truth_for, load_run, load_runs, savefig
 
 __author__ = ["Jean-Luc Bouchot"]
 __copyright__ = "Copyright 2017-2026, INRIA, LMU Munich, and Seminar for Applied Mathematics, ETH Zurich and School of Mathematics and Statistics, Beijing Institute of Technology"
@@ -29,26 +29,24 @@ __version__ = "0.5.0-dev"
 __maintainer__ = "Jean-Luc Bouchot"
 __email__ = "jlbouchot@gmail.com"
 __status__ = "Development"
-__lastmodified__ = "2026/11/15"
+__lastmodified__ = "2026/11/16"
 
 
 # ============================== settings ====================================
 HERE = os.path.dirname(os.path.abspath(__file__))
 TESTING = os.path.join(HERE, '..', 'testing')
 
-## The runs to plot. Each is <RESULTS>/L_val_<L>; 
+# The runs to plot. Each is <RESULTS>/L_val_<L>; 
 LMAX = [2, 3, 4, 5, 6, 7]
-## The runs that actually computed 'avg' despite having been launched by the
-## box launcher; see that folder's README.QOI-MISHAP.md. A future genuine box
-## run lands in 'boxqoi_h0_nbDisc_Fixed'.
+# Path to results
 RESULTS = os.path.join(TESTING, 'results', 'avgqoi_h0_nbDisc_Fixed_preQoIfix')
 
 # OPTIONAL single-level overlay, for the ML-vs-SL comparison.
 #
 # Simply adapt SL_RESULTS to point to a directory of shelves produced by the single-level sweeps.
 # Make sure the qoi, coefficients, ... and all parameters match the experiments. 
-SL_RESULTS = None
-# SL_RESULTS = os.path.join(TESTING, 'results', 'avgqoi_SingleLevel')
+# SL_RESULTS = None
+SL_RESULTS = os.path.join(TESTING, 'results', 'avgqoi_SingleLevel')
 
 NB_TESTS = 2000
 
@@ -170,8 +168,6 @@ if SL_LMAX:
     for L in LMAX:
         plt.annotate('L=%d' % L, (t_total[L], linferror[L]),
                      textcoords='offset points', xytext=(4, 4), fontsize=8)
-    ## At a matching L both methods reach the same finest grid, so the gap is
-    ## read horizontally: same accuracy, less work.
     for L in SL_LMAX:
         plt.annotate('', xy=(t_total[L], linferror[L]),
                      xytext=(sl_total[L], sl_linf[L]),
@@ -187,8 +183,7 @@ plt.yscale('log')
 plt.xlabel('Wall clock computing time (s)')
 plt.ylabel(r'$\ell_\infty$ error')
 plt.tight_layout()
-plt.savefig("errorVsWorkWRTLs.eps")
-plt.savefig("errorVsWorkWRTLs.jpg")
+savefig("errorVsWorkWRTLs")
 
 ## 2. error against the finest grid the run actually reached.
 if base_mesh:
@@ -201,8 +196,7 @@ if base_mesh:
     plt.ylabel(r'$\ell_\infty$ error')
     plt.legend(handles=handles, labels=labels)
     plt.tight_layout()
-    plt.savefig("errorVsMeshWRTLs.eps")
-    plt.savefig("errorVsMeshWRTLs.jpg")
+    savefig("errorVsMeshWRTLs")
 
 ## 3. the headline: where the time goes, and the error, against L.
 fig, ax1 = plt.subplots()
@@ -225,7 +219,6 @@ h1, l1 = ax1.get_legend_handles_labels()
 h2, l2 = ax2.get_legend_handles_labels()
 ax1.legend(h1 + h2, l1 + l2)
 fig.tight_layout()
-plt.savefig("timesAndErrorWRTLs.eps")
-plt.savefig("timesAndErrorWRTLs.jpg")
+savefig("timesAndErrorWRTLs")
 
 plt.show()
